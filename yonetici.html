@@ -733,7 +733,7 @@ document.getElementById('staffFilter').value = 'all';
             <span class="badge ${log.type}" ${clickAction} style="${badgeStyle}">${displayText}</span><br>
             <small style="color:var(--primary); font-weight:700;">⏱️ ${durationText}</small>
         </td>
-        <td><div class="${isMessage ? 'msg-text-truncate' : ''}">${noteText}</div><br><a href="http://googleusercontent.com/maps.google.com/?q=${log.lat},${log.lon}" target="_blank" style="color:#3b82f6; font-size:10px; font-weight:700; text-decoration:none;">📍 KONUM</a></td>
+        <td><div class="${isMessage ? 'msg-text-truncate' : ''}">${noteText}</div><br><a href="https://www.google.com/maps?q=${log.lat},${log.lon}" target="_blank" style="color:#3b82f6; font-size:10px; font-weight:700; text-decoration:none;">📍 KONUM</a></td>
         <td><small>${log.time}</small></td>
     </tr>`;
 }).join('');
