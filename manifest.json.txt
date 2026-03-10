@@ -1,0 +1,18 @@
+{
+  "short_name": "ShiftTurbo",
+  "name": "ShiftTurbo Personel Takip Sistemi",
+  "description": "ShiftTurbo Akıllı Personel Takip ve Mesai Yönetimi",
+  "icons": [
+    {
+      "src": "https://raw.githubusercontent.com/FortAwesome/Font-Awesome/6.x/svgs/solid/rocket.svg",
+      "type": "image/svg+xml",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "/index.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#020617",
+  "background_color": "#020617"
+}

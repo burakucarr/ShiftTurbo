@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ShiftTurbo | AI PRO YÖNETİCİ PANELİ</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@200;400;600;700;900&family=Orbitron:wght@200;500;700;900&display=swap" rel="stylesheet">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        /* 🚨 UcR TECHNOLOGY - PREMİUM BRAND BADGE CSS */
+        .ucr-badge {
+            position: fixed !important;
+            bottom: 18px !important;
+            right: 20px !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 10px !important;
+            font-family: 'Segoe UI', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            color: #ffffff;
+            padding: 8px 16px;
+            background: rgba(20, 20, 20, 0.65);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 0 15px rgba(244, 129, 32, 0.3), 0 0 30px rgba(0, 0, 0, 0.5);
+            z-index: 2147483647 !important; /* Maksimum katman */
+            transition: all .3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: default;
+            user-select: none;
+        }
+
+        .ucr-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #f48120;
+            box-shadow: 0 0 8px #f48120, 0 0 16px #f48120;
+            animation: ucrPulse 2s infinite ease-in-out;
+        }
+
+        @keyframes ucrPulse {
+            0% { transform: scale(1); opacity: 1; filter: brightness(1); }
+            50% { transform: scale(1.3); opacity: 0.6; filter: brightness(1.5); }
+            100% { transform: scale(1); opacity: 1; filter: brightness(1); }
+        }
+
+        .ucr-badge:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 0 25px rgba(244, 129, 32, 0.6);
+            background: rgba(30, 30, 30, 0.8);
+            border-color: rgba(244, 129, 32, 0.5);
+        }
+
+        :root { --primary: #f48120; --bg: #020617; --card: rgba(15, 23, 42, 0.7); --glass: rgba(255, 255, 255, 0.03); --border: rgba(255, 255, 255, 0.1); --error: #ef4444; --ai-glow: rgba(139, 92, 246, 0.4); }
+        
+        body::before {
+            content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(at 0% 0%, rgba(244, 129, 32, 0.12) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(59, 130, 246, 0.1) 0px, transparent 50%),
+                linear-gradient(rgba(244, 129, 32, 0.08) 1px, transparent 1px), 
+                linear-gradient(90deg, rgba(244, 129, 32, 0.08) 1px, transparent 1px);
+            background-size: 100% 100%, 100% 100%, 40px 40px, 40px 40px;
+            pointer-events: none; z-index: -1; animation: meshFloat 15s ease infinite alternate;
+        }
+
+        @keyframes meshFloat { 0% { background-position: 0% 0%, 100% 100%, 0px 0px, 0px 0px; } 100% { background-position: 10% 10%, 90% 90%, 20px 20px, 20px 20px; } }
+        body::after { content: ""; position: fixed; top: -100%; left: 0; width: 100%; height: 100%; background: linear-gradient(to bottom, transparent, rgba(244, 129, 32, 0.15), transparent); animation: dataStream 8s linear infinite; pointer-events: none; z-index: -1; }
+        @keyframes dataStream { 0% { transform: translateY(0); } 100% { transform: translateY(200%); } }
+        @keyframes statusBarPulse { 0%, 100% { opacity: 1; filter: brightness(1); } 50% { opacity: 0.6; filter: brightness(1.5); } }
+        @keyframes aiPulse { 0%, 100% { border-color: rgba(139, 92, 246, 0.3); } 50% { border-color: rgba(139, 92, 246, 0.8); box-shadow: 0 0 20px var(--ai-glow); } }
+
+        body { font-family: 'Poppins', sans-serif; background: var(--bg); margin: 0; min-height: 100vh; color: white; overflow-y: auto; }
+        #status-bar { position: fixed; top: 0; left: 0; width: 100%; height: 4px; background: var(--primary); z-index: 1000; box-shadow: 0 0 15px var(--primary); animation: statusBarPulse 3s infinite ease-in-out; }
+
+        @keyframes beamFall { 0% { transform: translateY(-100%) skewX(-20deg); opacity: 0; } 30% { opacity: 0.8; } 100% { transform: translateY(100%) skewX(-20deg); opacity: 0; } }
+        #loginOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(2, 6, 23, 0.3); z-index: 999; display: flex; flex-direction: column; justify-content: center; align-items: center; overflow: hidden; backdrop-filter: blur(15px); }
+        .beams-container { position: absolute; width: 100%; height: 100%; pointer-events: none; z-index: -1; }
+        .beam { position: absolute; top: 0; width: 180px; height: 100%; background: linear-gradient(to bottom, transparent, rgba(244, 129, 32, 0.25), transparent); filter: blur(60px); animation: beamFall 7s infinite linear; }
+        .b1 { left: 5%; animation-delay: 0s; } .b2 { left: 40%; animation-delay: 2.5s; width: 300px; } .b3 { left: 75%; animation-delay: 5s; width: 150px; }
+
+        .brand-signature-login { text-align: center; margin-bottom: 40px; z-index: 10; }
+        .brand-logo-text-login { font-family: 'Orbitron', sans-serif; font-size: 22px; letter-spacing: 12px; font-weight: 900; color: #fff; text-shadow: 0 0 20px rgba(244, 129, 32, 0.4); text-transform: uppercase; }
+        .brand-logo-text-login span { color: var(--primary); }
+        .brand-slogan-login { font-family: 'Poppins', sans-serif; font-size: 11px; font-weight: 900; letter-spacing: 6px; color: var(--primary); text-transform: uppercase; display: block; margin-top: 10px; }
+
+        .login-card { background: rgba(15, 23, 42, 0.75); padding: 4rem 3rem; border-radius: 45px; text-align: center; max-width: 400px; width: 92%; border: 1px solid rgba(244, 129, 32, 0.3); box-shadow: 0 40px 100px rgba(0,0,0,0.8); position: relative; z-index: 10; overflow: hidden; backdrop-filter: blur(20px); }
+        .login-card::after { content: ""; position: absolute; top: -150%; left: -150%; width: 300%; height: 300%; background: linear-gradient(45deg, transparent 45%, rgba(244, 129, 32, 0.05) 50%, transparent 55%); animation: cardShimmer 10s infinite linear; pointer-events: none; }
+        .login-card::before { top: -1px; left: -1px; border-top: 2px solid var(--primary); border-left: 2px solid var(--primary); border-radius: 45px 0 0 0; position: absolute; content: ""; width: 25px; height: 25px; }
+        .login-card-bottom-edge { position: absolute; bottom: -1px; right: -1px; width: 25px; height: 25px; border-bottom: 2px solid var(--primary); border-right: 2px solid var(--primary); border-radius: 0 0 45px 0; z-index: 12; }
+
+        .time-display-login { font-family: 'Orbitron', sans-serif; font-size: 64px; font-weight: 200; line-height: 1; letter-spacing: -4px; background: linear-gradient(180deg, #fff 40%, rgba(255,255,255,0.3) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 10px; }
+        .date-display-login { font-family: 'Orbitron', sans-serif; font-size: 10px; font-weight: 300; color: rgba(255, 255, 255, 0.4); letter-spacing: 6px; text-transform: uppercase; margin-bottom: 30px; }
+        
+        #adminPanel { display: none; padding: 40px; max-width: 1400px; margin: 0 auto; }
+        .top-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; padding-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .admin-badge { display: flex; align-items: center; gap: 15px; background: rgba(244, 129, 32, 0.05); padding: 10px 20px; border-radius: 15px; border: 1px solid rgba(244, 129, 32, 0.2); }
+        .admin-name { display: block; font-family: 'Orbitron'; font-size: 12px; font-weight: 900; color: #fff; letter-spacing: 1px; }
+        .admin-role { font-size: 9px; color: var(--primary); text-transform: uppercase; font-weight: 600; letter-spacing: 2px; }
+        .admin-avatar { width: 35px; height: 35px; background: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #000; font-weight: 900; font-family: 'Orbitron'; box-shadow: 0 0 15px rgba(244, 129, 32, 0.3); }
+
+        .btn-cyber { padding: 15px 25px; border-radius: 12px; border: none; font-family: 'Orbitron'; font-weight: 800; cursor: pointer; background: var(--primary); color: #000; transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1); font-size: 11px; text-transform: uppercase; }
+        .btn-cyber:hover { transform: scale(1.05) translateY(-2px); filter: brightness(1.2); box-shadow: 0 10px 20px rgba(244, 129, 32, 0.3); }
+        
+        .btn-logout { background: none; border: 1px solid #ef4444; color: #ef4444; padding: 10px 20px; border-radius: 12px; cursor: pointer; font-family: 'Orbitron'; font-size: 10px; font-weight: 800; }
+        .btn-logout:hover { background: #ef4444; color: white; }
+
+        #ai-box { background: rgba(139, 92, 246, 0.1); border: 1px solid rgba(139, 92, 246, 0.3); border-radius: 20px; padding: 25px; margin-bottom: 30px; animation: aiPulse 5s infinite; position: relative; }
+        #ai-box::after { content: "AI PRO-STRATEGIST"; position: absolute; top: 10px; right: 20px; font-family: 'Orbitron'; font-size: 8px; color: #a78bfa; letter-spacing: 2px; }
+
+/* İstatistik Kartları Yeni Nesil Tasarım */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 25px;
+    margin-bottom: 40px;
+}
+
+.stat-card {
+    background: linear-gradient(145deg, rgba(15, 23, 42, 0.9), rgba(2, 6, 23, 0.8));
+    padding: 35px 25px;
+    border-radius: 24px;
+    text-align: center;
+    border: 1px solid rgba(244, 129, 32, 0.15);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    position: relative;
+    overflow: hidden;
+}
+
+/* Siberpunk Çentik Efekti */
+.stat-card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 40px;
+    height: 2px;
+    background: var(--primary);
+    box-shadow: 0 0 10px var(--primary);
+}
+
+.stat-card:hover {
+    transform: translateY(-8px);
+    border-color: var(--primary);
+    box-shadow: 0 0 30px rgba(244, 129, 32, 0.2);
+    background: rgba(15, 23, 42, 0.95);
+}
+
+.stat-icon {
+    font-size: 24px;
+    color: var(--primary);
+    margin-bottom: 15px;
+    opacity: 0.8;
+    filter: drop-shadow(0 0 5px var(--primary));
+}
+
+.stat-val {
+    font-family: 'Orbitron';
+    font-size: 38px;
+    font-weight: 700;
+    color: #fff;
+    text-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+    display: block;
+    margin: 5px 0;
+}
+
+.stat-label {
+    font-family: 'Orbitron';
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: #94a3b8;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+       .toolbar {
+    background: rgba(15, 23, 42, 0.5);
+    backdrop-filter: blur(10px);
+    padding: 20px 30px;
+    border-radius: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center; /* Hizalama sorunu burada çözülüyor */
+    margin-bottom: 30px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: inset 0 0 20px rgba(0,0,0,0.3);
+}
+.toolbar select, .toolbar input {
+    background: rgba(2, 6, 23, 0.8);
+    border: 1px solid rgba(244, 129, 32, 0.3);
+    color: #fff;
+    padding: 10px 15px;
+    border-radius: 10px;
+    font-family: 'Poppins';
+    font-size: 12px;
+    transition: all 0.3s ease;
+    outline: none;
+}
+
+.toolbar select:focus, .toolbar input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 10px rgba(244, 129, 32, 0.4);
+}
+
+.toolbar div {
+    display: flex;
+    align-items: center;
+    gap: 15px; /* Elemanlar arasındaki boşluk */
+}
+
+/* Rapor al butonu için özel renk dokunuşu */
+.btn-green {
+    background: linear-gradient(135deg, #10b981, #059669) !important;
+    color: white !important;
+}
+       /* Tablo Genel Yapısı */
+table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 12px; /* Satırlar arasında boşluk bırakır */
+    margin-top: -10px;
+    background: transparent; /* Arka planı kartlara bırakıyoruz */
+}
+
+/* Başlık Alanı */
+th {
+    font-family: 'Orbitron';
+    font-size: 11px;
+    color: var(--primary);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    padding: 15px 20px;
+    border-bottom: 2px solid rgba(244, 129, 32, 0.2); /* Lazer çizgisi */
+    text-align: left;
+}
+
+/* Satır Kartları */
+#logTable tr {
+    background: rgba(15, 23, 42, 0.4);
+    backdrop-filter: blur(5px);
+    transition: all 0.3s ease;
+}
+
+#logTable tr:hover {
+    background: rgba(244, 129, 32, 0.05);
+    transform: scale(1.01);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+
+/* Hücre Detayları */
+td {
+    padding: 20px;
+    color: #cbd5e1;
+    font-size: 13px;
+    border-top: 1px solid rgba(255,255,255,0.02);
+    border-bottom: 1px solid rgba(255,255,255,0.02);
+}
+
+/* İlk ve son hücrelere köşe yumuşatma */
+td:first-child { border-radius: 15px 0 0 15px; border-left: 1px solid rgba(255,255,255,0.02); }
+td:last-child { border-radius: 0 15px 15px 0; border-right: 1px solid rgba(255,255,255,0.02); }
+
+/* Durum Rozetlerini Parlatalım */
+.badge {
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 10px;
+    text-shadow: 0 0 10px currentColor; /* Yazıya kendi renginde neon ışığı verir */
+}
+        .msg-text-truncate { font-style: italic; font-size: 12px; color: #64748b; }
+        .badge.is-read { opacity: 0.5; filter: grayscale(1); border-style: dashed; }
+
+        .GİRİŞ { color: #10b981; } .ÇIKIŞ { color: #ef4444; }
+        select, input { background: #0f172a; border: 1px solid #334155; color: white; padding: 12px; border-radius: 10px; outline: none; font-family: 'Poppins'; }
+        
+
+        .score-box { display: inline-flex; align-items: center; gap: 5px; background: rgba(16, 185, 129, 0.1); padding: 4px 10px; border-radius: 10px; border: 1px solid rgba(16, 185, 129, 0.3); font-family: 'Orbitron'; font-size: 10px; color: #10b981; font-weight: 700; margin-top: 5px; }
+        .low-score { background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.3); color: #ef4444; }
+
+        .admin-label { font-family: 'Orbitron'; font-size: 10px; color: #94a3b8; letter-spacing: 5px; margin-left: 20px; padding-left: 20px; border-left: 1px solid rgba(255,255,255,0.1); text-transform: uppercase; display: flex; align-items: center; height: 25px; }
+
+        .live-trend-container { display: flex; align-items: center; gap: 15px; margin-left: auto; margin-right: 30px; background: rgba(255,255,255,0.03); padding: 8px 15px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); }
+        .trend-label { font-family: 'Orbitron'; font-size: 9px; color: #94a3b8; letter-spacing: 1px; }
+        .sparkline { width: 100px; height: 30px; stroke: var(--primary); stroke-width: 2; fill: none; stroke-linecap: round; filter: drop-shadow(0 0 5px var(--primary)); }
+
+        #msg-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(10px); z-index: 2000; align-items: center; justify-content: center; }
+        .msg-content { background: #0f172a; padding: 40px; border-radius: 30px; border: 1px solid #9333ea; box-shadow: 0 0 40px rgba(147, 51, 234, 0.3); width: 90%; max-width: 450px; text-align: center; position: relative; }
+        .msg-title { font-family: 'Orbitron'; font-size: 12px; color: #a78bfa; letter-spacing: 3px; margin-bottom: 20px; }
+        #msg-body { font-size: 15px; line-height: 1.6; color: #cbd5e1; margin-bottom: 30px; font-weight: 300; }
+        .msg-footer-time { font-family: 'Orbitron'; font-size: 9px; color: #64748b; letter-spacing: 1px; display: block; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 15px; margin-top: 20px; }
+
+        @keyframes newRowGlow { 0% { background: rgba(244, 129, 32, 0.2); box-shadow: inset 0 0 15px rgba(244, 129, 32, 0.2); } 100% { background: transparent; box-shadow: inset 0 0 0px transparent; } }
+        .new-action-row { animation: newRowGlow 5s ease-out forwards; }
+
+        body.stealth-mode { filter: contrast(1.1) brightness(0.9); }
+        body.stealth-mode .login-card, body.stealth-mode .stat-card, body.stealth-mode .toolbar, body.stealth-mode table { border-color: var(--primary) !important; box-shadow: 0 0 30px rgba(244, 129, 32, 0.15); }
+/* Zaman Sütunu - Okunabilir Versiyon */
+#logTable td:last-child {
+    font-family: 'Poppins', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    color: #cbd5e1;
+    text-align: right; 
+    padding-right: 30px; /* Satırın en sağından biraz boşluk bırakıyoruz */
+    vertical-align: middle; /* Yazıyı dikeyde tam ortalar */
+}
+
+/* Sadece Saati Parlatalım (Orbitron'u sadece burada, büyük kullanabiliriz) */
+.log-time-highlight {
+    font-family: 'Orbitron', sans-serif;
+    color: #fff;
+    font-size: 14px;
+    letter-spacing: 1px;
+    display: block; /* Saati ayrı bir blok yapar, tarih altına düzgün iner */
+    margin-bottom: 2px;
+}
+
+.time-icon {
+    color: var(--primary);
+    margin-right: 5px;
+    font-size: 12px;
+}
+table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 12px;
+    background: transparent;
+}
+
+/* Satır Kartları */
+#logTable tr {
+    background: rgba(15, 23, 42, 0.4);
+    backdrop-filter: blur(5px);
+    transition: all 0.3s ease;
+}
+
+#logTable tr:hover {
+    background: rgba(244, 129, 32, 0.05);
+    transform: scale(1.01);
+}
+
+/* Konum Butonunu Jilet Gibi Yapıyoruz */
+#logTable td a {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(59, 130, 246, 0.1);
+    color: #3b82f6 !important;
+    text-decoration: none !important;
+    padding: 6px 14px;
+    border-radius: 10px;
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    font-size: 10px;
+    font-weight: 800;
+    font-family: 'Orbitron';
+    letter-spacing: 1px;
+    transition: all 0.3s ease;
+    text-shadow: 0 0 8px rgba(59, 130, 246, 0.5);
+}
+
+#logTable td a:hover {
+    background: rgba(59, 130, 246, 0.25);
+    border-color: #3b82f6;
+    box-shadow: 0 0 15px rgba(59, 130, 246, 0.4);
+    transform: translateY(-2px);
+}
+
+/* Durum Rozetleri (GİRİŞ/ÇIKIŞ) için neon efekti */
+.badge {
+    padding: 6px 14px;
+    border-radius: 8px;
+    font-size: 10px;
+    text-shadow: 0 0 10px currentColor;
+    font-weight: 900;
+}
+
+/* Hücrelerin köşe yumuşatmaları */
+#logTable td:first-child { border-radius: 15px 0 0 15px; }
+#logTable td:last-child { border-radius: 0 15px 15px 0; }
+/* 10 Saat Uyarısı İçin Kritik Alarm Stili */
+.critical-alarm {
+    background: rgba(239, 68, 68, 0.15) !important; /* Hafif kırmızı arka plan */
+    border-left: 5px solid #ef4444 !important; /* Sol tarafa kırmızı jilet çizgi */
+    animation: criticalPulse 2s infinite ease-in-out;
+}
+
+@keyframes criticalPulse {
+    0% { box-shadow: inset 0 0 10px rgba(239, 68, 68, 0.2); }
+    50% { box-shadow: inset 0 0 30px rgba(239, 68, 68, 0.5); }
+    100% { box-shadow: inset 0 0 10px rgba(239, 68, 68, 0.2); }
+}
+
+/* Kritik Rozet */
+.critical-badge {
+    background: #ef4444;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 9px;
+    font-family: 'Orbitron';
+    font-weight: 900;
+    display: inline-block;
+    margin-top: 5px;
+}
+
+    </style>
+</head>
+<body>
+
+    <div id="status-bar"></div>
+
+    <div id="loginOverlay">
+        <div class="beams-container"><div class="beam b1"></div><div class="beam b2"></div><div class="beam b3"></div></div>
+        <div class="brand-signature-login">
+            <div style="display: flex; align-items: center; justify-content: center; gap: 15px;">
+                <div class="brand-logo-text-login">SHIFT<span>TURBO</span></div>
+                <div style="height: 20px; width: 1px; background: rgba(255,255,255,0.2);"></div>
+                <div style="font-family: 'Orbitron'; font-size: 10px; color: var(--primary); letter-spacing: 4px; opacity: 0.8; font-weight: 700;">YÖNETİCİ TERMİNALİ</div>
+            </div>
+            <span class="brand-slogan-login">Zamanı Durdurma, Onu Yönet</span>
+        </div>
+        <div class="login-card">
+            <div class="login-card-bottom-edge"></div>
+            <div id="clock_login" class="time-display-login">00:00</div>
+            <div id="date_login" class="date-display-login">-- MART 2026</div>
+            <div id="step1">
+                <input type="text" id="username" placeholder="YÖNETİCİ KİMLİĞİ" style="width:100%; margin-bottom:15px; box-sizing: border-box; text-align:center;">
+                <input type="password" id="password" placeholder="ERİŞİM ANAHTARI" style="width:100%; margin-bottom:25px; box-sizing: border-box; text-align:center;">
+                <button class="btn-cyber" style="width:100%" onclick="nextStep()">SİSTEME GİRİN</button>
+            </div>
+            <div id="step2" style="display:none;">
+                <p style="font-family:'Orbitron'; font-size:10px; color:var(--primary); margin-bottom:20px; letter-spacing:1px;">İKİNCİL DOĞRULAMA GEREKLİ</p>
+                <input type="password" id="twoStepCode" placeholder="GÜVENLİK KODU" style="width:100%; margin-bottom:25px; box-sizing: border-box; text-align:center; letter-spacing:8px;">
+                <button class="btn-cyber" style="width:100%" onclick="checkAuth()">SİSTEMİ AÇ</button>
+                <button style="background:none; border:none; color:rgba(255,255,255,0.3); font-size:9px; margin-top:15px; cursor:pointer;" onclick="location.reload()">Geri Dön</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="adminPanel">
+        <div class="top-nav">
+            <div style="display: flex; align-items: center;">
+                <div style="font-family:'Orbitron'; font-size:22px; font-weight:900;">SHIFT<span style="color:var(--primary)">TURBO</span></div>
+                <div class="admin-label">Yönetici Ekranı</div>
+            </div>
+            <div class="live-trend-container">
+                <div class="trend-label">Sistem<br>Akış<br>Hızı</div>
+                <svg class="sparkline" viewBox="0 0 100 30"><path id="trendPath" d="M0,25 L15,10 L30,20 L45,5 L60,15 L75,25 L90,10 L100,15"></path></svg>
+            </div>
+            <div style="display: flex; gap: 25px; align-items: center;">
+                <div id="liveClock" style="font-family:'Orbitron'; font-size:14px; color:#94a3b8;">00:00:00</div>
+                <div class="admin-avatar" style="background: none; border: 1.5px solid var(--primary); color: var(--primary);">
+    <i class="fas fa-user-shield" style="font-size: 16px;"></i>
+</div>
+                <button class="btn-logout" onclick="logout()">ÇIKIŞ</button>
+            </div>
+        </div>
+
+        <div id="ai-box">
+            <div id="ai-text" style="font-size:13px; color:#cbd5e1; line-height:1.6;">Veriler işleniyor...</div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card"><span id="stat-today" class="stat-val">0</span><br><small style="font-family:'Orbitron'; font-size:9px;">GÜNLÜK TRAFİK</small></div><div class="stat-card" onclick="filterActiveStaff()" style="cursor: pointer;">
+    <i class="fas fa-satellite-dish stat-icon"></i>
+    <span id="stat-staff" class="stat-val">0</span>
+    <span class="stat-label">MESAİDEKİLER</span>
+</div>
+            <div class="stat-card"><span id="stat-total" class="stat-val">0</span><br><small style="font-family:'Orbitron'; font-size:9px;">TOPLAM KAYIT</small></div>
+        </div>
+
+        <div class="toolbar">
+            <div style="display:flex; gap:15px;"><select id="staffFilter" onchange="applyFilter()"></select><input type="date" id="startDate" onchange="applyFilter()"><input type="date" id="endDate" onchange="applyFilter()"></div>
+            <div style="display:flex; gap:12px;"><button class="btn-cyber btn-green" onclick="exportPDF()">📄 RAPOR AL</button><button class="btn-cyber" onclick="fetchData()">🔄 YENİLE</button></div>
+        </div>
+        <table><thead><tr><th>PERSONEL</th><th>DURUM</th><th>BÖLGE/NOT</th><th>ZAMAN</th></tr></thead><tbody id="logTable"></tbody></table>
+    </div>
+
+    <div id="msg-modal">
+        <div class="msg-content">
+            <div class="msg-title">📩 PERSONEL BİLDİRİMİ</div>
+            <div id="msg-body"></div>
+            <div id="msg-time-footer" class="msg-footer-time"></div>
+            <button class="btn-cyber" style="background:#9333ea; color:white; width:100%; margin-top:20px;" onclick="closeMsg()">ANLAŞILDI</button>
+        </div>
+    </div>
+
+    <div class="ucr-badge">
+        <span class="ucr-dot"></span>
+        UCR Technology
+    </div>
+
+    <script>
+        const supabaseUrl = 'https://tnvjdppcyctmqkirlwmy.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRudmpkcHBjeWN0bXFraXJsd215Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3MzY0NTIsImV4cCI6MjA4ODMxMjQ1Mn0.Ft4JXQtbcXz1-qO7n06fV1vGtP4DbCVUWDojEAFoALI';
+        const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
+        let allLogs = [];
+        let tempAdmin = null;
+        let lastLogCount = 0;
+
+        async function nextStep() {
+            const user = document.getElementById("username").value;
+            const pass = document.getElementById("password").value;
+            const { data } = await _supabase.from('admins').select('*').eq('username', user).eq('password', pass).single();
+            if(data) { tempAdmin = data; document.getElementById("step1").style.display = "none"; document.getElementById("step2").style.display = "block"; }
+            else { alert("YETKİSİZ!"); }
+        }
+
+        async function checkAuth() {
+            const secretCode = document.getElementById("twoStepCode").value;
+            if(tempAdmin && secretCode === tempAdmin.secret_key) { sessionStorage.setItem("isAdmin", "true"); showPanel(); }
+            else { alert("HATALI!"); location.reload(); }
+        }
+
+        function showPanel() { 
+            document.getElementById("loginOverlay").style.display = "none"; 
+            document.getElementById("adminPanel").style.display = "block"; 
+            if (Notification.permission !== "granted") Notification.requestPermission();
+            fetchData(); 
+        }
+
+        function logout() { sessionStorage.removeItem("isAdmin"); location.reload(); }
+
+        async function fetchData() {
+document.getElementById('staffFilter').value = 'all';
+    document.getElementById('startDate').value = '';
+    document.getElementById('endDate').value = '';
+            const { data } = await _supabase.from('logs').select('*').order('created_at', { ascending: false });
+            
+            // 🚨 ÖNEMLİ: Temizleme mantığını mesajları kapsayacak şekilde esnetiyoruz
+            const cleanData = [];
+            const seenActions = new Set();
+            
+            (data || []).forEach(log => {
+                // Mesajlar asla kopya sayılmasın (her mesaj değerlidir)
+                const timeKey = log.type === 'MESAJ' ? `msg-${log.id}` : `${log.personel_name}-${log.created_at}`;
+                if (!seenActions.has(timeKey)) { 
+                    cleanData.push(log); 
+                    seenActions.add(timeKey); 
+                }
+            });
+
+            allLogs = cleanData.map(log => ({
+                id: log.id,
+                // Eğer isim boş gelirse bilinmeyen olarak işaretle
+                personel: (log.personel_name || "BILINMEYEN_MISAFIR").trim().toUpperCase('tr-TR'),
+                type: log.type, 
+                mahalle: log.mahalle, 
+                lat: log.lat, 
+                lon: log.lon,
+                time: new Date(log.created_at).toLocaleString('tr-TR'), 
+                raw_time: log.created_at
+            }));
+
+            updateTrendGraph(); 
+            runAIAnalysis(); 
+            updateDashboard(); 
+            
+            // 🔊 BİLİNMEYEN PERSONEL MESAJI GELDİĞİNDE BİLDİRİMİ TETİKLE
+            checkNewNotifications(allLogs);
+        }
+
+        function updateTrendGraph() {
+            const points = []; const hours = 7; const now = new Date();
+            for(let i=0; i<=hours; i++) {
+                const targetTime = new Date(now.getTime() - (i * 3600000));
+                const count = allLogs.filter(l => new Date(l.raw_time).getHours() === targetTime.getHours()).length;
+                points.push(30 - (Math.min(count, 5) * 5));
+            }
+            const pathData = points.reverse().map((p, i) => `${i === 0 ? 'M' : 'L'}${i * 15},${p}`).join(' ');
+            if(document.getElementById('trendPath')) document.getElementById('trendPath').setAttribute('d', pathData);
+        }
+
+        function calculateScore(personName) {
+            let score = 100; const personLogs = allLogs.filter(l => l.personel === personName);
+            personLogs.forEach(log => { if(log.type === 'GİRİŞ') { const isLast = allLogs.filter(l => l.personel === log.personel)[0] === log; if(isLast && (new Date() - new Date(log.raw_time)) / 3600000 > 10) score -= 15; } });
+            score += Math.floor(personLogs.length / 5) * 2; return Math.min(Math.max(score, 0), 100);
+        }
+
+       function runAIAnalysis() {
+            const names = [...new Set(allLogs.map(l => l.personel))]
+                            .filter(n => !n.includes("BILINMEYEN") && !n.includes("BİLİNMEYEN"));
+            
+            if (names.length === 0) {
+                document.getElementById('ai-text').innerHTML = "🧠 Veri akışı bekleniyor...";
+                return;
+            }
+
+            let activeStaff = 0;
+            let criticalCount = 0;
+            let bestPerson = { name: "", score: -1 };
+            let remoteStaffNames = []; // Dışarıdan girenlerin isimlerini tutacak liste
+            let totalActionsToday = allLogs.filter(l => new Date(l.raw_time).toDateString() === new Date().toDateString()).length;
+
+            // 📍 DÜKKAN KOORDİNATLARI (Buraları dükkanının konumuyla güncelle!)
+            const shopLat = 41.0000; 
+            const shopLon = 28.0000; 
+
+            names.forEach(name => {
+                const logs = allLogs.filter(l => l.personel === name);
+                const lastAction = logs.find(l => l.type === 'GİRİŞ' || l.type === 'ÇIKIŞ');
+                const score = calculateScore(name);
+                
+                if(score > bestPerson.score) { bestPerson = { name, score }; }
+                
+                if(lastAction && lastAction.type === 'GİRİŞ') {
+                    activeStaff++;
+                    const hoursInShift = (new Date() - new Date(lastAction.raw_time)) / 3600000;
+                    if(hoursInShift > 10) criticalCount++;
+                    
+                    // Mesafe Kontrolü: 0.001 yaklaşık 100 metredir. 
+                    // 0.005'ten büyükse dükkanda değildir.
+                    const distLat = Math.abs(lastAction.lat - shopLat);
+                    const distLon = Math.abs(lastAction.lon - shopLon);
+                    if(distLat > 0.005 || distLon > 0.005) {
+                        remoteStaffNames.push(name); // Hile şüphelisini listeye ekle
+                    }
+                }
+            });
+
+            const aiText = document.getElementById('ai-text');
+            let aiMsg = "";
+
+            // 1. Durum Analizi (Hile ve Anomali Tespiti)
+            if (remoteStaffNames.length > 0) {
+                aiMsg += `📍 <b style="color:#f48120">DIŞ MEKAN GİRİŞİ:</b> <span style="color:#fff; background:#ef4444; padding:2px 6px; border-radius:4px;">${remoteStaffNames.join(", ")}</span> dükkan dışından işlem yaptı! `;
+            } else if (criticalCount > 0) {
+                aiMsg += `⚠️ <b style="color:#ef4444">KRİTİK DURUM:</b> Mesaisi 10 saati aşanlar var. `;
+            } else {
+                aiMsg += `✅ <b style="color:#10b981">GÜVENLİ:</b> Tüm personel dükkan sınırları içerisinde. `;
+            }
+
+            // 2. Performans Raporu
+            aiMsg += `<br>📊 <b>ÖZET:</b> Bugün ${totalActionsToday} işlem. En disiplinli: <b>${bestPerson.name}</b>.`;
+            
+            // 3. AI Tavsiyesi
+            if (activeStaff > 0) {
+                aiMsg += `<br>🚀 <b>SAHA:</b> Şu an ${activeStaff} personel aktif görevde.`;
+            }
+
+            if(aiText) aiText.innerHTML = aiMsg;
+        }
+        function calculateRowDuration(currentLog, logs) {
+            const personLogs = logs.filter(l => l.personel === currentLog.personel).sort((a, b) => new Date(a.raw_time) - new Date(b.raw_time));
+            const lastGiris = personLogs.filter(l => new Date(l.raw_time) <= new Date(currentLog.raw_time) && l.type === 'GİRİŞ').pop();
+            if (!lastGiris) return "BAŞLANGIÇ YOK";
+            const followingCikis = personLogs.filter(l => new Date(l.raw_time) > new Date(lastGiris.raw_time) && l.type === 'ÇIKIŞ')[0];
+            let endTime = followingCikis ? new Date(followingCikis.raw_time) : new Date();
+            let diff = Math.max(0, endTime - new Date(lastGiris.raw_time));
+            return `${Math.floor(diff / 3600000)}s ${Math.floor((diff % 3600000) / 60000)}dk`;
+        }
+
+      function checkCriticalAlert(log, all) {
+    // Sadece 'GİRİŞ' satırlarında uyarı gösterelim
+    if (log.type !== 'GİRİŞ') return false;
+
+    // Bu personelin TÜM hareketlerini zamana göre diz (en yeni en üstte)
+    const personLogs = all.filter(l => l.personel === log.personel);
+    
+    // Personelin yaptığı EN SON ana işlemi bul (GİRİŞ mi ÇIKIŞ mı?)
+    // find() mesajları atlasın diye tip kontrolü yapıyoruz
+    const lastMainAction = personLogs.find(l => l.type === 'GİRİŞ' || l.type === 'ÇIKIŞ');
+
+    // KRİTİK KONTROL 1: Eğer personelin son işlemi ÇIKIŞ ise, o zaten evindedir. Alarm verme!
+    if (lastMainAction && lastMainAction.type === 'ÇIKIŞ') return false;
+
+    // KRİTİK KONTROL 2: Eğer baktığımız bu satır, personelin EN SON giriş kaydı değilse alarm verme!
+    // (Eski girişleri kırmızı boyayıp kafa karıştırmasın)
+    const lastGiris = personLogs.find(l => l.type === 'GİRİŞ');
+    if (lastGiris && lastGiris.id !== log.id) return false;
+
+    // KRİTİK KONTROL 3: Zaman hesabı
+    const girisZamani = new Date(log.raw_time);
+    const simdi = new Date();
+    const farkSaat = (simdi - girisZamani) / 3600000;
+
+    // Eğer şu an hala içerideyse VE 10 saati geçmişse KIRMIZI YAK!
+    return farkSaat > 10;
+}
+
+        function updateDashboard() {
+            const names = [...new Set(allLogs.map(l => l.personel))].sort();
+            document.getElementById('staffFilter').innerHTML = '<option value="all">TÜMÜ</option>' + names.map(n => `<option value="${n}">${n}</option>`).join('');
+            document.getElementById('stat-total').innerText = allLogs.length;
+            let realActiveCount = 0;
+            names.forEach(name => {
+                const personLogs = allLogs.filter(l => l.personel === name);
+                const lastMainAction = personLogs.find(l => l.type === 'GİRİŞ' || l.type === 'ÇIKIŞ');
+                if(lastMainAction && lastMainAction.type === 'GİRİŞ') realActiveCount++;
+            });
+            document.getElementById('stat-staff').innerText = realActiveCount;
+            document.getElementById('stat-today').innerText = allLogs.filter(l => new Date(l.raw_time).toDateString() === new Date().toDateString()).length;
+            applyFilter();
+        }
+
+        function applyFilter() {
+            const staff = document.getElementById('staffFilter').value;
+            const sD = document.getElementById('startDate').value;
+            const eD = document.getElementById('endDate').value;
+            let filtered = allLogs;
+            if (staff !== "all") filtered = filtered.filter(l => l.personel === staff);
+            if (sD) filtered = filtered.filter(l => new Date(l.raw_time) >= new Date(sD));
+            if (eD) filtered = filtered.filter(l => new Date(l.raw_time) <= new Date(eD + "T23:59:59"));
+            
+           document.getElementById('logTable').innerHTML = filtered.map(log => {
+    const isCrit = checkCriticalAlert(log, allLogs);
+    const score = calculateScore(log.personel);
+    const isNew = (new Date() - new Date(log.raw_time)) < 30000;
+    const isMessage = log.type === 'MESAJ';
+    const isUnknown = log.personel.includes("BILINMEYEN") || log.personel.includes("BİLİNMEYEN");
+    const durationText = calculateRowDuration(log, allLogs); // Süre hesaplamayı unutma
+    
+    const clickAction = isMessage ? `onclick="showMsg('${log.personel}', '${log.mahalle.replace(/'/g, "\\'")}', '${log.time}')"` : "";
+    const badgeStyle = isMessage ? 'background: #9333ea; cursor: pointer; border-color: #a78bfa;' : '';
+    const displayText = isMessage ? '📩 MESAJI OKU' : log.type;
+    const noteText = isMessage ? '📝 Personel Bildirimi Gönderdi' : log.mahalle;
+    const scoreBox = !isUnknown ? `<div class="score-box ${score < 70 ? 'low-score' : ''}">⭐ ${score} Puan</div>` : '';
+
+    // İŞTE DEĞİŞECEK OLAN ANA YAPI:
+    return `<tr class="${isCrit ? 'critical-alarm' : ''} ${isNew ? 'new-action-row' : ''}">
+        <td>
+            <b>${log.personel}</b><br>
+            ${scoreBox}
+            ${isCrit ? '<br><span class="critical-badge">⚠️ 10 SAAT+ MESAİ</span>' : ''} 
+        </td>
+        <td>
+            <span class="badge ${log.type}" ${clickAction} style="${badgeStyle}">${displayText}</span><br>
+            <small style="color:var(--primary); font-weight:700;">⏱️ ${durationText}</small>
+        </td>
+        <td><div class="${isMessage ? 'msg-text-truncate' : ''}">${noteText}</div><br><a href="http://googleusercontent.com/maps.google.com/?q=${log.lat},${log.lon}" target="_blank" style="color:#3b82f6; font-size:10px; font-weight:700; text-decoration:none;">📍 KONUM</a></td>
+        <td><small>${log.time}</small></td>
+    </tr>`;
+}).join('');
+        }
+function filterActiveStaff() {
+    const names = [...new Set(allLogs.map(l => l.personel))];
+    const activeLogsOnly = [];
+
+    names.forEach(name => {
+        // Personelin tüm loglarını al
+        const personLogs = allLogs.filter(l => l.personel === name);
+        
+        // 🚨 KRİTİK DÜZELTME: Mesajları filtre dışı bırak, sadece GİRİŞ veya ÇIKIŞ'a bak
+        const lastWorkAction = personLogs.find(l => l.type === 'GİRİŞ' || l.type === 'ÇIKIŞ');
+
+        // Eğer en son yaptığı ana işlem GİRİŞ ise, dükkandadır (arada mesaj atmış olsa bile)
+        if(lastWorkAction && lastWorkAction.type === 'GİRİŞ') {
+            activeLogsOnly.push(lastWorkAction);
+        }
+    });
+
+    const logTable = document.getElementById('logTable');
+    if (activeLogsOnly.length === 0) {
+        logTable.innerHTML = `<tr><td colspan="4" style="text-align:center; padding:50px; opacity:0.5; font-family:'Orbitron';">Şu an dükkanda aktif personel bulunmuyor.</td></tr>`;
+    } else {
+        renderCustomTable(activeLogsOnly); 
+    }
+
+    document.getElementById('staffFilter').value = 'all';
+    document.getElementById('ai-text').innerHTML = `⚡ <b>GÜNCEL TAKİP:</b> Personel mesaj gönderse dahi mesai takibi devam eder. Şu an ${activeLogsOnly.length} personel içeride.`;
+}
+function renderCustomTable(data) {
+    document.getElementById('logTable').innerHTML = data.map(log => {
+        const isCrit = checkCriticalAlert(log, allLogs);
+        const score = calculateScore(log.personel);
+        const isMessage = log.type === 'MESAJ';
+        const durationText = calculateRowDuration(log, allLogs);
+        
+        const clickAction = isMessage ? `onclick="showMsg('${log.personel}', '${log.mahalle.replace(/'/g, "\\'")}', '${log.time}')"` : "";
+        const badgeStyle = isMessage ? 'background: #9333ea; cursor: pointer; border-color: #a78bfa;' : '';
+        const displayText = isMessage ? '📩 MESAJI OKU' : log.type;
+
+        // İŞTE DEĞİŞECEK OLAN ANA YAPI:
+        return `<tr class="${isCrit ? 'critical-alarm' : ''}">
+            <td>
+                <b>${log.personel}</b><br>
+                <div class="score-box ${score < 70 ? 'low-score' : ''}">⭐ ${score} Puan</div>
+                ${isCrit ? '<br><span class="critical-badge">⚠️ 10 SAAT+ MESAİ</span>' : ''} 
+            </td>
+            <td>
+                <span class="badge ${log.type}" ${clickAction} style="${badgeStyle}">${displayText}</span><br>
+                <small style="color:var(--primary); font-weight:700;">⏱️ ${durationText}</small>
+            </td>
+            <td>${log.mahalle}<br><a href="http://googleusercontent.com/maps.google.com/?q=${log.lat},${log.lon}" target="_blank" style="color:#3b82f6; font-size:10px; font-weight:700; text-decoration:none;">📍 KONUM</a></td>
+            <td>
+                <i class="far fa-clock time-icon"></i>
+                <span class="log-time-highlight">${log.time.split(' ')[1]}</span><br>
+                <small style="font-size: 9px; opacity: 0.6;">${log.time.split(' ')[0]}</small>
+            </td>
+        </tr>`;
+    }).join('');
+}
+
+        function showMsg(person, text, time) {
+            document.getElementById('msg-body').innerHTML = `<b style="color:white;">${person}:</b><br><br>"${text}"`;
+            document.getElementById('msg-time-footer').innerText = `GÖNDERİM ZAMANI: ${time}`;
+            document.getElementById('msg-modal').style.display = 'flex';
+        }
+
+        function closeMsg() { document.getElementById('msg-modal').style.display = 'none'; }
+
+        function exportPDF() {
+            const { jsPDF } = window.jspdf; const doc = new jsPDF();
+            const now = new Date();
+            const clearTR = (text) => text ? text.toString().replace(/İ/g, 'I').replace(/ı/g, 'i').replace(/Ş/g, 'S').replace(/ş/g, 's').replace(/Ğ/g, 'G').replace(/ğ/g, 'g').replace(/Ü/g, 'U').replace(/ü/g, 'u').replace(/Ö/g, 'O').replace(/ö/g, 'o').replace(/Ç/g, 'C').replace(/ç/g, 'c') : "";
+            const summaryData = {}; const groupedLogs = {};
+            allLogs.forEach(log => { if (!groupedLogs[log.personel]) groupedLogs[log.personel] = []; groupedLogs[log.personel].push(log); });
+            Object.keys(groupedLogs).forEach(name => {
+                const logs = groupedLogs[name].sort((a, b) => new Date(a.raw_time) - new Date(b.raw_time));
+                let totalMs = 0; let shiftCount = 0; let lastGirisTime = null;
+                logs.forEach(log => {
+                    if (log.type === 'GİRİŞ') { shiftCount++; lastGirisTime = new Date(log.raw_time); } 
+                    else if (log.type === 'ÇIKIŞ' && lastGirisTime) { totalMs += (new Date(log.raw_time) - lastGirisTime); lastGirisTime = null; }
+                });
+                if (lastGirisTime) totalMs += (now - lastGirisTime);
+                summaryData[name] = { count: shiftCount, duration: `${Math.floor(totalMs / 3600000)}s ${Math.floor((totalMs % 3600000) / 60000)}dk` };
+            });
+            const summaryRows = Object.keys(summaryData).map(name => [clearTR(name), summaryData[name].count + " Kez", summaryData[name].duration]);
+            doc.setFontSize(16); doc.text(clearTR("SHIFT TURBO - OPERASYONEL RAPOR"), 14, 15);
+            doc.autoTable({ startY: 25, head: [['PERSONEL', 'MESAI SAYISI', 'TOPLAM SURE']], body: summaryRows, theme: 'grid', headStyles: { fillColor: [59, 130, 246] } });
+            const detailRows = allLogs.map(l => [clearTR(l.personel), clearTR(l.type), clearTR(l.mahalle), l.time]);
+            doc.autoTable({ startY: doc.lastAutoTable.finalY + 15, head: [['PERSONEL', 'ISLEM', 'BOLGE', 'ZAMAN']], body: detailRows, theme: 'striped', headStyles: { fillColor: [244, 129, 32] } });
+            doc.save("ShiftTurbo_Rapor.pdf");
+        }
+
+        setInterval(() => { 
+            const now = new Date();
+            if(document.getElementById('liveClock')) document.getElementById('liveClock').innerText = now.toLocaleTimeString('tr-TR');
+            if(document.getElementById('clock_login')) document.getElementById('clock_login').innerText = now.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+            if(document.getElementById('date_login')) document.getElementById('date_login').innerText = now.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' }).toUpperCase();
+        }, 1000);
+
+        window.onload = () => { if(sessionStorage.getItem("isAdmin") === "true") showPanel(); }
+
+        function ensureSignature() {
+            const badge = document.querySelector('.ucr-badge');
+            if (badge && document.body.lastElementChild !== badge) {
+                document.body.appendChild(badge);
+                badge.style.display = 'flex';
+            }
+        }
+        setInterval(ensureSignature, 1000);
+    </script>
+</body>
+</html> 
