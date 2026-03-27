@@ -9,6 +9,14 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="ai_assistant.js?v=2"></script>
+    
+    <link rel="manifest" href="manifest_yonetici.json">
+    <meta name="theme-color" content="#f48120">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="logom.png">
+    <link rel="icon" type="image/png" href="logom.png">
 
     <style>
         /* 🚨 UcR TECHNOLOGY - PREMİUM BRAND BADGE CSS */
@@ -111,8 +119,104 @@
         .btn-logout { background: none; border: 1px solid #ef4444; color: #ef4444; padding: 10px 20px; border-radius: 12px; cursor: pointer; font-family: 'Orbitron'; font-size: 10px; font-weight: 800; }
         .btn-logout:hover { background: #ef4444; color: white; }
 
-        #ai-box { background: rgba(139, 92, 246, 0.1); border: 1px solid rgba(139, 92, 246, 0.3); border-radius: 20px; padding: 25px; margin-bottom: 30px; animation: aiPulse 5s infinite; position: relative; }
-        #ai-box::after { content: "AI PRO-STRATEGIST"; position: absolute; top: 10px; right: 20px; font-family: 'Orbitron'; font-size: 8px; color: #a78bfa; letter-spacing: 2px; }
+        #ai-box { 
+            background: rgba(15, 23, 42, 0.4); 
+            border: 1px solid rgba(139, 92, 246, 0.3); 
+            border-radius: 20px; 
+            padding: 20px; 
+            margin-bottom: 30px; 
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+        #ai-box::after { content: "SHIFT-AI VISION CENTER"; position: absolute; top: 12px; right: 20px; font-family: 'Orbitron'; font-size: 8px; color: #a78bfa; letter-spacing: 2px; opacity: 0.6; }
+        
+        .ai-chat-messages {
+            max-height: 150px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding-right: 10px;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(139, 92, 246, 0.3) transparent;
+        }
+        .ai-msg {
+            padding: 8px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            max-width: 85%;
+            word-wrap: break-word;
+        }
+        .ai-msg-bot { background: rgba(139, 92, 246, 0.1); border: 1px solid rgba(139, 92, 246, 0.2); color: #cbd5e1; align-self: flex-start; }
+        .ai-msg-user { background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.2); color: #fff; align-self: flex-end; }
+        
+        .ai-chat-input-wrapper {
+            display: flex;
+            gap: 10px;
+            margin-top: 5px;
+        }
+        .ai-input {
+            flex: 1;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            border-radius: 10px;
+            padding: 10px 15px;
+            color: #fff;
+            font-size: 12px;
+            outline: none;
+            transition: border-color 0.3s ease;
+        }
+        .ai-input:focus { border-color: #8b5cf6; }
+        .ai-btn-small {
+            padding: 8px 12px;
+            border-radius: 10px;
+            background: #8b5cf6;
+            color: #000;
+            border: none;
+            font-family: 'Orbitron';
+            font-size: 10px;
+            font-weight: 900;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .ai-btn-small:hover { transform: scale(1.05); filter: brightness(1.2); }
+        
+        .ai-suggestions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 5px;
+        }
+        .suggestion-btn {
+            background: rgba(244, 129, 32, 0.05);
+            border: 1px dashed rgba(244, 129, 32, 0.4);
+            color: var(--primary);
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 10px;
+            font-family: 'Orbitron';
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .suggestion-btn:hover { background: rgba(244, 129, 32, 0.15); border-style: solid; }
+        
+        .ai-config-icon {
+            position: absolute;
+            top: 10px;
+            left: 20px;
+            font-size: 12px;
+            color: #475569;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+        .ai-config-icon:hover { color: #8b5cf6; }
+
+        @keyframes aiPulse { 0%, 100% { border-color: rgba(139, 92, 246, 0.3); } 50% { border-color: rgba(139, 92, 246, 0.8); box-shadow: 0 0 20px var(--ai-glow); } }
+        #ai-box.analyzing { animation: aiPulse 2s infinite; }
 
 /* İstatistik Kartları Yeni Nesil Tasarım */
 .stats-grid {
