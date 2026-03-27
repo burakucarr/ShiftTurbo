@@ -19,7 +19,6 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
-
         /* 🚨 UcR TECHNOLOGY - PREMİUM BRAND BADGE CSS */
 
         .ucr-badge {
@@ -90,11 +89,20 @@
 
         @keyframes ucrPulse {
 
-            0% { transform: scale(1); opacity: 1; }
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
 
-            50% { transform: scale(1.3); opacity: 0.7; }
+            50% {
+                transform: scale(1.3);
+                opacity: 0.7;
+            }
 
-            100% { transform: scale(1); opacity: 1; }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
 
         }
 
@@ -114,27 +122,36 @@
 
 
 
-        :root { --primary: #f48120; --bg: #030712; --glass: rgba(255, 255, 255, 0.03); --border: rgba(255, 255, 255, 0.1); --success: #10b981; --error: #ef4444; }
+        :root {
+            --primary: #f48120;
+            --bg: #030712;
+            --glass: rgba(255, 255, 255, 0.03);
+            --border: rgba(255, 255, 255, 0.1);
+            --success: #10b981;
+            --error: #ef4444;
+        }
 
-        
 
-        body { 
+        body {
 
-            font-family: 'Poppins', sans-serif; 
+            font-family: 'Poppins', sans-serif;
 
-            background: var(--bg); 
+            background: var(--bg);
 
-            margin: 0; 
+            margin: 0;
 
-            display: flex; 
+            display: flex;
 
-            justify-content: center; 
+            flex-direction: column;
+            /* Dikey hizalama için eklendi */
 
-            align-items: center; 
+            justify-content: center;
 
-            min-height: 100vh; 
+            align-items: center;
 
-            color: white; 
+            min-height: 100vh;
+
+            color: white;
 
             overflow: hidden;
 
@@ -148,13 +165,20 @@
 
         body::before {
 
-            content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
 
-            background: linear-gradient(rgba(244, 129, 32, 0.05) 1px, transparent 1px), 
+            background: linear-gradient(rgba(244, 129, 32, 0.05) 1px, transparent 1px),
 
-                        linear-gradient(90deg, rgba(244, 129, 32, 0.05) 1px, transparent 1px);
+                linear-gradient(90deg, rgba(244, 129, 32, 0.05) 1px, transparent 1px);
 
-            background-size: 30px 30px; pointer-events: none; z-index: -1;
+            background-size: 30px 30px;
+            pointer-events: none;
+            z-index: -1;
 
         }
 
@@ -162,13 +186,18 @@
 
         body::after {
 
-            content: ""; position: fixed; top: -100%; left: 0; width: 100%; height: 100%;
+            content: "";
+            position: fixed;
+            top: -100%;
+            left: 0;
+            width: 100%;
+            height: 100%;
 
             background: linear-gradient(to bottom, transparent, rgba(244, 129, 32, 0.1), transparent);
 
-            animation: dataStream 6s linear infinite; 
+            animation: dataStream 6s linear infinite;
 
-            pointer-events: none; 
+            pointer-events: none;
 
             z-index: -1;
 
@@ -178,139 +207,768 @@
 
 
 
-        @keyframes dataStream { 0% { transform: translateY(0); } 100% { transform: translateY(200%); } }
+        @keyframes dataStream {
+            0% {
+                transform: translateY(0);
+            }
+
+            100% {
+                transform: translateY(200%);
+            }
+        }
 
 
-        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-10px); } 75% { transform: translateX(10px); } }
+        @keyframes shake {
 
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+            0%,
+            100% {
+                transform: translateX(0);
+            }
 
-        @keyframes scannerGlow { 0% { box-shadow: 0 0 5px var(--primary); } 50% { box-shadow: 0 0 25px var(--primary); } 100% { box-shadow: 0 0 5px var(--primary); } }
+            25% {
+                transform: translateX(-10px);
+            }
 
-        @keyframes statusBarPulse { 0%, 100% { opacity: 1; filter: brightness(1); } 50% { opacity: 0.6; filter: brightness(1.5); } }
+            75% {
+                transform: translateX(10px);
+            }
+        }
 
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
 
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
 
-        .shake { animation: shake 0.3s ease-in-out; border-color: var(--error) !important; }
+        @keyframes scannerGlow {
+            0% {
+                box-shadow: 0 0 5px var(--primary);
+            }
 
-        .fade-in { animation: fadeIn 0.4s ease-out forwards; }
+            50% {
+                box-shadow: 0 0 25px var(--primary);
+            }
 
-        
+            100% {
+                box-shadow: 0 0 5px var(--primary);
+            }
+        }
 
-        #status-bar { position: absolute; top: 0; left: 0; width: 0%; height: 4px; background: var(--primary); transition: 1s; box-shadow: 0 0 15px var(--primary); z-index: 100; animation: statusBarPulse 3s infinite ease-in-out; }
+        @keyframes statusBarPulse {
 
-        .brand-signature { position: absolute; top: 30px; text-align: center; width: 100%; z-index: 10; }
+            0%,
+            100% {
+                opacity: 1;
+                filter: brightness(1);
+            }
 
-        .brand-logo-text { font-family: 'Orbitron', sans-serif; font-size: 16px; letter-spacing: 8px; font-weight: 900; color: #fff; text-transform: uppercase; margin-bottom: 5px; }
-
-        .brand-logo-text span { color: var(--primary); }
-
-        .brand-slogan { font-family: 'Poppins', sans-serif; font-size: 9px; font-weight: 900; letter-spacing: 4px; color: var(--primary); text-transform: uppercase; display: block; }
-
-        
-
-        .card { background: var(--glass); padding: 2.5rem 1.5rem; border-radius: 30px; text-align: center; max-width: 380px; width: 90%; backdrop-filter: blur(50px); -webkit-backdrop-filter: blur(50px); box-shadow: 0 40px 100px rgba(0,0,0,0.6); border: 1px solid var(--border); position: relative; margin-top: 20px; height: max-content; }
-
-        .card::before { top: -1px; left: -1px; border-top: 2px solid var(--primary); border-left: 2px solid var(--primary); border-radius: 30px 0 0 0; position: absolute; content: ""; width: 20px; height: 20px; }
-
-        .card::after { bottom: -1px; right: -1px; border-bottom: 2px solid var(--primary); border-right: 2px solid var(--primary); border-radius: 0 0 30px 0; position: absolute; content: ""; width: 20px; height: 20px; }
-
-        
-
-        .time-display { font-family: 'Orbitron', sans-serif; font-size: 64px; font-weight: 200; line-height: 1; letter-spacing: -3px; background: linear-gradient(180deg, #fff 40%, rgba(255,255,255,0.3) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin: 0; }
-
-        .date-display { font-family: 'Orbitron', sans-serif; font-size: 10px; font-weight: 300; color: rgba(255, 255, 255, 0.4); letter-spacing: 5px; text-transform: uppercase; margin-top: 5px; display: block; }
-
-        
-
-        .status-icons { display: flex; justify-content: center; gap: 12px; margin-top: 10px; opacity: 0.4; }
-
-        .icon-item { font-size: 8px; font-family: 'Orbitron'; letter-spacing: 1px; color: var(--primary); display: flex; align-items: center; gap: 4px; }
-
-        .blink { animation: statusBarPulse 2s infinite; }
-
-
-
-        button { padding: 20px; border-radius: 15px; border: none; font-weight: 800; cursor: pointer; transition: 0.3s; color: white; font-family: 'Orbitron', sans-serif; text-transform: uppercase; letter-spacing: 1.5px; font-size: 11px; width: 100%; margin-top: 25px; }
-
-        .btn-scan { display: none; background: linear-gradient(135deg, var(--primary), #d96d00); animation: scannerGlow 2.5s infinite ease-in-out; }
-
-        .btn-in { background: linear-gradient(135deg, #10b981, #059669); }
-
-        .btn-out { background: linear-gradient(135deg, #ef4444, #b91c1c); }
-
-        
-
-        #reader { width: 100%; border-radius: 15px; overflow: hidden; margin-top: 15px; border: 1px solid var(--border); display: none; }
-
-        #pin-pad { display: none; margin-top: 15px; }
-
-        .pin-input { background: rgba(0,0,0,0.4); border: 1px solid var(--primary); padding: 12px; border-radius: 12px; font-family: 'Orbitron'; font-size: 20px; letter-spacing: 12px; color: var(--primary); width: 70%; margin: 0 auto 15px; text-align: center; }
-
-        .numpad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; max-width: 220px; margin: 0 auto; }
-
-        .num-btn { padding: 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; color: white; font-family: 'Orbitron'; font-size: 16px; cursor: pointer; transition: 0.1s; }
-
-        .num-btn:active { background: var(--primary); color: black; box-shadow: 0 0 20px var(--primary); transform: scale(0.95); }
+            50% {
+                opacity: 0.6;
+                filter: brightness(1.5);
+            }
+        }
 
 
 
-        #action-confirm { display: none; margin-top: 15px; padding: 20px; background: rgba(255,255,255,0.02); border-radius: 20px; border: 1px solid var(--border); }
+        .shake {
+            animation: shake 0.3s ease-in-out;
+            border-color: var(--error) !important;
+        }
 
-        .btn-mini { padding: 12px; font-size: 9px; margin-top: 10px; }
-
-        #confirm-box { display: none; margin-top: 15px; padding: 15px; background: rgba(244, 129, 32, 0.05); border-radius: 20px; border: 1px dashed rgba(244, 129, 32, 0.3); }
-
-        #status { margin-top: 30px; font-size: 8px; color: #475569; letter-spacing: 2px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.05); }
-
-
-
-        .arch-signature { margin-top: 30px; opacity: 0.25; pointer-events: none; transition: opacity 0.5s ease; }
-
-        .arch-label { font-family: 'Orbitron'; font-size: 6px; letter-spacing: 3px; color: var(--primary); display: block; margin-bottom: 2px; }
-
-        .arch-name { font-family: 'Orbitron'; font-size: 9px; font-weight: 400; color: rgba(255, 255, 255, 0.7); letter-spacing: 2px; }
+        .fade-in {
+            animation: fadeIn 0.4s ease-out forwards;
+        }
 
 
+        #status-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 0%;
+            height: 4px;
+            background: var(--primary);
+            transition: 1s;
+            box-shadow: 0 0 15px var(--primary);
+            z-index: 100;
+            animation: statusBarPulse 3s infinite ease-in-out;
+        }
 
-        .btn-message { margin-top: 10px; padding: 10px; background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(244, 129, 32, 0.2); border-radius: 12px; font-size: 9px; font-family: 'Orbitron'; letter-spacing: 2px; color: rgba(255, 255, 255, 0.3) !important; cursor: pointer; transition: all 0.4s ease; width: 100%; }
+        .brand-signature {
+            position: absolute;
+            top: 30px;
+            text-align: center;
+            width: 100%;
+            z-index: 10;
+        }
 
-        .btn-message:hover { background: rgba(244, 129, 32, 0.05); border-color: var(--primary); color: var(--primary) !important; box-shadow: 0 0 15px rgba(244, 129, 32, 0.2); }
+        .brand-logo-text {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 16px;
+            letter-spacing: 8px;
+            font-weight: 900;
+            color: #fff;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
 
-        
+        .brand-logo-text span {
+            color: var(--primary);
+        }
 
-        #message-modal, #error-modal { display: none; position: fixed !important; top: 0 !important; left: 0 !important; width: 100vw !important; height: 100vh !important; background: rgba(0,0,0,0.85) !important; backdrop-filter: blur(10px) !important; z-index: 999999 !important; align-items: center !important; justify-content: center !important; }
+        .brand-slogan {
+            font-family: 'Poppins', sans-serif;
+            font-size: 9px;
+            font-weight: 900;
+            letter-spacing: 4px;
+            color: var(--primary);
+            text-transform: uppercase;
+            display: block;
+        }
 
-        .modal-content, .error-content { background: #0f172a !important; padding: 30px !important; border-radius: 25px !important; border: 2px solid var(--primary) !important; width: 85% !important; max-width: 320px !important; text-align: center !important; position: relative !important; box-shadow: 0 0 50px rgba(0,0,0,1); }
 
-        .error-content { border-color: var(--error) !important; }
+        .card {
+            background: var(--glass);
+            padding: 2.5rem 1.5rem;
+            border-radius: 30px;
+            text-align: center;
+            max-width: 380px;
+            width: 90%;
+            backdrop-filter: blur(50px);
+            -webkit-backdrop-filter: blur(50px);
+            box-shadow: 0 40px 100px rgba(0, 0, 0, 0.6);
+            border: 1px solid var(--border);
+            position: relative;
+            margin-top: 20px;
+            height: max-content;
+        }
 
-        textarea { width: 100%; height: 100px; background: rgba(0,0,0,0.3); border: 1px solid var(--border); border-radius: 12px; color: white; padding: 10px; font-family: 'Poppins'; margin: 15px 0; resize: none; outline: none; box-sizing: border-box; }
+        .card::before {
+            top: -1px;
+            left: -1px;
+            border-top: 2px solid var(--primary);
+            border-left: 2px solid var(--primary);
+            border-radius: 30px 0 0 0;
+            position: absolute;
+            content: "";
+            width: 20px;
+            height: 20px;
+        }
 
-        .status-error { color: var(--error) !important; opacity: 1 !important; }
-	@keyframes planeFly {
-    	0% { transform: translate(0, 0) scale(1) rotate(0deg); opacity: 1; }
-    	20% { transform: translate(-10px, 10px) scale(1.1) rotate(-10deg); }
-    	100% { transform: translate(300px, -300px) scale(0) rotate(15deg); opacity: 0; }
-	}
+        .card::after {
+            bottom: -1px;
+            right: -1px;
+            border-bottom: 2px solid var(--primary);
+            border-right: 2px solid var(--primary);
+            border-radius: 0 0 30px 0;
+            position: absolute;
+            content: "";
+            width: 20px;
+            height: 20px;
+        }
 
-	.plane-animation {
-   	display: inline-block;
-    	font-size: 20px;
-    	animation: planeFly 1.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-	}
 
-	#status.success-glow {
-    	color: var(--success) !important;
-    	text-shadow: 0 0 15px var(--success);
-    	transition: 0.3s;
-	}
+        .time-display {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 64px;
+            font-weight: 200;
+            line-height: 1;
+            letter-spacing: -3px;
+            background: linear-gradient(180deg, #fff 40%, rgba(255, 255, 255, 0.3) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin: 0;
+        }
+
+        .date-display {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 10px;
+            font-weight: 300;
+            color: rgba(255, 255, 255, 0.4);
+            letter-spacing: 5px;
+            text-transform: uppercase;
+            margin-top: 5px;
+            display: block;
+        }
+
+
+        .status-icons {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 10px;
+            opacity: 0.4;
+        }
+
+        .icon-item {
+            font-size: 8px;
+            font-family: 'Orbitron';
+            letter-spacing: 1px;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .blink {
+            animation: statusBarPulse 2s infinite;
+        }
+
+
+
+        button {
+            padding: 20px;
+            border-radius: 15px;
+            border: none;
+            font-weight: 800;
+            cursor: pointer;
+            transition: 0.3s;
+            color: white;
+            font-family: 'Orbitron', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-size: 11px;
+            width: 100%;
+            margin-top: 25px;
+        }
+
+        .btn-scan {
+            display: none;
+            background: linear-gradient(135deg, var(--primary), #d96d00);
+            animation: scannerGlow 2.5s infinite ease-in-out;
+        }
+
+        .btn-in {
+            background: linear-gradient(135deg, #10b981, #059669);
+        }
+
+        .btn-out {
+            background: linear-gradient(135deg, #ef4444, #b91c1c);
+        }
+
+
+        #reader {
+            width: 100%;
+            border-radius: 15px;
+            overflow: hidden;
+            margin-top: 15px;
+            border: 1px solid var(--border);
+            display: none;
+        }
+
+        #pin-pad {
+            display: none;
+            margin-top: 15px;
+        }
+
+        .pin-input {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--primary);
+            padding: 12px;
+            border-radius: 12px;
+            font-family: 'Orbitron';
+            font-size: 20px;
+            letter-spacing: 12px;
+            color: var(--primary);
+            width: 70%;
+            margin: 0 auto 15px;
+            text-align: center;
+        }
+
+        .numpad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            max-width: 220px;
+            margin: 0 auto;
+        }
+
+        .num-btn {
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            color: white;
+            font-family: 'Orbitron';
+            font-size: 16px;
+            cursor: pointer;
+            transition: 0.1s;
+        }
+
+        .num-btn:active {
+            background: var(--primary);
+            color: black;
+            box-shadow: 0 0 20px var(--primary);
+            transform: scale(0.95);
+        }
+
+
+
+        #action-confirm {
+            display: none;
+            margin-top: 15px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 20px;
+            border: 1px solid var(--border);
+        }
+
+        .btn-mini {
+            padding: 12px;
+            font-size: 9px;
+            margin-top: 10px;
+        }
+
+        #confirm-box {
+            display: none;
+            margin-top: 15px;
+            padding: 15px;
+            background: rgba(244, 129, 32, 0.05);
+            border-radius: 20px;
+            border: 1px dashed rgba(244, 129, 32, 0.3);
+        }
+
+        #status {
+            margin-top: 30px;
+            font-size: 8px;
+            color: #475569;
+            letter-spacing: 2px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+
+
+        .arch-signature {
+            margin-top: 30px;
+            opacity: 0.25;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+        }
+
+        .arch-label {
+            font-family: 'Orbitron';
+            font-size: 6px;
+            letter-spacing: 3px;
+            color: var(--primary);
+            display: block;
+            margin-bottom: 2px;
+        }
+
+        .arch-name {
+            font-family: 'Orbitron';
+            font-size: 9px;
+            font-weight: 400;
+            color: rgba(255, 255, 255, 0.7);
+            letter-spacing: 2px;
+        }
+
+
+
+        .btn-message {
+            margin-top: 10px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(244, 129, 32, 0.2);
+            border-radius: 12px;
+            font-size: 9px;
+            font-family: 'Orbitron';
+            letter-spacing: 2px;
+            color: rgba(255, 255, 255, 0.3) !important;
+            cursor: pointer;
+            transition: all 0.4s ease;
+            width: 100%;
+        }
+
+        .btn-message:hover {
+            background: rgba(244, 129, 32, 0.05);
+            border-color: var(--primary);
+            color: var(--primary) !important;
+            box-shadow: 0 0 15px rgba(244, 129, 32, 0.2);
+        }
+
+
+        #message-modal,
+        #error-modal {
+            display: none;
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            background: rgba(0, 0, 0, 0.85) !important;
+            backdrop-filter: blur(10px) !important;
+            z-index: 999999 !important;
+            align-items: center !important;
+            justify-content: center !important;
+        }
+
+        .modal-content,
+        .error-content {
+            background: #0f172a !important;
+            padding: 30px !important;
+            border-radius: 25px !important;
+            border: 2px solid var(--primary) !important;
+            width: 85% !important;
+            max-width: 320px !important;
+            text-align: center !important;
+            position: relative !important;
+            box-shadow: 0 0 50px rgba(0, 0, 0, 1);
+        }
+
+        .error-content {
+            border-color: var(--error) !important;
+        }
+
+        textarea {
+            width: 100%;
+            height: 100px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            color: white;
+            padding: 10px;
+            font-family: 'Poppins';
+            margin: 15px 0;
+            resize: none;
+            outline: none;
+            box-sizing: border-box;
+        }
+
+        .status-error {
+            color: var(--error) !important;
+            opacity: 1 !important;
+        }
+
+        @keyframes planeFly {
+            0% {
+                transform: translate(0, 0) scale(1) rotate(0deg);
+                opacity: 1;
+            }
+
+            20% {
+                transform: translate(-10px, 10px) scale(1.1) rotate(-10deg);
+            }
+
+            100% {
+                transform: translate(300px, -300px) scale(0) rotate(15deg);
+                opacity: 0;
+            }
+        }
+
+        .plane-animation {
+            display: inline-block;
+            font-size: 20px;
+            animation: planeFly 1.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+
+        #status.success-glow {
+            color: var(--success) !important;
+            text-shadow: 0 0 15px var(--success);
+            transition: 0.3s;
+        }
+
+        /* UCR TECHNOLOGY - AÇILIŞ VE LANDING PAGE CSS */
+        #cyber-splash {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #030712;
+            z-index: 100000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.5s ease;
+        }
+
+        .cyber-spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid transparent;
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        .cyber-text {
+            font-family: 'Orbitron';
+            font-size: 10px;
+            color: var(--primary);
+            letter-spacing: 4px;
+            animation: pulse 1.5s infinite;
+            text-align: center;
+            margin: 0 20px;
+        }
+
+        @keyframes spin {
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes pulse {
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        #landing-wrapper {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(3, 7, 18, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            z-index: 50000;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 40px 20px;
+            box-sizing: border-box;
+            transition: opacity 0.8s ease, transform 0.8s ease;
+        }
+
+        .landing-header {
+            text-align: center;
+            margin-bottom: 5px;
+            margin-top: 5px;
+        }
+
+        .landing-title {
+            font-family: 'Orbitron';
+            font-size: 32px;
+            font-weight: 900;
+            letter-spacing: 8px;
+            margin: 0;
+        }
+
+        .landing-title span {
+            color: var(--primary);
+        }
+
+        .landing-subtitle {
+            font-family: 'Poppins';
+            font-size: 10px;
+            color: var(--primary);
+            letter-spacing: 3px;
+            margin-top: 10px;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        .landing-features {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-width: 400px;
+            margin: 0 auto 10px;
+        }
+
+        .l-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(244, 129, 32, 0.2);
+            border-radius: 15px;
+            padding: 10px 12px;
+            text-align: left;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .l-card::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 3px;
+            background: var(--primary);
+        }
+
+        .l-card h3 {
+            font-family: 'Orbitron';
+            font-size: 14px;
+            color: #fff;
+            margin: 0 0 10px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            letter-spacing: 1px;
+        }
+
+        .l-card p {
+            font-family: 'Poppins';
+            font-size: 11px;
+            color: #94a3b8;
+            margin: 0;
+            line-height: 1.6;
+        }
+
+        .landing-action {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .btn-enter-terminal {
+            background: linear-gradient(135deg, var(--primary), #d96d00);
+            padding: 20px 40px;
+            border-radius: 15px;
+            border: none;
+            font-family: 'Orbitron';
+            font-size: 14px;
+            color: white;
+            font-weight: 800;
+            letter-spacing: 3px;
+            cursor: pointer;
+            box-shadow: 0 10px 30px rgba(244, 129, 32, 0.3);
+            transition: 0.3s;
+            width: 100%;
+            max-width: 300px;
+        }
+
+        .btn-enter-terminal:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 15px 40px rgba(244, 129, 32, 0.5);
+        }
+
+        /* 📣 DUYURU BANNER CSS */
+        #broadcast-banner {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background: linear-gradient(90deg, #f48120, #ffba7a, #f48120);
+            background-size: 200% auto;
+            color: #000;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 11px;
+            font-weight: 900;
+            padding: 8px 0;
+            z-index: 1000000;
+            text-align: center;
+            letter-spacing: 1px;
+            display: none;
+            box-shadow: 0 2px 20px rgba(244, 129, 32, 0.5);
+            animation: broadcastGlow 3s linear infinite;
+        }
+
+        /* 🧬 BIOMETRIC SCANNER CSS */
+        #bio-scanner {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(3, 7, 18, 0.9); backdrop-filter: blur(15px);
+            z-index: 10000; display: none; align-items: center; justify-content: center;
+        }
+        .scan-line {
+            position: absolute; width: 100%; height: 2px;
+            background: var(--primary); box-shadow: 0 0 20px var(--primary);
+            animation: scanMove 2s infinite ease-in-out;
+        }
+        @keyframes scanMove { 0% { top: 0; } 100% { top: 100%; } }
+        .scan-circle {
+            width: 200px; height: 200px; border: 2px solid var(--primary);
+            border-radius: 50%; position: relative;
+            box-shadow: 0 0 30px rgba(244, 129, 32, 0.2);
+            display: flex; align-items: center; justify-content: center;
+        }
+        .scan-circle i { font-size: 60px; color: var(--primary); animation: bioPulse 1.5s infinite; }
+        @keyframes bioPulse { 0% { opacity: 0.3; transform: scale(0.9); } 50% { opacity: 1; transform: scale(1.1); } 100% { opacity: 0.3; transform: scale(0.9); } }
 
     </style>
+
 
 </head>
 
 <body>
+    <!-- SPLASH & LANDING PAGE EKLENTİSİ -->
+    <div id="cyber-splash">
+        <div class="cyber-spinner"></div>
+        <div class="cyber-text" id="splash-text">AĞ BAĞLANTISI KURULUYOR...</div>
+    </div>
+
+    <div id="landing-wrapper" style="display: none;">
+        <div class="landing-header">
+            <h1 class="landing-title">SHIFT<span>TURBO</span></h1>
+            <p class="landing-subtitle" id="dynamic-subtitle">Zamanı Durdurma, Onu Yönet</p>
+        </div>
+
+        <div class="landing-features">
+            <div class="l-card fade-in" style="animation-delay: 0.1s;">
+                <h3><span style="font-size:18px">🛡️</span> Uçtan Uca Güvenlik</h3>
+                <p>UCR Technology altyapısıyla geliştirilmiş, Supabase şifreleme protokolleriyle korunan kapalı devre
+                    personel terminali.</p>
+            </div>
+            <div class="l-card fade-in" style="animation-delay: 0.2s;">
+                <h3><span style="font-size:18px">📷</span> Hızlı Barkod & PIN</h3>
+                <p>Personel kimliğinizi saniyeler içinde doğrulayın. Kişiye özel QR kod ve pin sistemiyle sıfır temas,
+                    maksimum hız.</p>
+            </div>
+            <div class="l-card fade-in" style="animation-delay: 0.3s;">
+                <h3><span style="font-size:18px">📍</span> Akıllı Konum Doğrulama</h3>
+                <p>Sadece Check-in / Check-out anlarında konumunuz doğrulanır. Sürekli takip yapılmaz, mahremiyetiniz
+                    korunur.</p>
+            </div>
+            <div class="l-card fade-in" style="animation-delay: 0.4s;">
+                <h3><span style="font-size:18px">📡</span> Canlı Merkez İletişimi</h3>
+                <p>Anlık durum bildirimleri, arıza raporlarınızı uçuş modundayken bile çevrimdışı önbellekle merkeze
+                    iletin.</p>
+            </div>
+        </div>
+
+        <div class="landing-action fade-in" style="animation-delay: 0.5s;">
+            <button class="btn-enter-terminal" onclick="showBioScan()">SİSTEME GİRİŞ YAP</button>
+        </div>
+
+        <div style="text-align: center; opacity: 0.3; margin-bottom: 20px;">
+            <span class="arch-label">SYSTEM ARCHITECT</span>
+            <span class="arch-name">BURAK UÇAR</span>
+        </div>
+    </div>
+
+    <div id="kvkk-overlay"
+        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(3, 7, 18, 0.95); backdrop-filter: blur(20px); z-index: 9999999; align-items: center; justify-content: center;">
+        <div class="card" style="max-width: 340px; border-color: var(--primary); padding: 30px 20px;">
+            <div
+                style="font-family: 'Orbitron'; color: var(--primary); font-size: 12px; letter-spacing: 4px; margin-bottom: 20px;">
+                VERİ GÜVENLİĞİ PROTOKOLÜ
+            </div>
+
+            <div id="kvkk-text"
+                style="font-size: 11px; color: #94a3b8; text-align: left; height: 180px; overflow-y: auto; padding-right: 10px; line-height: 1.6; border-bottom: 1px solid var(--border); margin-bottom: 20px; font-family: 'Poppins';">
+                <p><strong>Sayın Personel;</strong></p>
+                <p>6698 sayılı KVKK kapsamında, ShiftTurbo terminalini kullanımınız sırasında;</p>
+                <p>● <strong>Kimlik Verisi:</strong> Ad ve soyadınız doğrulanır.<br>
+                    ● <strong>Konum Verisi:</strong> Sadece Giriş/Çıkış butonuna bastığınız anda anlık koordinatınız
+                    alınır (Sürekli takip yapılmaz).<br>
+                    ● <strong>İşleme Amacı:</strong> Mesai takibi ve lokasyon doğrulaması.</p>
+                <p>Verileriniz uçtan uca şifreli Supabase altyapısında saklanır.</p>
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
+                <input type="checkbox" id="kvkk-check"
+                    style="width: 20px; height: 20px; accent-color: var(--primary); cursor: pointer;">
+                <label for="kvkk-check"
+                    style="font-size: 10px; color: #fff; cursor: pointer; font-family: 'Orbitron'; letter-spacing: 1px;">
+                    OKUDUM, ONAYLIYORUM
+                </label>
+            </div>
+
+            <button id="kvkk-btn" class="btn-in" onclick="acceptKVKK()"
+                style="margin-top: 0; opacity: 0.3; pointer-events: none;">
+                SİSTEME ERİŞİM SAĞLA
+            </button>
+        </div>
+    </div>
 
 
 
@@ -318,19 +976,53 @@
 
         <div class="error-content">
 
-            <div style="font-family: 'Orbitron'; color: var(--error); font-size: 14px; letter-spacing: 4px; margin-bottom: 15px;">ERİŞİM REDDİ</div>
+            <div
+                style="font-family: 'Orbitron'; color: var(--error); font-size: 14px; letter-spacing: 4px; margin-bottom: 15px;">
+                ERİŞİM REDDİ</div>
 
             <div id="error-msg-body" style="font-size: 12px; color: #cbd5e1; line-height: 1.6;"></div>
 
-            <button class="btn-out btn-mini" onclick="location.reload()" style="margin-top:25px;">SİSTEMİ YENİLE</button>
+            <button class="btn-out btn-mini" onclick="location.reload()" style="margin-top:25px;">SİSTEMİ
+                YENİLE</button>
 
         </div>
 
     </div>
 
+    <div id="message-modal">
+        <div class="modal-content" style="position: relative;">
+            <span
+                style="position: absolute; top: 15px; right: 20px; color: rgba(255,255,255,0.3); cursor: pointer; font-size: 16px; font-family: 'Orbitron';"
+                onclick="toggleModal(false)">X</span>
+
+            <div
+                style="font-family: 'Orbitron'; color: var(--primary); font-size: 12px; letter-spacing: 3px; margin-bottom: 5px;">
+                📩 MERKEZE İLET</div>
+            <div
+                style="font-size: 9px; color: #64748b; letter-spacing: 1px; margin-bottom: 15px; text-transform: uppercase;">
+                Şikayet, Öneri veya Durum Bildirisi</div>
+
+            <textarea id="msg-area"
+                placeholder="Mesajınızı buraya yazınız... (Örn: Ekipman arızası var, bölge temizlendi vb.)"></textarea>
+
+            <div
+                style="font-size: 8px; color: #475569; margin-top: -5px; margin-bottom: 15px; letter-spacing: 1px; line-height: 1.4; text-align: left;">
+                🔒 Bu mesaj yalnızca sistem yöneticisi (UCR Technology) tarafından uçtan uca şifreli olarak okunabilir.
+            </div>
+
+            <div style="display: flex; gap: 10px;">
+                <button class="btn-in btn-mini" onclick="sendMessage()"
+                    style="margin-top:0; background: linear-gradient(135deg, var(--primary), #d96d00);">GÖNDER</button>
+                <button class="btn-out btn-mini" onclick="toggleModal(false)"
+                    style="margin-top:0; background: #334155;">İPTAL</button>
+            </div>
+        </div>
+    </div>
 
 
+    <div id="broadcast-banner">📢 SİSTEM MESAJI: <span id="broadcast-text">Yükleniyor...</span></div>
     <div id="status-bar"></div>
+
 
     <div class="brand-signature">
 
@@ -340,7 +1032,9 @@
 
             <div style="height: 15px; width: 1px; background: rgba(255,255,255,0.2);"></div>
 
-            <div style="font-family: 'Orbitron'; font-size: 8px; color: var(--primary); letter-spacing: 3px; opacity: 0.8;">PERSONEL TERMİNALİ</div>
+            <div
+                style="font-family: 'Orbitron'; font-size: 8px; color: var(--primary); letter-spacing: 3px; opacity: 0.8;">
+                PERSONEL TERMİNALİ</div>
 
         </div>
 
@@ -352,21 +1046,22 @@
 
     <div class="card" id="main-card">
 
-        <div id="greeting" style="font-size: 9px; color: #475569; letter-spacing: 2px; margin-bottom: 15px; font-weight: 600;">SİSTEM BAĞLANTISI</div>
+        <div id="greeting"
+            style="font-size: 9px; color: #475569; letter-spacing: 2px; margin-bottom: 15px; font-weight: 600;">SİSTEM
+            BAĞLANTISI</div>
 
         <div id="clock" class="time-display">00:00</div>
 
         <div id="date" class="date-display">-- MART 2026</div>
 
-        
 
         <div class="status-icons">
 
-            <div class="icon-item blink">● KONUM_BAĞLANTISI</div>
+            <div id="gps-status-icon" class="icon-item blink">● KONUM_BAĞLANTISI</div>
 
-            <div class="icon-item">● GÜVENLİ_AĞ</div>
+            <div id="net-status-icon" class="icon-item">● GÜVENLİ_AĞ</div>
 
-            <div class="icon-item blink">● CANLI_VERİ</div>
+            <div id="data-status-icon" class="icon-item blink">● CANLI_VERİ</div>
 
         </div>
 
@@ -378,7 +1073,6 @@
 
             <button id="scanBtn" class="btn-scan" onclick="startQR()">📷 QR KİMLİK DOĞRULAMA</button>
 
-            
 
             <div id="pin-pad" class="fade-in">
 
@@ -386,27 +1080,38 @@
 
                 <div class="numpad" id="numpad-grid"></div>
 
-                <button class="btn-out btn-mini" onclick="location.reload()" style="background: #334155; margin-top: 10px;">İPTAL</button>
+                <div
+                    style="font-size: 8px; color: #475569; margin-top: 15px; margin-bottom: 5px; letter-spacing: 1px; line-height: 1.4;">
+                    🔒 PIN kodunuz telefonunuzda saklanmaz, anlık olarak doğrulanır.
+                </div>
+
+                <button class="btn-out btn-mini" onclick="location.reload()"
+                    style="background: #334155; margin-top: 10px;">İPTAL</button>
 
             </div>
 
             <div id="confirm-box" class="fade-in">
 
-                <p id="user-check-text" style="font-size: 10px; letter-spacing: 1px; color: #94a3b8; font-family: 'Orbitron';"></p>
+                <p id="user-check-text"
+                    style="font-size: 10px; letter-spacing: 1px; color: #94a3b8; font-family: 'Orbitron';"></p>
 
                 <button class="btn-in btn-mini" onclick="verifySuccess()">EVET, BENİM</button>
 
-                <button class="btn-out btn-mini" onclick="location.reload()" style="background: #334155; margin-top: 10px;">HAYIR, DEĞİLİM</button>
+                <button class="btn-out btn-mini" onclick="location.reload()"
+                    style="background: #334155; margin-top: 10px;">HAYIR, DEĞİLİM</button>
 
             </div>
 
             <div id="action-confirm" class="fade-in">
 
-                <p id="action-text" style="font-size: 10px; letter-spacing: 1px; color: #fff; font-family: 'Orbitron'; margin-bottom: 10px;"></p>
+                <p id="action-text"
+                    style="font-size: 10px; letter-spacing: 1px; color: #fff; font-family: 'Orbitron'; margin-bottom: 10px;">
+                </p>
 
                 <button id="final-ok-btn" onclick="executeAction()">ONAYLIYORUM</button>
 
-                <button class="btn-out btn-mini" onclick="cancelAction()" style="background: #334155; margin-top: 10px;">İPTAL</button>
+                <button class="btn-out btn-mini" onclick="cancelAction()"
+                    style="background: #334155; margin-top: 10px;">İPTAL</button>
 
             </div>
 
@@ -424,7 +1129,7 @@
 
         </div>
 
-        
+
 
         <button class="btn-message" onclick="toggleModal(true)">📩 ŞİKAYET / ÖNERİ İLET</button>
 
@@ -434,22 +1139,13 @@
 
 
 
-    <div id="message-modal">
-
-        <div class="modal-content fade-in">
-
-            <div style="font-family:'Orbitron'; font-size:10px; color:var(--primary); letter-spacing:2px;">MERKEZE NOT İLET</div>
-
-            <textarea id="msg-area" placeholder="Mesajınızı buraya yazın..."></textarea>
-
-            <button class="btn-in btn-mini" onclick="sendMessage()">GÖNDER</button>
-
-            <button class="btn-out btn-mini" onclick="toggleModal(false)" style="background:#334155;">KAPAT</button>
-
-        </div>
-
+    <div
+        style="text-align: center; font-family: 'Orbitron', sans-serif; font-size: 7px; color: rgba(255, 255, 255, 0.15); letter-spacing: 3px; margin-top: 15px; text-transform: uppercase; z-index: 5;">
+        <span style="pointer-events: none;">© 2026 ShiftTurbo | Tüm Hakları Saklıdır</span><br>
+        <span onclick="showKVKKOnly()"
+            style="color: var(--primary); pointer-events: auto; cursor: pointer; text-decoration: underline; display: inline-block; margin-top: 5px;">Gizlilik
+            ve KVKK Politikası</span>
     </div>
-
 
 
     <div class="ucr-badge">
@@ -478,6 +1174,14 @@
 
         let autoTrackInterval = null;
 
+        // 📲 Service Worker Kaydı (PWA için)
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(reg => console.log('ShiftTurbo PWA Hazır!', reg))
+                    .catch(err => console.log('PWA Hatası:', err));
+            });
+        }
 
 
         const playSound = (type) => {
@@ -492,7 +1196,7 @@
 
                 osc.connect(gain); gain.connect(context.destination);
 
-                if(type === 'success') { 
+                if (type === 'success') {
 
                     osc.type = 'triangle'; osc.frequency.setValueAtTime(440, context.currentTime);
 
@@ -504,25 +1208,25 @@
 
                     osc.start(); osc.stop(context.currentTime + 0.3);
 
-                } else if(type === 'error') { 
+                } else if (type === 'error') {
 
-                    osc.type = 'sawtooth'; osc.frequency.setValueAtTime(150, context.currentTime); 
+                    osc.type = 'sawtooth'; osc.frequency.setValueAtTime(150, context.currentTime);
 
-                    osc.frequency.linearRampToValueAtTime(50, context.currentTime + 0.2); 
+                    osc.frequency.linearRampToValueAtTime(50, context.currentTime + 0.2);
 
-                    gain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + 0.2); 
+                    gain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + 0.2);
 
                     osc.start(); osc.stop(context.currentTime + 0.2);
 
-                } else { 
+                } else {
 
-                    osc.frequency.setValueAtTime(600, context.currentTime); osc.start(); 
+                    osc.frequency.setValueAtTime(600, context.currentTime); osc.start();
 
-                    gain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + 0.1); osc.stop(context.currentTime + 0.1); 
+                    gain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + 0.1); osc.stop(context.currentTime + 0.1);
 
                 }
 
-            } catch(e) {}
+            } catch (e) { }
 
         };
 
@@ -530,7 +1234,7 @@
 
         function speakGreeting(name) {
 
-            const firstName = name.split(' ')[0]; 
+            const firstName = name.split(' ')[0];
 
             const message = new SpeechSynthesisUtterance();
 
@@ -555,14 +1259,49 @@
         }
 
         setInterval(updateTime, 1000); updateTime();
+        // KVKK Onay Fonksiyonu (Butona basınca çalışır)
+        function acceptKVKK() {
+            localStorage.setItem('shiftTurbo_kvkk', 'true'); // Hafızaya kaydettik
+            if (typeof playSound === "function") playSound('success'); // Varsa ses çal
+            document.getElementById('kvkk-overlay').style.display = 'none';
+            console.log("🛡️ KVKK Protokolü Onaylandı.");
+            location.reload(); // Sistemi başlatmak için yeniden yükle
+        }
 
+        // KVKK Kontrol Mekanizması
+        function initKVKK() {
+            const hasAccepted = localStorage.getItem('shiftTurbo_kvkk');
+            const overlay = document.getElementById('kvkk-overlay');
+            const checkbox = document.getElementById('kvkk-check');
+            const btn = document.getElementById('kvkk-btn');
+
+            // Eğer hafızada 'true' yoksa ekranı aç
+            if (hasAccepted !== 'true') {
+                overlay.style.display = 'flex';
+
+                // Checkbox değişimini izle
+                checkbox.addEventListener('change', function () {
+                    if (this.checked) {
+                        btn.style.opacity = "1";
+                        btn.style.pointerEvents = "auto";
+                        if (typeof playSound === "function") playSound('tap');
+                    } else {
+                        btn.style.opacity = "0.3";
+                        btn.style.pointerEvents = "none";
+                    }
+                });
+            } else {
+                // Zaten onaylıysa hiç gösterme
+                overlay.style.display = 'none';
+            }
+        }
 
 
         function createNumPad() {
 
             const grid = document.getElementById('numpad-grid');
 
-            const nums = [1,2,3,4,5,6,7,8,9,"C",0,"OK"];
+            const nums = [1, 2, 3, 4, 5, 6, 7, 8, 9, "C", 0, "OK"];
 
             grid.innerHTML = nums.map(n => `<button class="num-btn" onclick="pressNum('${n}')">${n}</button>`).join('');
 
@@ -578,11 +1317,11 @@
 
             else if (n === "OK") { checkPin(); return; }
 
-            else { if(currentPin.length < 4) currentPin += n; }
+            else { if (currentPin.length < 4) currentPin += n; }
 
             document.getElementById('pin-display').innerText = "*".repeat(currentPin.length) || "****";
 
-            if(currentPin.length === 4) setTimeout(checkPin, 300);
+            if (currentPin.length === 4) setTimeout(checkPin, 300);
 
         }
 
@@ -600,7 +1339,7 @@
 
             html5QrCode.start({ facingMode: "environment" }, { fps: 25, qrbox: 250 }, async (decodedText) => {
 
-                if(decodedText.toUpperCase().includes("SHIFT")) {
+                if (decodedText.toUpperCase().includes("SHIFT")) {
 
                     playSound('success');
 
@@ -638,7 +1377,7 @@
 
                 document.getElementById('confirm-box').style.display = 'block';
 
-            } else { 
+            } else {
 
                 playSound('error');
 
@@ -646,7 +1385,7 @@
 
                 setTimeout(() => document.getElementById('main-card').classList.remove('shake'), 300);
 
-                currentPin = ""; document.getElementById('pin-display').innerText = "****"; 
+                currentPin = ""; document.getElementById('pin-display').innerText = "****";
 
             }
 
@@ -655,13 +1394,9 @@
 
 
         function verifySuccess() {
-
             const fullName = localStorage.getItem('temp_user_name');
-
             speakGreeting(fullName);
-
             localStorage.setItem('shiftTurbo_user', fullName);
-
             localStorage.setItem('auth_active', 'true');
 
             localStorage.removeItem('temp_user_name');
@@ -684,7 +1419,7 @@
 
             const okBtn = document.getElementById('final-ok-btn');
 
-            if(type === 'GİRİŞ') { actionText.innerText = "MESAİ BAŞLATILSIN MI?"; okBtn.className = "btn-in"; }
+            if (type === 'GİRİŞ') { actionText.innerText = "MESAİ BAŞLATILSIN MI?"; okBtn.className = "btn-in"; }
 
             else { actionText.innerText = "MESAİ BİTİRİLSİN MI?"; okBtn.className = "btn-out"; }
 
@@ -694,258 +1429,475 @@
 
         function cancelAction() { document.getElementById('action-confirm').style.display = 'none'; document.getElementById('main-actions').style.display = 'block'; }
 
-
-
         async function executeAction() {
-
             if (!pendingType) return;
-
             const type = pendingType;
-
             const name = localStorage.getItem('shiftTurbo_user');
 
-            
-
-            document.getElementById('action-confirm').style.display = 'none';
-
-            document.getElementById('status').innerText = "⏳ GÜVENLİK SORGUSU YAPILIYOR...";
-
-
-
-            // 🛡️ ÇİFT GİRİŞ ENGELLEME PROTOKOLÜ
-
-            // Önce veritabanından bu personelin en son yaptığı işlemi çekiyoruz
-
-            const { data: lastLogs, error: fetchError } = await _supabase
-
+            // 🛡️ 1. ADIM: İŞLEM ÖNCESİ BULUT KONTROLÜ (GÜVENLİK KİLİDİ)
+            const { data: checkData } = await _supabase
                 .from('logs')
-
                 .select('type')
-
                 .eq('personel_name', name)
-
-                .in('type', ['GİRİŞ', 'ÇIKIŞ']) // Sadece ana hareketlere bakıyoruz
-
+                .in('type', ['GİRİŞ', 'ÇIKIŞ'])
                 .order('created_at', { ascending: false })
-
                 .limit(1);
 
+            const buluttakiSonDurum = (checkData && checkData.length > 0) ? checkData[0].type : 'ÇIKIŞ';
 
-
-            const lastAction = (lastLogs && lastLogs.length > 0) ? lastLogs[0].type : 'ÇIKIŞ';
-
-
-
-            // Eğer personel GİRİŞ yapmak istiyorsa ama zaten sistemde GİRİŞ yapmış görünüyorsa DURDUR
-
-            if (type === 'GİRİŞ' && lastAction === 'GİRİŞ') {
-
+            // Eğer personel "ÇIKIŞ" yapmak istiyor ama zaten "ÇIKIŞ" yapılmışsa (Senin tarafandan veya sistemce)
+            if (type === 'ÇIKIŞ' && buluttakiSonDurum === 'ÇIKIŞ') {
                 playSound('error');
-
-                document.getElementById('error-msg-body').innerText = "DİKKAT: Sistemde zaten aktif bir mesainiz bulunuyor. Üst üste giriş yapılamaz.";
-
-                document.getElementById('error-modal').style.display = 'flex';
-
-                document.getElementById('status').innerText = "❌ İŞLEM REDDEDİLDİ";
-
-                return; // Kodu burada kes, veritabanına yeni kayıt atma
-
+                document.getElementById('status').innerText = "❌ ZATEN ÇIKIŞ YAPILMIŞ!";
+                setTimeout(() => { location.reload(); }, 1500); // 1.5 sn sonra sayfayı zorla yenile
+                return; // FONKSİYONU BURADA DURDUR, AŞAĞIYA (KONUM ALMAYA) GEÇME!
             }
 
+            // Eğer personel "GİRİŞ" yapmak istiyor ama zaten "GİRİŞ" yapılmışsa
+            if (type === 'GİRİŞ' && buluttakiSonDurum === 'GİRİŞ') {
+                playSound('error');
+                document.getElementById('status').innerText = "❌ ZATEN MESAİDESİNİZ!";
+                setTimeout(() => { location.reload(); }, 1500);
+                return;
+            }
 
+            // --- BURADAN AŞAĞISI SADECE DURUM UYGUNSA ÇALIŞIR ---
+            document.getElementById('action-confirm').style.display = 'none';
+            const statusEl = document.getElementById('status');
+            statusEl.innerText = "🛰️ KONUM İŞLENİYOR...";
 
-            // Eğer her şey yolundaysa (veya ÇIKIŞ yapılıyorsa) işleme devam et
+            const finalizeLocation = async (accuracy, lat, lon) => {
+                console.log("Kullanılan Hassasiyet: " + accuracy + "m");
 
-            navigator.geolocation.getCurrentPosition(async (pos) => {
+                // [DEĞİŞİKLİK]: Hassasiyet (Accuracy) sınırını kaldırdık! Çünkü kapalı alanlarda telefonlar 
+                // hücresel veri ile bağlandığında bu değer yüksek çıksa bile nokta atışı doğru olabiliyor.
+                // Artık gereksiz yere "Sinyal çok zayıf" diye personeli bekletmiyor.
 
-                const { error } = await _supabase.from('logs').insert([{ 
-
-                    personel_name: name, type: type, lat: pos.coords.latitude, lon: pos.coords.longitude, mahalle: "MERKEZ" 
-
+                const { error } = await _supabase.from('logs').insert([{
+                    personel_name: name,
+                    type: type,
+                    lat: lat,
+                    lon: lon,
+                    mahalle: `DOĞRULUK: ${Math.round(accuracy)}m`
                 }]);
 
-
-
-                if (!error) {
-
-                    playSound('success');
-
-                    if (type === 'ÇIKIŞ') {
-
-                        // 🚨 ÖNCEKİ MESAJDAKİ GÜVENLİK: Çıkışta hafızayı siler
-
-                        localStorage.clear(); 
-
-                        setTimeout(() => { window.location.href = window.location.pathname; }, 500);
-
-                    } else {
-
-                        localStorage.setItem('isShiftActive', 'true');
-
-                        location.reload();
-
-                    }
-
-                } else {
-
-                    document.getElementById('error-msg-body').innerText = "Bulut bağlantı hatası.";
-
+                if (error) {
+                    playSound('error');
+                    statusEl.innerText = "❌ VERİTABANI HATASI";
+                    document.getElementById('error-msg-body').innerText = "Kayıt Başarısız: " + error.message;
                     document.getElementById('error-modal').style.display = 'flex';
-
+                    console.log("Supabase Insert Hatası:", error);
+                } else {
+                    playSound('success');
+                    if (type === 'ÇIKIŞ') {
+                        localStorage.removeItem('shiftTurbo_user');
+                        localStorage.removeItem('auth_active');
+                        localStorage.removeItem('isShiftActive');
+                        localStorage.removeItem('temp_user_name');
+                        setTimeout(() => { window.location.href = window.location.pathname; }, 500);
+                    } else {
+                        localStorage.setItem('isShiftActive', 'true');
+                        location.reload();
+                    }
                 }
+            };
 
-            }, (err) => {
+            // Eğer arka planda GPS zaten ısınmışsa ve 40m altındaysa HİÇ BEKLETME
+            if (window.bgLocation && window.bgLocation.accuracy <= 40) {
+                finalizeLocation(window.bgLocation.accuracy, window.bgLocation.latitude, window.bgLocation.longitude);
+            } else {
+                // Konum henüz uyanmadıysa veya sapma yüksekse anlık olarak ısınmasını bekle
+                const getLocation = (useHighAcc = true) => {
+                    navigator.geolocation.getCurrentPosition(async (pos) => {
+                        // Geldiği anda hiçbir gecikme yapmadan, bulduğu en iyi konumu hemen kullan!
+                        finalizeLocation(pos.coords.accuracy, pos.coords.latitude, pos.coords.longitude);
+                    }, (err) => {
+                        // Eğer GPS uydusu kapalı alan yüzünden 6 saniye içinde yanıt vermezse,
+                        // anında daha hızlı bir teknolojiye (Hücresel Sinyal / Wi-Fi) geçip konumu bul.
+                        if (useHighAcc && err.code === 3) {
+                            statusEl.innerText = "⚠️ BİNA İÇİ HIZLI TARAMA YAPILIYOR...";
+                            getLocation(false);
+                            return;
+                        }
 
-                document.getElementById('error-msg-body').innerText = "Konum izni gerekli.";
+                        playSound('error');
+                        let errMsg = "Bilinmeyen konum hatası.";
+                        if (err.code === 1) errMsg = "💥 ERİŞİM REDDİ: Tarayıcı veya telefondan KONUM izni (GPS) vermeniz şarttır.";
+                        else if (err.code === 2) errMsg = "📡 SİNYAL YOK: Lütfen cihazınızın Konum (GPS) ayarını açık konuma getirin.";
+                        else if (err.code === 3) errMsg = "⏱️ ZAMAN AŞIMI: Sinyal çok zayıf... Cihaz konumunuzu doğrulayamıyor.";
 
-                document.getElementById('error-modal').style.display = 'flex';
-
-            }, { enableHighAccuracy: true });
-
+                        document.getElementById('error-msg-body').innerText = errMsg;
+                        document.getElementById('error-modal').style.display = 'flex';
+                        statusEl.innerText = "❌ İŞLEM İPTAL EDİLDİ";
+                    }, { enableHighAccuracy: useHighAcc, timeout: useHighAcc ? 6000 : 8000, maximumAge: 10000 });
+                };
+                getLocation(true);
+            }
         }
-
-
 
         function toggleModal(show) { document.getElementById('message-modal').style.display = show ? 'flex' : 'none'; }
 
-        
+
 
         async function sendMessage() {
 
             const msg = document.getElementById('msg-area').value.trim();
-
-            // Hafızada isim varsa al, yoksa "MİSAFİR / BİLİNMEYEN" yaz
-
             let user = localStorage.getItem('shiftTurbo_user');
-
             if (!user) {
-
                 user = "BİLİNMEYEN PERSONEL (KAYITSIZ)";
-
             }
 
-            
-
-            if(!msg) return;
-
-            
+            if (!msg) return;
 
             toggleModal(false);
-
             document.getElementById('status').innerText = "⏳ MESAJ İLETİLİYOR...";
 
-
-
-            // Konum alınamasa bile mesajın her türlü gitmesini sağlayan garanti blok
-
             navigator.geolocation.getCurrentPosition(async (pos) => {
-
-                await _supabase.from('logs').insert([{ 
-
-                    personel_name: user, 
-
-                    type: 'MESAJ', 
-
-                    mahalle: msg, 
-
-                    lat: pos.coords.latitude, 
-
-                    lon: pos.coords.longitude 
-
+                await _supabase.from('logs').insert([{
+                    personel_name: user,
+                    type: 'MESAJ',
+                    mahalle: msg,
+                    lat: pos.coords.latitude,
+                    lon: pos.coords.longitude
                 }]);
-
                 finishMessage();
-
             }, async (err) => {
-
-                // Konum izni yoksa 0,0 koordinatıyla gönder
-
-                await _supabase.from('logs').insert([{ 
-
-                    personel_name: user, 
-
-                    type: 'MESAJ', 
-
-                    mahalle: msg, 
-
-                    lat: 0, 
-
-                    lon: 0 
-
+                await _supabase.from('logs').insert([{
+                    personel_name: user,
+                    type: 'MESAJ',
+                    mahalle: msg,
+                    lat: 0,
+                    lon: 0
                 }]);
-
                 finishMessage();
+            }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 });
+        }
 
-            });
+
+
+        function finishMessage() {
+
+            playSound('success');
+
+            const message = new SpeechSynthesisUtterance();
+            message.text = "Mesajınız başarıyla merkeze iletildi.";
+            message.lang = 'tr-TR';
+            window.speechSynthesis.speak(message);
+
+            const statusEl = document.getElementById('status');
+            statusEl.innerHTML = `<span class="plane-animation">✈️</span> ✅ MESAJ MERKEZE İLETİLDİ`;
+            statusEl.classList.add('success-glow');
+
+            document.getElementById('msg-area').value = "";
+
+            setTimeout(() => {
+                statusEl.innerHTML = "SHIFT TURBO GÜVENLİK SİSTEMİ";
+                statusEl.classList.remove('success-glow');
+            }, 4000);
 
         }
 
 
 
-       // ESKİ HALİNİ SİL, BUNU YAPIŞTIR
-function finishMessage() {
-    playSound('success'); 
-    
-    // 🗣️ Sesli Geri Bildirim (Tarayıcı konuşur)
-    const message = new SpeechSynthesisUtterance();
-    message.text = "Mesajınız başarıyla merkeze iletildi.";
-    message.lang = 'tr-TR';
-    window.speechSynthesis.speak(message);
+        window.bootSystem = async () => {
+            // Eğer sistem zaten başladıysa tekrar çalıştırma
+            if (window.systemStarted) return;
+            window.systemStarted = true;
 
-    const statusEl = document.getElementById('status');
-    // ✈️ Kağıt uçak emojisi buraya ekleniyor
-    statusEl.innerHTML = `<span class="plane-animation">✈️</span> ✅ MESAJ MERKEZE İLETİLDİ`;
-    statusEl.classList.add('success-glow');
+            console.log("🚀 SİSTEM BAŞLATILIYOR...");
 
-    document.getElementById('msg-area').value = ""; 
-    
-    setTimeout(() => { 
-        statusEl.innerHTML = "SHIFT TURBO GÜVENLİK SİSTEMİ"; 
-        statusEl.classList.remove('success-glow');
-    }, 4000);
-}
-
-
-        window.onload = () => {
-
+            // 2. MEVCUT SİSTEM MANTIĞIN (Hiçbir değişiklik yapılmadı)
             const user = localStorage.getItem('shiftTurbo_user');
-
             const auth = localStorage.getItem('auth_active') === 'true';
 
-            const isActive = localStorage.getItem('isShiftActive') === 'true';
-
+            // GPS ISITMA (Pre-warming): Kullanıcı zaten girmişse arka planda uyduları hazır tut!
+            if (user && auth && navigator.geolocation) {
+                navigator.geolocation.watchPosition(
+                    (pos) => { window.bgLocation = pos.coords; },
+                    (err) => { console.log("BG GPS Isıtma Hatası:", err); },
+                    { enableHighAccuracy: true, timeout: 25000, maximumAge: 0 }
+                );
+            }
             const scanBtn = document.getElementById('scanBtn');
-
             const mainActions = document.getElementById('main-actions');
 
+            if (user && auth) {
+                // 🛰️ TELEFONUN HAFIZASINA DEĞİL, BULUTA SORALIM:
+                const { data: lastLogs } = await _supabase
+                    .from('logs')
+                    .select('type')
+                    .eq('personel_name', user)
+                    .in('type', ['GİRİŞ', 'ÇIKIŞ'])
+                    .order('created_at', { ascending: false })
+                    .limit(1);
 
+                const lastAction = (lastLogs && lastLogs.length > 0) ? lastLogs[0].type : 'ÇIKIŞ';
 
-            if (user && auth && isActive) {
-
-                document.getElementById('status-bar').style.width = "100%";
-
-                document.getElementById('greeting').innerText = "SYSTEM ACTIVE / " + user.toUpperCase();
-
-                mainActions.innerHTML = `<button class="btn-out" onclick="requestConfirm('ÇIKIŞ')">MESAİ BİTİR</button>`;
-
-            } else if (user && auth && !isActive) {
-
-                document.getElementById('status-bar').style.width = "50%";
-
-                document.getElementById('greeting').innerText = "SYSTEM READY / " + user.toUpperCase();
-
-                mainActions.innerHTML = `<button class="btn-in" onclick="requestConfirm('GİRİŞ')">MESAİ BAŞLAT</button>`;
-
+                if (lastAction === 'GİRİŞ') {
+                    document.getElementById('status-bar').style.width = "100%";
+                    document.getElementById('greeting').innerText = "SYSTEM ACTIVE / " + user.toUpperCase();
+                    mainActions.innerHTML = `<button class="btn-out" onclick="requestConfirm('ÇIKIŞ')">MESAİ BİTİR</button>`;
+                } else {
+                    document.getElementById('status-bar').style.width = "50%";
+                    document.getElementById('greeting').innerText = "SYSTEM READY / " + user.toUpperCase();
+                    mainActions.innerHTML = `<button class="btn-in" onclick="requestConfirm('GİRİŞ')">MESAİ BAŞLAT</button>`;
+                }
             } else {
-
-                scanBtn.style.display = 'block';
-
+                if (scanBtn) scanBtn.style.display = 'block';
             }
 
+            // Zamanlayıcıyı başlat
+            if (typeof updateTime === "function") {
+                updateTime();
+                setInterval(updateTime, 1000);
+            }
+
+            // --- CANLI TAKİP (REALTIME) SİSTEMİ ---
+            const currentUserForRealtime = localStorage.getItem('shiftTurbo_user');
+
+            if (currentUserForRealtime) {
+                const channel = _supabase
+                    .channel('db-changes')
+                    .on(
+                        'postgres_changes',
+                        {
+                            event: 'INSERT',
+                            schema: 'public',
+                            table: 'logs',
+                            filter: `personel_name=eq.${currentUserForRealtime}`
+                        },
+                        (payload) => {
+                            location.reload();
+                        }
+                    )
+                    .subscribe();
+            }
+
+            // 3. DUYURU KONTROLÜ
+            fetchLatestBroadcast();
+            setInterval(fetchLatestBroadcast, 30000); // 30 saniyede bir otomatik kontrol
+        };
+
+        window.onload = async () => {
+            // 0. AĞ DURUMU TAKİBİ (KVKK'dan bağımsız her zaman çalışmalı)
+            initNetworkMonitor();
+
+            // 1. KVKK DURUM KONTROLÜ (Sistemi kilitleyen ilk adım)
+            checkKVKKStatus();
+
+            // Eğer KVKK onaylandıysa hemen sistemi başlat
+            if (localStorage.getItem('shiftTurbo_kvkk') === 'true') {
+                bootSystem();
+            }
+        };
+
+        function initNetworkMonitor() {
+            const updateStatus = () => {
+                const netIcon = document.getElementById('net-status-icon');
+                if (!netIcon) return;
+                
+                if (navigator.onLine) {
+                    netIcon.innerHTML = "● GÜVENLİ_AĞ";
+                    netIcon.style.color = "";
+                    netIcon.classList.remove('status-error');
+                    netIcon.classList.add('blink');
+                } else {
+                    netIcon.innerHTML = "● BAĞLANTI_YOK";
+                    netIcon.style.color = "var(--error)";
+                    netIcon.classList.add('status-error');
+                    netIcon.classList.remove('blink');
+                }
+            };
+            window.addEventListener('online', updateStatus);
+            window.addEventListener('offline', updateStatus);
+            updateStatus();
         }
+
+
+        // 🚨 ÖNEMLİ: Supabase'de bir satırı silmek için mutlaka bir filtre olmalı.
+        // ID'si 0'dan büyük veya eşit olan tüm satırları sil diyoruz.
+        async function deleteBroadcasts() {
+            const { error } = await _supabase.from('broadcasts').delete().gte('id', 0);
+            if (error) {
+                console.error("Broadcasts silinirken hata oluştu:", error);
+            } else {
+                console.log("Tüm eski broadcasts silindi.");
+            }
+        }
+
+
+        async function fetchLatestBroadcast() {
+            try {
+                const { data, error } = await _supabase
+                    .from('broadcasts')
+                    .select('message')
+                    .order('created_at', { ascending: false })
+                    .limit(1);
+                if (data && data.length > 0) {
+                    document.getElementById('broadcast-text').innerText = data[0].message;
+                    document.getElementById('broadcast-banner').style.display = 'block';
+                    document.body.style.paddingTop = "35px";
+                } else {
+                    document.getElementById('broadcast-text').innerText = "";
+                    document.getElementById('broadcast-banner').style.display = 'none';
+                    document.body.style.paddingTop = "0";
+                }
+
+            } catch (e) { console.log("Duyuru çekilemedi."); }
+        }
+
+
+        /** * KVKK Destek Fonksiyonları
+         * (Bunları script içinde herhangi bir yere ekleyebilirsin)
+         */
+
+        function checkKVKKStatus() {
+            const hasAccepted = localStorage.getItem('shiftTurbo_kvkk');
+            const overlay = document.getElementById('kvkk-overlay');
+            const checkbox = document.getElementById('kvkk-check');
+            const btn = document.getElementById('kvkk-btn');
+
+            if (hasAccepted !== 'true') {
+                overlay.style.display = 'flex';
+
+                checkbox.onchange = function () {
+                    if (this.checked) {
+                        btn.style.opacity = "1";
+                        btn.style.pointerEvents = "auto";
+                        if (typeof playSound === "function") playSound('tap');
+                    } else {
+                        btn.style.opacity = "0.3";
+                        btn.style.pointerEvents = "none";
+                    }
+                };
+            } else {
+                overlay.style.display = 'none';
+            }
+        }
+        window.acceptKVKK = function () {
+            console.log("KVKK Onaylandı.");
+            localStorage.setItem('shiftTurbo_kvkk', 'true');
+
+            if (typeof playSound === "function") {
+                playSound('success');
+            }
+            document.getElementById('kvkk-overlay').style.display = 'none';
+            bootSystem(); // Sistemi hemen başlat (reload yapma)
+        }
+
+        // --- LANDING PAGE & SPLASH SİSTEM MANTIĞI ---
+        setTimeout(() => {
+            const splashText = document.getElementById('splash-text');
+            if (splashText) splashText.innerText = "GÜVENLİK PROTOKOLLERİ DOĞRULANIYOR...";
+
+            setTimeout(() => {
+                const splash = document.getElementById('cyber-splash');
+                const landing = document.getElementById('landing-wrapper');
+                const hasAcceptedKVKK = localStorage.getItem('shiftTurbo_kvkk');
+
+                // Eğer daha önce onaylamışsa (eski kullanıcıysa) direkt terminale aksın
+                if (hasAcceptedKVKK === 'true') {
+                    splash.style.opacity = '0';
+                    setTimeout(() => {
+                        if (splash) splash.style.display = 'none';
+                    }, 500);
+                } else {
+                    // Yeni kullanıcıysa landing page'i göster
+                    landing.style.display = 'flex';
+                    splash.style.opacity = '0';
+                    setTimeout(() => {
+                        if (splash) splash.style.display = 'none';
+                    }, 500);
+                }
+            }, 1200);
+        }, 1500);
+
+        window.enterTerminal = function () {
+            if (typeof playSound === "function") playSound('tap');
+            const landing = document.getElementById('landing-wrapper');
+            landing.style.transform = "translateY(-30px) scale(1.05)";
+            landing.style.opacity = "0";
+
+            setTimeout(() => {
+                landing.style.display = 'none';
+                // Landing page kapandığında altta otomatik olarak KVKK ekranı hazır bekliyor olacak.
+            }, 800);
+        }
+
+        window.showKVKKOnly = function () {
+            const overlay = document.getElementById('kvkk-overlay');
+            const btn = document.getElementById('kvkk-btn');
+
+            // Sadece okuma moduna al
+            btn.style.opacity = "1";
+            btn.style.pointerEvents = "auto";
+            btn.innerText = "KAPAT";
+            btn.className = "btn-out";
+
+            // Kapat butonunun işlevini geçici olarak kapamaya ayarla
+            btn.onclick = function () {
+                overlay.style.display = 'none';
+                // İşlemi orijinal onaylama moduna geri yükle
+                btn.innerText = "SİSTEME ERİŞİM SAĞLA";
+                btn.className = "btn-in";
+                btn.onclick = acceptKVKK;
+                if (localStorage.getItem('shiftTurbo_kvkk') !== 'true') {
+                    btn.style.opacity = "0.3";
+                    btn.style.pointerEvents = "none";
+                }
+            };
+
+            overlay.style.display = 'flex';
+        };
+
+        // --- 🧪 YENİ ÖZELLİKLER MANTIĞI ---
+
+        // 0. Dinamik Alt Başlık
+        function initDynamicSubtitle() {
+            const phrases = [
+                "Zamanı Durdurma, Onu Yönet",
+                "Geleceği Bugünden Tasarla",
+                "Hız ve Verimlilik Bir Arada",
+                "Dijital Dönüşümün Parçası Ol",
+                "ShiftTurbo ile Sınırları Aş",
+                "UCR Technology Güvencesiyle",
+                "Verimliliğin Yeni Adresi",
+                "Sizin İçin, Sizinle Beraber"
+            ];
+            const subtitleEl = document.getElementById('dynamic-subtitle');
+            if (subtitleEl) {
+                subtitleEl.innerText = phrases[Math.floor(Math.random() * phrases.length)];
+            }
+        }
+
+        // Sayfa yüklendiğinde başlat
+        document.addEventListener('DOMContentLoaded', initDynamicSubtitle);
+
+        // 1. Biyometrik Tarama Animasyonu
+        window.showBioScan = function() {
+            if (typeof playSound === "function") playSound('tap');
+            const scanner = document.getElementById('bio-scanner');
+            scanner.style.display = 'flex';
+            
+            setTimeout(() => {
+                scanner.style.opacity = '0';
+                setTimeout(() => {
+                    scanner.style.display = 'none';
+                    window.enterTerminal(); // Orijinal geçişi başlat
+                }, 500);
+            }, 1500);
+        };
 
     </script>
 
+    <div id="bio-scanner">
+        <div class="scan-line"></div>
+        <div class="scan-circle">
+            <i class="fas fa-fingerprint"></i>
+        </div>
+        <div style="position:absolute; bottom:20%; font-family:'Orbitron'; color:var(--primary); letter-spacing:3px; font-size:12px">KİMLİK TARANIYOR...</div>
+    </div>
+
 </body>
 
-</html> 
+</html>

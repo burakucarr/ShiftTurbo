@@ -200,7 +200,16 @@
     font-family: 'Poppins';
     font-size: 12px;
     transition: all 0.3s ease;
+    color-scheme: dark;
     outline: none;
+}
+
+.toolbar input[type="date"]::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="%23f48120" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>') no-repeat;
+    background-size: contain;
+    width: 20px;
+    height: 20px;
 }
 
 .toolbar select:focus, .toolbar input:focus {
@@ -432,7 +441,7 @@ table {
             <div id="step1">
                 <input type="text" id="username" placeholder="YÖNETİCİ KİMLİĞİ" style="width:100%; margin-bottom:15px; box-sizing: border-box; text-align:center;">
                 <input type="password" id="password" placeholder="ERİŞİM ANAHTARI" style="width:100%; margin-bottom:25px; box-sizing: border-box; text-align:center;">
-                <button class="btn-cyber" style="width:100%" onclick="nextStep()">SİSTEME GİRİN</button>
+                <button class="btn-cyber" style="width:100%" onclick="nextStep()">SİSTEMİ GİRİN</button>
             </div>
             <div id="step2" style="display:none;">
                 <p style="font-family:'Orbitron'; font-size:10px; color:var(--primary); margin-bottom:20px; letter-spacing:1px;">İKİNCİL DOĞRULAMA GEREKLİ</p>
@@ -463,7 +472,27 @@ table {
         </div>
 
         <div id="ai-box">
-            <div id="ai-text" style="font-size:13px; color:#cbd5e1; line-height:1.6;">Veriler işleniyor...</div>
+            <div class="ai-config-icon" onclick="toggleAIConfig()" title="AI Ayarları">⚙️</div>
+            
+            <div id="ai-chat-history" class="ai-chat-messages">
+                <div class="ai-msg ai-msg-bot">Merhaba! Ben ShiftTurbo AI. Bugün sana nasıl yardımcı olabilirim? Verileri analiz etmek için aşağıya soru sorabilirsin.</div>
+            </div>
+
+            <div id="ai-suggestion-box" class="ai-suggestions">
+                <!-- Akıllı öneriler buraya gelecek -->
+            </div>
+
+            <div class="ai-chat-input-wrapper">
+                <input type="text" id="ai-user-input" class="ai-input" placeholder="Yapay zekaya soru sor... (Örn: Bugün en çok kim çalıştı?)" onkeypress="if(event.key==='Enter') sendAIChat()">
+                <button class="ai-btn-small" onclick="sendAIChat()">SOR</button>
+            </div>
+
+            <div id="ai-api-config" style="display:none; padding: 15px; background: rgba(0,0,0,0.4); border-radius: 12px; margin-top: 10px; border: 1px solid var(--primary);">
+                <label style="font-family:'Orbitron'; font-size: 9px; color: var(--primary); display:block; margin-bottom: 10px;">GEMINI API ANAHTARI</label>
+                <input type="password" id="ai-api-key" class="ai-input" style="width:100%; box-sizing:border-box; margin-bottom:10px;" placeholder="API Keyinizi buraya yapıştırın...">
+                <button class="ai-btn-small" onclick="saveAIConfig()" style="width:100%">KAYDET</button>
+                <p style="font-size:9px; color:#64748b; margin-top:10px;">*API Key tarayıcı hafızasında yerel olarak (LocalStorage) saklanır.</p>
+            </div>
         </div>
 
         <div class="stats-grid">
@@ -477,9 +506,52 @@ table {
 
         <div class="toolbar">
             <div style="display:flex; gap:15px;"><select id="staffFilter" onchange="applyFilter()"></select><input type="date" id="startDate" onchange="applyFilter()"><input type="date" id="endDate" onchange="applyFilter()"></div>
-            <div style="display:flex; gap:12px;"><button class="btn-cyber btn-green" onclick="exportPDF()">📄 RAPOR AL</button><button class="btn-cyber" onclick="fetchData()">🔄 YENİLE</button></div>
+            <div style="display:flex; gap:12px;">
+                <button class="btn-cyber btn-green" onclick="exportPDF()">📄 RAPOR AL</button>
+                <button class="btn-cyber" onclick="fetchData()">🔄 YENİLE</button>
+            </div>
         </div>
+
+        <!-- 📣 DUYURU PANELİ -->
+        <div id="broadcast-panel" style="background: rgba(244, 129, 32, 0.05); border: 1px dashed rgba(244, 129, 32, 0.3); border-radius: 20px; padding: 25px; margin-bottom: 30px; display: flex; gap: 20px; align-items: center;">
+            <div style="flex: 1;">
+                <h4 style="font-family: 'Orbitron'; font-size: 10px; color: var(--primary); margin: 0 0 10px 0; letter-spacing: 2px;">📢 PERSONEL DUYURUSU YAYINLA</h4>
+                <input type="text" id="broadcastMsg" placeholder="Örn: Bugün denetim var, tüm alanlar temizlensin." style="width: 100%; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 12px; border-radius: 10px; font-family: 'Poppins';">
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 5px; margin-top: 15px;">
+                <button class="btn-cyber" onclick="sendBroadcast()" style="height: 40px;">YAYINLA</button>
+                <button class="btn-cyber" onclick="deleteBroadcasts()" style="height: 30px; background: rgba(239, 68, 68, 0.1); color: #ef4444; border-color: #ef4444; font-size: 8px;">DUYURUYU KALDIR</button>
+            </div>
+        </div>
+
+
+        <!-- 👥 PERSONEL YÖNETİMİ -->
+        <div id="staff-management" style="background: var(--card); border: 1px solid var(--border); border-radius: 25px; padding: 30px; margin-top: 50px;">
+            <h3 style="font-family: 'Orbitron'; font-size: 16px; letter-spacing: 3px; margin-bottom: 25px; color: #fff; border-left: 4px solid var(--primary); padding-left: 15px;">PERSONEL YÖNETİM MERKEZİ</h3>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 15px; margin-bottom: 30px;">
+                <input type="text" id="newStaffName" placeholder="Ad Soyad">
+                <input type="text" id="newStaffPin" placeholder="PIN Kodu (4 Hane)" maxlength="4">
+                <button class="btn-cyber btn-green" onclick="addStaff()">➕ YENİ PERSONEL EKLE</button>
+            </div>
+
+            <table style="width: 100%; border-collapse: collapse;">
+                <thead style="background: rgba(255,255,255,0.02);">
+                    <tr>
+                        <th style="padding: 15px; text-align: left; font-size: 10px;">AD SOYAD</th>
+                        <th style="padding: 15px; text-align: left; font-size: 10px;">PIN KODU</th>
+                        <th style="padding: 15px; text-align: right; font-size: 10px;">İŞLEM</th>
+                    </tr>
+                </thead>
+                <tbody id="staffListTable"></tbody>
+            </table>
+        </div>
+
         <table><thead><tr><th>PERSONEL</th><th>DURUM</th><th>BÖLGE/NOT</th><th>ZAMAN</th></tr></thead><tbody id="logTable"></tbody></table>
+        
+        <div style="text-align: center; font-family: 'Orbitron', sans-serif; font-size: 7px; color: rgba(255, 255, 255, 0.15); letter-spacing: 3px; margin-top: 30px; text-transform: uppercase; pointer-events: none; z-index: 5;">
+            © 2026 ShiftTurbo | Tüm Hakları Saklıdır
+        </div>
     </div>
 
     <div id="msg-modal">
@@ -497,48 +569,70 @@ table {
     </div>
 
     <script>
+    (() => {
+        let isAuthenticated = false;
         const supabaseUrl = 'https://tnvjdppcyctmqkirlwmy.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRudmpkcHBjeWN0bXFraXJsd215Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3MzY0NTIsImV4cCI6MjA4ODMxMjQ1Mn0.Ft4JXQtbcXz1-qO7n06fV1vGtP4DbCVUWDojEAFoALI';
         const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
-        let allLogs = [];
-        let tempAdmin = null;
+        window.allLogs = [];
         let lastLogCount = 0;
+
+        // 📲 Service Worker Kaydı (PWA için)
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(reg => console.log('ShiftTurbo Manager PWA Hazır!', reg))
+                    .catch(err => console.log('PWA Hatası:', err));
+            });
+        }
 
         async function nextStep() {
             const user = document.getElementById("username").value;
             const pass = document.getElementById("password").value;
-            const { data } = await _supabase.from('admins').select('*').eq('username', user).eq('password', pass).single();
-            if(data) { tempAdmin = data; document.getElementById("step1").style.display = "none"; document.getElementById("step2").style.display = "block"; }
-            else { alert("YETKİSİZ!"); }
+            
+            // Eğer "admin" yazarsa otomatik maile çevir, mail yazarsa olduğu gibi kullan
+            const emailTarget = user.includes('@') ? user : user + '@shifturbo.com';
+            
+            // Supabase'in gerçek ve şifreli Authentication sunucusuna istek at!
+            const { data, error } = await _supabase.auth.signInWithPassword({
+                email: emailTarget,
+                password: pass
+            });
+            
+            if(data && data.session) { 
+                // Süper güvenli oturum açıldı! Eski amatör 2. adıma gerek yok.
+                isAuthenticated = true; 
+                showPanel(); 
+            } else { 
+                alert("GİRİŞ BAŞARISIZ: " + (error ? error.message : "Lütfen e-posta ve şifrenizi kontrol edin.")); 
+                console.log("Supabase Auth Hatası:", error);
+            }
         }
 
         async function checkAuth() {
-            const secretCode = document.getElementById("twoStepCode").value;
-            if(tempAdmin && secretCode === tempAdmin.secret_key) { sessionStorage.setItem("isAdmin", "true"); showPanel(); }
-            else { alert("HATALI!"); location.reload(); }
+            // Sistem Supabase Auth'a geçtiği için 2. adıma gerek kalmadı.
         }
 
         function showPanel() { 
+            if (!isAuthenticated) { alert("YETKİSİZ ERİŞİM"); location.reload(); return; }
             document.getElementById("loginOverlay").style.display = "none"; 
             document.getElementById("adminPanel").style.display = "block"; 
             if (Notification.permission !== "granted") Notification.requestPermission();
             fetchData(); 
         }
 
-        function logout() { sessionStorage.removeItem("isAdmin"); location.reload(); }
+        function logout() { isAuthenticated = false; location.reload(); }
 
         async function fetchData() {
-document.getElementById('staffFilter').value = 'all';
-    document.getElementById('startDate').value = '';
-    document.getElementById('endDate').value = '';
+            if (!isAuthenticated) return;
+            // Not: Filtreleri sıfırlamıyoruz ki kullanıcı tarih seçip yenile deyince gitmesin.
             const { data } = await _supabase.from('logs').select('*').order('created_at', { ascending: false });
+
             
-            // 🚨 ÖNEMLİ: Temizleme mantığını mesajları kapsayacak şekilde esnetiyoruz
             const cleanData = [];
             const seenActions = new Set();
             
             (data || []).forEach(log => {
-                // Mesajlar asla kopya sayılmasın (her mesaj değerlidir)
                 const timeKey = log.type === 'MESAJ' ? `msg-${log.id}` : `${log.personel_name}-${log.created_at}`;
                 if (!seenActions.has(timeKey)) { 
                     cleanData.push(log); 
@@ -546,9 +640,8 @@ document.getElementById('staffFilter').value = 'all';
                 }
             });
 
-            allLogs = cleanData.map(log => ({
+            window.allLogs = cleanData.map(log => ({
                 id: log.id,
-                // Eğer isim boş gelirse bilinmeyen olarak işaretle
                 personel: (log.personel_name || "BILINMEYEN_MISAFIR").trim().toUpperCase('tr-TR'),
                 type: log.type, 
                 mahalle: log.mahalle, 
@@ -562,15 +655,105 @@ document.getElementById('staffFilter').value = 'all';
             runAIAnalysis(); 
             updateDashboard(); 
             
-            // 🔊 BİLİNMEYEN PERSONEL MESAJI GELDİĞİNDE BİLDİRİMİ TETİKLE
-            checkNewNotifications(allLogs);
+            checkNewNotifications(window.allLogs);
+            loadStaffList(); // Personel listesini günceller
         }
+
+        async function sendBroadcast() {
+            const msg = document.getElementById('broadcastMsg').value.trim();
+            if (!msg) return;
+            const { error } = await _supabase.from('broadcasts').insert([{ message: msg }]);
+            if (error) {
+                alert("Duyuru gönderilemedi. Lütfen 'broadcasts' tablosunun varlığını kontrol edin.");
+            } else {
+                alert("📢 DUYURU BAŞARIYLA YAYINLANDI!");
+                document.getElementById('broadcastMsg').value = "";
+            }
+        }
+
+        async function deleteBroadcasts() {
+            if (!confirm("TÜM duyuruları silmek ve panoyu temizlemek istediğinize emin misiniz?")) return;
+            
+            // 🚨 ÖNEMLİ: Supabase'de bir satırı silmek için mutlaka bir filtre olmalı.
+            // 'message' sütunu boş olmayan tüm satırları sil diyoruz (Yani her şeyi).
+            const { error } = await _supabase.from('broadcasts').delete().neq('message', '___HOSGELDINIZ___');
+            
+            if (error) {
+                alert("Hata: " + error.message + "\n\nİpucu: Supabase SQL panelinde 'DELETE' yetkisi (Policy) tanımlanmamış olabilir.");
+            } else {
+                alert("✅ PANORAMA TEMİZLENDİ!\nPersonel ekranlarından 30 saniye içinde silinecektir.");
+                document.getElementById('broadcastMsg').value = "";
+            }
+        }
+
+
+
+
+        async function loadStaffList() {
+            const { data, error } = await _supabase.from('users').select('*').order('id', { ascending: false }); // Yeni olanlar en üstte!
+            if (data) {
+                document.getElementById('staffListTable').innerHTML = data.map(u => `
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                        <td style="padding: 15px; color: #fff; font-weight: 600;">${u.ad_soyad}</td>
+                        <td style="padding: 15px; font-family: 'Orbitron'; color: var(--primary);">${u.pin}</td>
+                        <td style="padding: 15px; text-align: right;">
+                            <button onclick="deleteStaff(${u.id})" style="background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; color: #ef4444; padding: 5px 12px; border-radius: 8px; cursor: pointer; font-size: 10px;">SİL</button>
+                        </td>
+                    </tr>
+                `).join('');
+            }
+        }
+
+        async function addStaff() {
+            const name = document.getElementById('newStaffName').value.trim();
+            const pin = document.getElementById('newStaffPin').value.trim();
+            if (!name || pin.length !== 4) { alert("Lütfen geçerli isim ve 4 haneli PIN girin!"); return; }
+
+            // 🔍 AYNI ŞİFRE (PIN) DENETİMİ
+            const { data: existingUser } = await _supabase.from('users').select('ad_soyad').eq('pin', pin).limit(1);
+            if (existingUser && existingUser.length > 0) {
+                alert(`⚠️ DİKKAT: Bu PIN kodu zaten "${existingUser[0].ad_soyad}" adına tanımlı! Lütfen farklı bir PIN belirleyin.`);
+                return;
+            }
+
+            const { error } = await _supabase.from('users').insert([{ ad_soyad: name, pin: pin }]);
+            if (error) alert("Hata: " + error.message + "\n(Lütfen 'users' tablosunda ekleme yetkiniz olduğunu kontrol edin)");
+            else {
+                document.getElementById('newStaffName').value = "";
+                document.getElementById('newStaffPin').value = "";
+                loadStaffList();
+            }
+        }
+
+        async function deleteStaff(id) {
+            if (!confirm("Bu personeli silmek istediğinize emin misiniz?")) return;
+            const { error } = await _supabase.from('users').delete().eq('id', id);
+            if (error) alert("Hata: " + error.message);
+            else loadStaffList();
+        }
+
+        // 🚨 TÜM FONKSİYONLARI DIŞARI AÇ (Window Scope)
+        // IIFE içinde oldukları için HTML butonları bunları göremez. 
+        // Güvenliği bozmadan sadece gerekli kapıları açıyoruz.
+        window.nextStep = nextStep;
+        window.fetchData = fetchData;
+        window.applyFilter = applyFilter;
+        window.sendBroadcast = sendBroadcast;
+        window.deleteBroadcasts = deleteBroadcasts;
+        window.addStaff = addStaff;
+        window.deleteStaff = deleteStaff;
+
+        window.logout = logout;
+        window.exportPDF = exportPDF;
+        window.showMsg = showMsg;
+        window.closeMsg = closeMsg;
+        window.filterActiveStaff = filterActiveStaff;
 
         function updateTrendGraph() {
             const points = []; const hours = 7; const now = new Date();
             for(let i=0; i<=hours; i++) {
                 const targetTime = new Date(now.getTime() - (i * 3600000));
-                const count = allLogs.filter(l => new Date(l.raw_time).getHours() === targetTime.getHours()).length;
+                const count = window.allLogs.filter(l => new Date(l.raw_time).getHours() === targetTime.getHours()).length;
                 points.push(30 - (Math.min(count, 5) * 5));
             }
             const pathData = points.reverse().map((p, i) => `${i === 0 ? 'M' : 'L'}${i * 15},${p}`).join(' ');
@@ -578,13 +761,13 @@ document.getElementById('staffFilter').value = 'all';
         }
 
         function calculateScore(personName) {
-            let score = 100; const personLogs = allLogs.filter(l => l.personel === personName);
-            personLogs.forEach(log => { if(log.type === 'GİRİŞ') { const isLast = allLogs.filter(l => l.personel === log.personel)[0] === log; if(isLast && (new Date() - new Date(log.raw_time)) / 3600000 > 10) score -= 15; } });
+            let score = 100; const personLogs = window.allLogs.filter(l => l.personel === personName);
+            personLogs.forEach(log => { if(log.type === 'GİRİŞ') { const isLast = window.allLogs.filter(l => l.personel === log.personel)[0] === log; if(isLast && (new Date() - new Date(log.raw_time)) / 3600000 > 10) score -= 15; } });
             score += Math.floor(personLogs.length / 5) * 2; return Math.min(Math.max(score, 0), 100);
         }
 
        function runAIAnalysis() {
-            const names = [...new Set(allLogs.map(l => l.personel))]
+            const names = [...new Set(window.allLogs.map(l => l.personel))]
                             .filter(n => !n.includes("BILINMEYEN") && !n.includes("BİLİNMEYEN"));
             
             if (names.length === 0) {
@@ -595,15 +778,14 @@ document.getElementById('staffFilter').value = 'all';
             let activeStaff = 0;
             let criticalCount = 0;
             let bestPerson = { name: "", score: -1 };
-            let remoteStaffNames = []; // Dışarıdan girenlerin isimlerini tutacak liste
-            let totalActionsToday = allLogs.filter(l => new Date(l.raw_time).toDateString() === new Date().toDateString()).length;
+            let remoteStaffNames = []; 
+            let totalActionsToday = window.allLogs.filter(l => new Date(l.raw_time).toDateString() === new Date().toDateString()).length;
 
-            // 📍 DÜKKAN KOORDİNATLARI (Buraları dükkanının konumuyla güncelle!)
             const shopLat = 41.0000; 
             const shopLon = 28.0000; 
 
             names.forEach(name => {
-                const logs = allLogs.filter(l => l.personel === name);
+                const logs = window.allLogs.filter(l => l.personel === name);
                 const lastAction = logs.find(l => l.type === 'GİRİŞ' || l.type === 'ÇIKIŞ');
                 const score = calculateScore(name);
                 
@@ -614,12 +796,10 @@ document.getElementById('staffFilter').value = 'all';
                     const hoursInShift = (new Date() - new Date(lastAction.raw_time)) / 3600000;
                     if(hoursInShift > 10) criticalCount++;
                     
-                    // Mesafe Kontrolü: 0.001 yaklaşık 100 metredir. 
-                    // 0.005'ten büyükse dükkanda değildir.
                     const distLat = Math.abs(lastAction.lat - shopLat);
                     const distLon = Math.abs(lastAction.lon - shopLon);
                     if(distLat > 0.005 || distLon > 0.005) {
-                        remoteStaffNames.push(name); // Hile şüphelisini listeye ekle
+                        remoteStaffNames.push(name); 
                     }
                 }
             });
@@ -627,7 +807,6 @@ document.getElementById('staffFilter').value = 'all';
             const aiText = document.getElementById('ai-text');
             let aiMsg = "";
 
-            // 1. Durum Analizi (Hile ve Anomali Tespiti)
             if (remoteStaffNames.length > 0) {
                 aiMsg += `📍 <b style="color:#f48120">DIŞ MEKAN GİRİŞİ:</b> <span style="color:#fff; background:#ef4444; padding:2px 6px; border-radius:4px;">${remoteStaffNames.join(", ")}</span> dükkan dışından işlem yaptı! `;
             } else if (criticalCount > 0) {
@@ -636,16 +815,20 @@ document.getElementById('staffFilter').value = 'all';
                 aiMsg += `✅ <b style="color:#10b981">GÜVENLİ:</b> Tüm personel dükkan sınırları içerisinde. `;
             }
 
-            // 2. Performans Raporu
             aiMsg += `<br>📊 <b>ÖZET:</b> Bugün ${totalActionsToday} işlem. En disiplinli: <b>${bestPerson.name}</b>.`;
             
-            // 3. AI Tavsiyesi
-            if (activeStaff > 0) {
-                aiMsg += `<br>🚀 <b>SAHA:</b> Şu an ${activeStaff} personel aktif görevde.`;
+            const anomalies = [];
+            if (remoteStaffNames.length > 0) {
+                remoteStaffNames.forEach(name => anomalies.push({ type: 'OUTSIDE', name: name }));
             }
+            if (criticalCount > 0) {
+                anomalies.push({ type: 'OVERTIME' });
+            }
+            if (window.ShiftAI) window.ShiftAI.updateSuggestions(anomalies);
 
             if(aiText) aiText.innerHTML = aiMsg;
         }
+
         function calculateRowDuration(currentLog, logs) {
             const personLogs = logs.filter(l => l.personel === currentLog.personel).sort((a, b) => new Date(a.raw_time) - new Date(b.raw_time));
             const lastGiris = personLogs.filter(l => new Date(l.raw_time) <= new Date(currentLog.raw_time) && l.type === 'GİRİŞ').pop();
@@ -657,45 +840,30 @@ document.getElementById('staffFilter').value = 'all';
         }
 
       function checkCriticalAlert(log, all) {
-    // Sadece 'GİRİŞ' satırlarında uyarı gösterelim
     if (log.type !== 'GİRİŞ') return false;
-
-    // Bu personelin TÜM hareketlerini zamana göre diz (en yeni en üstte)
     const personLogs = all.filter(l => l.personel === log.personel);
-    
-    // Personelin yaptığı EN SON ana işlemi bul (GİRİŞ mi ÇIKIŞ mı?)
-    // find() mesajları atlasın diye tip kontrolü yapıyoruz
     const lastMainAction = personLogs.find(l => l.type === 'GİRİŞ' || l.type === 'ÇIKIŞ');
-
-    // KRİTİK KONTROL 1: Eğer personelin son işlemi ÇIKIŞ ise, o zaten evindedir. Alarm verme!
     if (lastMainAction && lastMainAction.type === 'ÇIKIŞ') return false;
-
-    // KRİTİK KONTROL 2: Eğer baktığımız bu satır, personelin EN SON giriş kaydı değilse alarm verme!
-    // (Eski girişleri kırmızı boyayıp kafa karıştırmasın)
     const lastGiris = personLogs.find(l => l.type === 'GİRİŞ');
     if (lastGiris && lastGiris.id !== log.id) return false;
-
-    // KRİTİK KONTROL 3: Zaman hesabı
     const girisZamani = new Date(log.raw_time);
     const simdi = new Date();
     const farkSaat = (simdi - girisZamani) / 3600000;
-
-    // Eğer şu an hala içerideyse VE 10 saati geçmişse KIRMIZI YAK!
     return farkSaat > 10;
 }
 
         function updateDashboard() {
-            const names = [...new Set(allLogs.map(l => l.personel))].sort();
+            const names = [...new Set(window.allLogs.map(l => l.personel))].sort();
             document.getElementById('staffFilter').innerHTML = '<option value="all">TÜMÜ</option>' + names.map(n => `<option value="${n}">${n}</option>`).join('');
-            document.getElementById('stat-total').innerText = allLogs.length;
+            document.getElementById('stat-total').innerText = window.allLogs.length;
             let realActiveCount = 0;
             names.forEach(name => {
-                const personLogs = allLogs.filter(l => l.personel === name);
+                const personLogs = window.allLogs.filter(l => l.personel === name);
                 const lastMainAction = personLogs.find(l => l.type === 'GİRİŞ' || l.type === 'ÇIKIŞ');
                 if(lastMainAction && lastMainAction.type === 'GİRİŞ') realActiveCount++;
             });
             document.getElementById('stat-staff').innerText = realActiveCount;
-            document.getElementById('stat-today').innerText = allLogs.filter(l => new Date(l.raw_time).toDateString() === new Date().toDateString()).length;
+            document.getElementById('stat-today').innerText = window.allLogs.filter(l => new Date(l.raw_time).toDateString() === new Date().toDateString()).length;
             applyFilter();
         }
 
@@ -703,18 +871,18 @@ document.getElementById('staffFilter').value = 'all';
             const staff = document.getElementById('staffFilter').value;
             const sD = document.getElementById('startDate').value;
             const eD = document.getElementById('endDate').value;
-            let filtered = allLogs;
+            let filtered = window.allLogs;
             if (staff !== "all") filtered = filtered.filter(l => l.personel === staff);
             if (sD) filtered = filtered.filter(l => new Date(l.raw_time) >= new Date(sD));
             if (eD) filtered = filtered.filter(l => new Date(l.raw_time) <= new Date(eD + "T23:59:59"));
             
            document.getElementById('logTable').innerHTML = filtered.map(log => {
-    const isCrit = checkCriticalAlert(log, allLogs);
+    const isCrit = checkCriticalAlert(log, window.allLogs);
     const score = calculateScore(log.personel);
     const isNew = (new Date() - new Date(log.raw_time)) < 30000;
     const isMessage = log.type === 'MESAJ';
     const isUnknown = log.personel.includes("BILINMEYEN") || log.personel.includes("BİLİNMEYEN");
-    const durationText = calculateRowDuration(log, allLogs); // Süre hesaplamayı unutma
+    const durationText = calculateRowDuration(log, window.allLogs); 
     
     const clickAction = isMessage ? `onclick="showMsg('${log.personel}', '${log.mahalle.replace(/'/g, "\\'")}', '${log.time}')"` : "";
     const badgeStyle = isMessage ? 'background: #9333ea; cursor: pointer; border-color: #a78bfa;' : '';
@@ -722,7 +890,6 @@ document.getElementById('staffFilter').value = 'all';
     const noteText = isMessage ? '📝 Personel Bildirimi Gönderdi' : log.mahalle;
     const scoreBox = !isUnknown ? `<div class="score-box ${score < 70 ? 'low-score' : ''}">⭐ ${score} Puan</div>` : '';
 
-    // İŞTE DEĞİŞECEK OLAN ANA YAPI:
     return `<tr class="${isCrit ? 'critical-alarm' : ''} ${isNew ? 'new-action-row' : ''}">
         <td>
             <b>${log.personel}</b><br>
@@ -738,18 +905,14 @@ document.getElementById('staffFilter').value = 'all';
     </tr>`;
 }).join('');
         }
+
 function filterActiveStaff() {
     const names = [...new Set(allLogs.map(l => l.personel))];
     const activeLogsOnly = [];
 
     names.forEach(name => {
-        // Personelin tüm loglarını al
         const personLogs = allLogs.filter(l => l.personel === name);
-        
-        // 🚨 KRİTİK DÜZELTME: Mesajları filtre dışı bırak, sadece GİRİŞ veya ÇIKIŞ'a bak
         const lastWorkAction = personLogs.find(l => l.type === 'GİRİŞ' || l.type === 'ÇIKIŞ');
-
-        // Eğer en son yaptığı ana işlem GİRİŞ ise, dükkandadır (arada mesaj atmış olsa bile)
         if(lastWorkAction && lastWorkAction.type === 'GİRİŞ') {
             activeLogsOnly.push(lastWorkAction);
         }
@@ -765,6 +928,7 @@ function filterActiveStaff() {
     document.getElementById('staffFilter').value = 'all';
     document.getElementById('ai-text').innerHTML = `⚡ <b>GÜNCEL TAKİP:</b> Personel mesaj gönderse dahi mesai takibi devam eder. Şu an ${activeLogsOnly.length} personel içeride.`;
 }
+
 function renderCustomTable(data) {
     document.getElementById('logTable').innerHTML = data.map(log => {
         const isCrit = checkCriticalAlert(log, allLogs);
@@ -776,7 +940,6 @@ function renderCustomTable(data) {
         const badgeStyle = isMessage ? 'background: #9333ea; cursor: pointer; border-color: #a78bfa;' : '';
         const displayText = isMessage ? '📩 MESAJI OKU' : log.type;
 
-        // İŞTE DEĞİŞECEK OLAN ANA YAPI:
         return `<tr class="${isCrit ? 'critical-alarm' : ''}">
             <td>
                 <b>${log.personel}</b><br>
@@ -787,7 +950,7 @@ function renderCustomTable(data) {
                 <span class="badge ${log.type}" ${clickAction} style="${badgeStyle}">${displayText}</span><br>
                 <small style="color:var(--primary); font-weight:700;">⏱️ ${durationText}</small>
             </td>
-            <td>${log.mahalle}<br><a href="http://googleusercontent.com/maps.google.com/?q=${log.lat},${log.lon}" target="_blank" style="color:#3b82f6; font-size:10px; font-weight:700; text-decoration:none;">📍 KONUM</a></td>
+            <td>${log.mahalle}<br><a href="https://www.google.com/maps?q=${log.lat},${log.lon}" target="_blank" style="color:#3b82f6; font-size:10px; font-weight:700; text-decoration:none;">📍 KONUM</a></td>
             <td>
                 <i class="far fa-clock time-icon"></i>
                 <span class="log-time-highlight">${log.time.split(' ')[1]}</span><br>
@@ -806,11 +969,27 @@ function renderCustomTable(data) {
         function closeMsg() { document.getElementById('msg-modal').style.display = 'none'; }
 
         function exportPDF() {
+            const staff = document.getElementById('staffFilter').value;
+            const sD = document.getElementById('startDate').value;
+            const eD = document.getElementById('endDate').value;
+            
+            let filteredLogs = allLogs;
+            if (staff !== "all") filteredLogs = filteredLogs.filter(l => l.personel === staff);
+            if (sD) filteredLogs = filteredLogs.filter(l => new Date(l.raw_time) >= new Date(sD));
+            if (eD) filteredLogs = filteredLogs.filter(l => new Date(l.raw_time) <= new Date(eD + "T23:59:59"));
+
+            if (filteredLogs.length === 0) {
+                alert("Seçili kriterlerde kayıt bulunamadığı için rapor oluşturulamadı.");
+                return;
+            }
+
             const { jsPDF } = window.jspdf; const doc = new jsPDF();
             const now = new Date();
+
             const clearTR = (text) => text ? text.toString().replace(/İ/g, 'I').replace(/ı/g, 'i').replace(/Ş/g, 'S').replace(/ş/g, 's').replace(/Ğ/g, 'G').replace(/ğ/g, 'g').replace(/Ü/g, 'U').replace(/ü/g, 'u').replace(/Ö/g, 'O').replace(/ö/g, 'o').replace(/Ç/g, 'C').replace(/ç/g, 'c') : "";
             const summaryData = {}; const groupedLogs = {};
-            allLogs.forEach(log => { if (!groupedLogs[log.personel]) groupedLogs[log.personel] = []; groupedLogs[log.personel].push(log); });
+            filteredLogs.forEach(log => { if (!groupedLogs[log.personel]) groupedLogs[log.personel] = []; groupedLogs[log.personel].push(log); });
+
             Object.keys(groupedLogs).forEach(name => {
                 const logs = groupedLogs[name].sort((a, b) => new Date(a.raw_time) - new Date(b.raw_time));
                 let totalMs = 0; let shiftCount = 0; let lastGirisTime = null;
@@ -823,20 +1002,25 @@ function renderCustomTable(data) {
             });
             const summaryRows = Object.keys(summaryData).map(name => [clearTR(name), summaryData[name].count + " Kez", summaryData[name].duration]);
             doc.setFontSize(16); doc.text(clearTR("SHIFT TURBO - OPERASYONEL RAPOR"), 14, 15);
-            doc.autoTable({ startY: 25, head: [['PERSONEL', 'MESAI SAYISI', 'TOPLAM SURE']], body: summaryRows, theme: 'grid', headStyles: { fillColor: [59, 130, 246] } });
-            const detailRows = allLogs.map(l => [clearTR(l.personel), clearTR(l.type), clearTR(l.mahalle), l.time]);
+            doc.setFontSize(10); 
+            doc.text(clearTR(`Filtre: ${staff === 'all' ? 'Tum Personel' : staff} | Tarih: ${sD || 'Baslangic Belirtilmedi'} - ${eD || 'Bugun'}`), 14, 22);
+
+            doc.autoTable({ startY: 30, head: [['PERSONEL', 'MESAI SAYISI', 'TOPLAM SURE']], body: summaryRows, theme: 'grid', headStyles: { fillColor: [59, 130, 246] } });
+            const detailRows = filteredLogs.map(l => [clearTR(l.personel), clearTR(l.type), clearTR(l.mahalle), l.time]);
             doc.autoTable({ startY: doc.lastAutoTable.finalY + 15, head: [['PERSONEL', 'ISLEM', 'BOLGE', 'ZAMAN']], body: detailRows, theme: 'striped', headStyles: { fillColor: [244, 129, 32] } });
+
             doc.save("ShiftTurbo_Rapor.pdf");
         }
 
-        setInterval(() => { 
+        function updateClocks() {
             const now = new Date();
             if(document.getElementById('liveClock')) document.getElementById('liveClock').innerText = now.toLocaleTimeString('tr-TR');
             if(document.getElementById('clock_login')) document.getElementById('clock_login').innerText = now.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
             if(document.getElementById('date_login')) document.getElementById('date_login').innerText = now.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' }).toUpperCase();
-        }, 1000);
+        }
 
-        window.onload = () => { if(sessionStorage.getItem("isAdmin") === "true") showPanel(); }
+        updateClocks();
+        setInterval(updateClocks, 1000);
 
         function ensureSignature() {
             const badge = document.querySelector('.ucr-badge');
@@ -846,6 +1030,19 @@ function renderCustomTable(data) {
             }
         }
         setInterval(ensureSignature, 1000);
+
+        // HTML'deki onclick olaylarının çalışması için açık uçları Global Window nesnesine atıyoruz
+        // Bu sayede gerçek veriler (isAuthenticated, allLogs) gizli kalırken arayüz sorunsuz çalışır
+        window.nextStep = nextStep;
+        window.checkAuth = checkAuth;
+        window.logout = logout;
+        window.fetchData = fetchData;
+        window.applyFilter = applyFilter;
+        window.filterActiveStaff = filterActiveStaff;
+        window.showMsg = showMsg;
+        window.closeMsg = closeMsg;
+        window.exportPDF = exportPDF;
+    })();
     </script>
 </body>
-</html> 
+</html>
