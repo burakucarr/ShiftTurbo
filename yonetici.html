@@ -1212,10 +1212,6 @@
             position: relative;
             transition: background 0.3s ease;
         }
-            max-width: 450px;
-            text-align: center;
-            position: relative;
-        }
 
         .msg-title {
             font-family: 'Orbitron';
@@ -1325,7 +1321,7 @@
 
         .critical-alarm {
             background: rgba(239, 68, 68, 0.15) !important;
-            border-left: 5px solid #ef444 !important;
+            border-left: 5px solid #ef4444 !important;
             animation: criticalPulse 2s infinite ease-in-out;
         }
 
@@ -3418,14 +3414,14 @@
                 if (!listEl) return;
                 const { data, error } = await _supabase.from('broadcasts').select('*').order('created_at', { ascending: false });
 
-                if (error || !data || data.length === 0) { listEl.innerHTML = `<div style="color:#64748b; font-size:11px;">Henüz geçmiş duyuru yok.</div>`; return; }
+                if (error || !data || data.length === 0) { listEl.innerHTML = '<div style="color:#64748b; font-size:11px;">Henüz geçmiş duyuru yok.</div>'; return; }
                 listEl.innerHTML = data.map(b => {
                     let dispMsg = b.message;
-                    let badgeHtml = `<span style="background: rgba(16,185,129,0.2); color:#10b981; padding:2px 6px; border-radius:4px; font-size:9px; margin-right:8px; font-family:'Poppins', sans-serif; font-weight:bold;">GENEL</span>`;
+                    let badgeHtml = '<span style="background: rgba(16,185,129,0.2); color:#10b981; padding:2px 6px; border-radius:4px; font-size:9px; margin-right:8px; font-family:\'Poppins\', sans-serif; font-weight:bold;">GENEL</span>';
                     if (dispMsg.startsWith('[ALL] ')) { dispMsg = dispMsg.replace('[ALL] ', ''); }
                     else if (dispMsg.match(/^\[(.*?)\]\s*(.*)/)) {
                         const m = dispMsg.match(/^\[(.*?)\]\s*(.*)/);
-                        badgeHtml = `<span style="background: rgba(59,130,246,0.2); color:#60a5fa; padding:2px 6px; border-radius:4px; font-size:9px; margin-right:8px; font-family:'Poppins', sans-serif; font-weight:bold;">👤 ${m[1]}</span>`;
+                        badgeHtml = '<span style="background: rgba(59,130,246,0.2); color:#60a5fa; padding:2px 6px; border-radius:4px; font-size:9px; margin-right:8px; font-family:\'Poppins\', sans-serif; font-weight:bold;">👤 ' + m[1] + '</span>';
                         dispMsg = m[2];
                     }
                     return `
@@ -3489,7 +3485,7 @@
                     const publicVapidKey = 'BEl62iUYgUivxIkv390w4q5Wq6S0FsyuG71a2kZkO4U9s6K7-tX2Z23548971234567890abcdef1234567890';
                     const urlBase64ToUint8Array = (base64String) => {
                         const padding = '='.repeat((4 - base64String.length % 4) % 4);
-                        const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/');
+                        const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
                         const rawData = window.atob(base64);
                         const outputArray = new Uint8Array(rawData.length);
                         for (let i = 0; i < rawData.length; ++i) { outputArray[i] = rawData.charCodeAt(i); }
@@ -3523,13 +3519,18 @@
                 if (!tbody) return;
                 const { data, error } = await _supabase.from('users').select('*').order('ad_soyad', { ascending: true });
 
-                if (error || !data || data.length === 0) { tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#64748b;">Personel kaydı yok.</td></tr>`; return; }
+                if (error || !data || data.length === 0) { tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#64748b;">Personel kaydı yok.</td></tr>'; return; }
 
                 window.allUsers = data;
                 const rates = JSON.parse(localStorage.getItem('shiftTurbo_hourly_rates') || '{}');
 
                 tbody.innerHTML = data.map(u => {
                     const rate = rates[u.pin] || 200;
+                    const safeName = u.ad_soyad.replace(/'/g, "\\'");
+                    const deviceBtnHtml = u.device_id 
+                        ? '<button onclick="resetDevice(\'' + u.pin + '\', \'' + safeName + '\')" class="btn-cyber" style="background:#3b82f6; color:#fff; font-size:10px; font-family:\'Poppins\', sans-serif; font-weight:600; padding:8px 14px; margin-right:15px;">📱 CİHAZ KİLİDİNİ AÇ</button>' 
+                        : '<span style="font-family:\'Poppins\', sans-serif; font-size:12px; font-weight:600; color:var(--text-muted); margin-right:15px; display:inline-block;">Cihaz Eşleşmemiş</span>';
+
                     return `
                     <tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
                         <td style="padding:15px; font-family:'Poppins', sans-serif; font-size:15px; font-weight:700; letter-spacing:0.5px; color:var(--text-main);">${u.ad_soyad}</td>
@@ -3538,13 +3539,13 @@
                             <div style="display:flex; align-items:center; gap:8px;">
                                 <input type="text" id="rate-${u.pin}" value="${rate}" style="width:80px; background:var(--input-bg); border:1px solid var(--border); color:var(--primary); padding:6px 10px; border-radius:8px; font-family:'Poppins', sans-serif; font-weight:bold; font-size:14px; outline:none; text-align:center;">
                                 <span style="color:var(--text-muted); font-size:11px; font-family:'Poppins', sans-serif;">TL/saat</span>
-                                <button onclick="saveHourlyRate('${u.pin}', '${u.ad_soyad}')" class="btn-cyber" style="background:#10b981; color:#fff; font-size:9px; padding:6px 10px; height:auto; font-family:'Poppins', sans-serif; font-weight:bold;">💾 KAYDET</button>
-                                <button onclick="promptHourlyRate('${u.pin}', '${u.ad_soyad}', ${rate})" class="btn-cyber" style="background:#f59e0b; color:#fff; font-size:9px; padding:6px 10px; height:auto; font-family:'Poppins', sans-serif; font-weight:bold;">✏️ HIZLI GİR</button>
+                                <button onclick="saveHourlyRate('${u.pin}', '${safeName}')" class="btn-cyber" style="background:#10b981; color:#fff; font-size:9px; padding:6px 10px; height:auto; font-family:'Poppins', sans-serif; font-weight:bold;">💾 KAYDET</button>
+                                <button onclick="promptHourlyRate('${u.pin}', '${safeName}', ${rate})" class="btn-cyber" style="background:#f59e0b; color:#fff; font-size:9px; padding:6px 10px; height:auto; font-family:'Poppins', sans-serif; font-weight:bold;">✏️ HIZLI GİR</button>
                             </div>
                         </td>
                         <td style="padding:15px; text-align:right;">
-                            ${u.device_id ? `<button onclick="resetDevice('${u.pin}', '${u.ad_soyad}')" class="btn-cyber" style="background:#3b82f6; color:#fff; font-size:10px; font-family:'Poppins', sans-serif; font-weight:600; padding:8px 14px; margin-right:15px;">📱 CİHAZ KİLİDİNİ AÇ</button>` : `<span style="font-family:'Poppins', sans-serif; font-size:12px; font-weight:600; color:var(--text-muted); margin-right:15px; display:inline-block;">Cihaz Eşleşmemiş</span>`}
-                            <button onclick="deleteStaff('${u.pin}', '${u.ad_soyad}')" class="btn-cyber" style="background:#ef4444; color:#fff; font-size:10px; font-family:'Poppins', sans-serif; font-weight:600; padding:8px 14px;">🗑️ SİL</button>
+                            ${deviceBtnHtml}
+                            <button onclick="deleteStaff('${u.pin}', '${safeName}')" class="btn-cyber" style="background:#ef4444; color:#fff; font-size:10px; font-family:'Poppins', sans-serif; font-weight:600; padding:8px 14px;">🗑️ SİL</button>
                         </td>
                     </tr>
                     `;
@@ -3553,8 +3554,8 @@
                 const targetSel = document.getElementById('broadcastTarget');
                 if (targetSel && data) {
                     const currentVal = targetSel.value;
-                    targetSel.innerHTML = `<option value="ALL">📢 Tüm Personeller (Genel Duyuru)</option>` + 
-                        data.map(u => `<option value="${u.ad_soyad}">👤 ${u.ad_soyad}</option>`).join('');
+                    targetSel.innerHTML = '<option value="ALL">📢 Tüm Personeller (Genel Duyuru)</option>' + 
+                        data.map(u => '<option value="' + u.ad_soyad + '">👤 ' + u.ad_soyad + '</option>').join('');
                     if (currentVal) targetSel.value = currentVal;
                 }
             }
@@ -3585,9 +3586,13 @@
                     queryColumn = 'pin';
                 }
 
-                const { error } = await _supabase.from('users').delete().eq(queryColumn, identifier);
-                if (error) showToast("HATA", error.message, "error");
-                else { 
+                const { data, error } = await _supabase.from('users').delete().eq(queryColumn, identifier).select();
+                if (error) {
+                    showToast("HATA", error.message, "error");
+                } else if (!data || data.length === 0) {
+                    showToast("YETKİ HATASI (RLS)", "Supabase RLS politikası silme işlemine izin vermiyor. Lütfen Supabase panelinden 'users' tablosu için DELETE yetkisi (policy) ekleyin.", "error");
+                    alert("Yetki Hatası (RLS): Supabase panelinde 'users' tablosu için RLS aktif edilmiş ancak silme yetkisi (DELETE policy) tanımlanmamış.\n\nÇözüm: Supabase > Authentication > Policies kısmından 'users' tablosuna DELETE yetkisi verin.");
+                } else { 
                     showToast("SİLİNDİ", `✅ ${name} silindi.`, "success"); 
                     if (typeof fetchStaffList === 'function') fetchStaffList();
                     if (typeof loadStaffList === 'function') loadStaffList();
@@ -3605,9 +3610,13 @@
                     queryColumn = 'pin';
                 }
 
-                const { error } = await _supabase.from('users').update({ device_id: null }).eq(queryColumn, identifier);
-                if (error) showToast("HATA", error.message, "error");
-                else { 
+                const { data, error } = await _supabase.from('users').update({ device_id: null }).eq(queryColumn, identifier).select();
+                if (error) {
+                    showToast("HATA", error.message, "error");
+                } else if (!data || data.length === 0) {
+                    showToast("YETKİ HATASI (RLS)", "Supabase Row Level Security (RLS) politikası bu işleme izin vermiyor. Lütfen Supabase panelinden 'users' tablosu için UPDATE yetkisi (policy) ekleyin.", "error");
+                    alert("Yetki Hatası (RLS): Supabase panelinde 'users' tablosu için RLS aktif edilmiş ancak anonim/yönetici güncelleme yetkisi (UPDATE policy) tanımlanmamış. Bu yüzden cihaz kilidi kaldırılamıyor.\n\nÇözüm: Supabase > Authentication > Policies kısmından 'users' tablosuna UPDATE yetkisi verin.");
+                } else { 
                     showToast("BAŞARILI", `✅ ${name} cihaz kilidi açıldı. Yeni telefondan giriş yapabilir.`, "success"); 
                     if (typeof fetchStaffList === 'function') fetchStaffList();
                     if (typeof loadStaffList === 'function') loadStaffList();
@@ -3688,12 +3697,12 @@
                     const aboutM = document.getElementById('about-modal');
                     const financeM = document.getElementById('finance-modal');
                     const scoreM = document.getElementById('score-modal');
-                    const confirmM = document.getElementById('cyber-confirm-modal');
+                    const confirmM = document.getElementById('confirm-modal');
                     const passM = document.getElementById('password-modal');
                     const hourlyM = document.getElementById('hourly-rate-modal');
 
                     if (confirmM && confirmM.style.display === 'flex') {
-                        const cancelBtn = confirmM.querySelector('.btn-out, .btn-red, button[onclick*="false"]');
+                        const cancelBtn = confirmM.querySelector('.btn-out, .btn-red, button[onclick*="false"], .btn-cancel');
                         if (cancelBtn) cancelBtn.click();
                         else confirmM.style.display = 'none';
                         return;

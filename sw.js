@@ -1,8 +1,9 @@
-const CACHE_NAME = 'shift-turbo-v7'; // Sürüm yükseltmek zorunlu cache silmeyi tetikler
+const CACHE_NAME = 'shift-turbo-v8'; // Sürüm yükseltmek zorunlu cache silmeyi tetikler
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
   './yonetici.html',
+  './yonetici',
   './manifest.json',
   'https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Orbitron:wght@500;700;900&display=swap',
   './audio/kimlik_dogrulandi_1.mp3',
@@ -12,7 +13,7 @@ const ASSETS_TO_CACHE = [
   './audio/mesai_baslat_2.mp3',
   './audio/mesai_baslat_3.mp3',
   './audio/mesai_bitir_1.mp3',
-  './audio/mesai_bitir_2.mp3',
+  './audio/mesai_bitir2.mp3',
   './audio/mesai_bitir_3.mp3',
   './audio/mesai_baslat_cevrimdisi_1.mp3',
   './audio/mesai_baslat_cevrimdisi_2.mp3',
@@ -62,9 +63,16 @@ self.addEventListener('fetch', (event) => {
           return response;
         });
       })
-      .catch(() => {
-        // İnternet yoksa (Offline), cache'den getir
-        return caches.match(event.request);
+      .catch(async () => {
+        // İnternet yoksa (Offline) veya sunucu hatası varsa cache'den getir
+        const cached = await caches.match(event.request);
+        if (cached) return cached;
+
+        // Eğer sayfa yönlendirmesi (/yonetici veya /panel) ise ve önbellekte doğrudan yoksa yonetici.html'e fallback yap
+        if (event.request.mode === 'navigate' || event.request.url.includes('/yonetici') || event.request.url.includes('/panel')) {
+          return caches.match('./yonetici.html');
+        }
+        return caches.match('./index.html');
       })
   );
 });
