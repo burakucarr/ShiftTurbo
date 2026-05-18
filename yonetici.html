@@ -2683,11 +2683,7 @@
                 if (autoRefreshInterval) clearInterval(autoRefreshInterval);
                 if (realtimeChannel) _supabase.removeChannel(realtimeChannel);
                 location.reload();
-            }
-            if (criticalCount > 0) {
-                anomalies.push({ type: 'OVERTIME' });
-            }
-            if (window.ShiftAI) window.ShiftAI.updateSuggestions(anomalies);
+
 
             // 🔑 ŞİFRE DEĞİŞTİRME FONKSİYONLARI
             function showPasswordModal() {
