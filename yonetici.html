@@ -52,21 +52,21 @@
         }
 
         [data-theme="light"] {
-            --primary: #b85100;
+            --primary: #9a3b00;
             --bg: #f1f5f9;
-            --card: rgba(255, 255, 255, 0.85);
-            --glass: rgba(255, 255, 255, 0.6);
-            --border: rgba(100, 116, 139, 0.2);
+            --card: rgba(255, 255, 255, 0.95);
+            --glass: rgba(255, 255, 255, 0.95);
+            --border: rgba(15, 23, 42, 0.2);
             --text-main: #0f172a;
             --text-sub: #334155;
-            --text-muted: #64748b;
-            --panel-bg: rgba(255, 255, 255, 0.85);
-            --ai-box-bg: rgba(255, 255, 255, 0.7);
-            --stat-bg-1: rgba(255, 255, 255, 0.95);
-            --stat-bg-2: rgba(241, 245, 249, 0.9);
-            --toolbar-bg: rgba(255, 255, 255, 0.8);
-            --table-row-bg: rgba(255, 255, 255, 0.7);
-            --input-bg: rgba(255, 255, 255, 0.9);
+            --text-muted: #475569;
+            --panel-bg: rgba(255, 255, 255, 0.95);
+            --ai-box-bg: rgba(255, 255, 255, 0.9);
+            --stat-bg-1: rgba(255, 255, 255, 1);
+            --stat-bg-2: rgba(241, 245, 249, 0.95);
+            --toolbar-bg: rgba(255, 255, 255, 0.9);
+            --table-row-bg: rgba(255, 255, 255, 0.9);
+            --input-bg: rgba(255, 255, 255, 1);
             --msg-bot-bg: rgba(139, 92, 246, 0.15);
             --msg-user-bg: rgba(59, 130, 246, 0.15);
             --modal-bg: #ffffff;
@@ -634,9 +634,15 @@
         }
 
         [data-theme="light"] body::before {
-            background: linear-gradient(rgba(244, 129, 32, 0.25) 1px, transparent 1px),
-                        linear-gradient(90deg, rgba(244, 129, 32, 0.25) 1px, transparent 1px);
+            background: linear-gradient(rgba(154, 59, 0, 0.15) 1px, transparent 1px),
+                        linear-gradient(90deg, rgba(154, 59, 0, 0.15) 1px, transparent 1px);
             background-size: 25px 25px;
+        }
+
+        [data-theme="light"] .login-card {
+            background: rgba(255, 255, 255, 0.95) !important;
+            border: 1px solid rgba(154, 59, 0, 0.3) !important;
+            box-shadow: 0 30px 70px rgba(15, 23, 42, 0.15), 0 0 30px rgba(154, 59, 0, 0.1) !important;
         }
 
         .header {

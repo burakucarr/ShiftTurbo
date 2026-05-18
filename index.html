@@ -38,17 +38,24 @@
         }
 
         :root[data-theme="light"] {
-            --primary: #b85100;
-            --bg: #f8fafc;
-            --card: rgba(255, 255, 255, 0.85);
-            --glass: rgba(0, 0, 0, 0.03);
-            --border: rgba(0, 0, 0, 0.15);
+            --primary: #9a3b00;
+            --bg: #f1f5f9;
+            --card: rgba(255, 255, 255, 0.95);
+            --glass: rgba(255, 255, 255, 0.95);
+            --border: rgba(15, 23, 42, 0.2);
             --text-main: #0f172a;
-            --text-muted: #64748b;
+            --text-muted: #475569;
         }
 
         [data-theme="light"] body {
             color: var(--text-main);
+            background: var(--bg);
+        }
+
+        [data-theme="light"] .card {
+            background: rgba(255, 255, 255, 0.95) !important;
+            border: 1px solid rgba(154, 59, 0, 0.3) !important;
+            box-shadow: 0 30px 70px rgba(15, 23, 42, 0.15), 0 0 30px rgba(154, 59, 0, 0.1) !important;
         }
 
         [data-theme="light"] .brand-logo-text {
@@ -61,37 +68,45 @@
 
         [data-theme="light"] .time-display,
         [data-theme="light"] .time-display-login {
-            background: linear-gradient(180deg, #0f172a 40%, rgba(15, 23, 42, 0.5) 100%);
+            background: linear-gradient(180deg, #0f172a 40%, rgba(15, 23, 42, 0.8) 100%);
             -webkit-background-clip: text;
             background-clip: text;
             -webkit-text-fill-color: transparent;
+            font-weight: 700;
         }
 
         [data-theme="light"] .date-display,
         [data-theme="light"] .date-display-login {
-            color: #64748b;
+            color: #475569;
+            font-weight: 600;
         }
 
         [data-theme="light"] .pin-input {
-            background: rgba(255, 255, 255, 0.8);
-            border-color: var(--primary);
+            background: #ffffff;
+            border: 2px solid var(--primary);
             color: var(--primary);
+            font-weight: 900;
+            box-shadow: 0 5px 15px rgba(154, 59, 0, 0.15);
         }
 
         [data-theme="light"] .num-btn {
-            background: rgba(0, 0, 0, 0.05);
-            border-color: rgba(0, 0, 0, 0.1);
+            background: rgba(15, 23, 42, 0.08);
+            border: 1px solid rgba(15, 23, 42, 0.2);
             color: #0f172a;
+            font-weight: 700;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
         }
 
         [data-theme="light"] #greeting {
-            color: #64748b !important;
+            color: #334155 !important;
+            font-weight: 700;
         }
 
         [data-theme="light"] .btn-message {
-            background: rgba(0, 0, 0, 0.03);
-            border-color: rgba(244, 129, 32, 0.3);
+            background: rgba(15, 23, 42, 0.05);
+            border: 1px solid var(--primary);
             color: #0f172a !important;
+            font-weight: 700;
         }
 
         [data-theme="light"] .landing-title {
@@ -99,28 +114,30 @@
         }
 
         [data-theme="light"] .l-card {
-            background: rgba(0, 0, 0, 0.03);
-            border-color: rgba(244, 129, 32, 0.3);
+            background: #ffffff;
+            border: 1px solid rgba(154, 59, 0, 0.3);
+            box-shadow: 0 5px 15px rgba(15, 23, 42, 0.05);
         }
 
         [data-theme="light"] .l-card p {
-            color: #475569;
+            color: #334155;
+            font-weight: 500;
         }
 
         [data-theme="light"] #landing-wrapper {
-            background: rgba(248, 250, 252, 0.85);
+            background: rgba(241, 245, 249, 0.95);
         }
 
         [data-theme="light"] .ucr-badge {
-            background: rgba(255, 255, 255, 0.65);
+            background: rgba(255, 255, 255, 0.9);
             color: #0f172a;
-            border-color: rgba(0, 0, 0, 0.15);
-            box-shadow: 0 0 15px rgba(244, 129, 32, 0.2), 0 0 30px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(15, 23, 42, 0.2);
+            box-shadow: 0 5px 15px rgba(154, 59, 0, 0.15), 0 0 30px rgba(0, 0, 0, 0.1);
         }
 
         [data-theme="light"] body::before {
-            background: linear-gradient(rgba(244, 129, 32, 0.25) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(244, 129, 32, 0.25) 1px, transparent 1px);
+            background: linear-gradient(rgba(154, 59, 0, 0.15) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(154, 59, 0, 0.15) 1px, transparent 1px);
             background-size: 25px 25px;
         }
 
