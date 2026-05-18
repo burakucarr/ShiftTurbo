@@ -2815,6 +2815,7 @@
 
             // 🤖 CYBER-CONFIRM MODAL
             function cyberConfirm(title, msg) {
+                console.log("🤖 cyberConfirm çağrıldı:", title, msg);
                 return new Promise((resolve) => {
                     const modal = document.getElementById('confirm-modal');
                     const titleEl = document.getElementById('confirm-title');
@@ -2823,6 +2824,7 @@
                     const okBtn = document.getElementById('confirm-ok-btn');
 
                     if (!modal || !titleEl || !msgEl || !cancelBtn || !okBtn) {
+                        console.warn("⚠️ cyberConfirm modal elementleri bulunamadı, tarayıcı confirm() açılıyor.");
                         resolve(confirm(`${title}\n\n${msg}`));
                         return;
                     }
@@ -2837,8 +2839,8 @@
                         okBtn.removeEventListener('click', onOk);
                     };
 
-                    const onCancel = () => { cleanup(); resolve(false); };
-                    const onOk = () => { cleanup(); resolve(true); };
+                    const onCancel = () => { console.log("🤖 cyberConfirm: İPTAL seçildi."); cleanup(); resolve(false); };
+                    const onOk = () => { console.log("🤖 cyberConfirm: ONAYLAYIN seçildi."); cleanup(); resolve(true); };
 
                     cancelBtn.addEventListener('click', onCancel);
                     okBtn.addEventListener('click', onOk);
@@ -3528,8 +3530,8 @@
                     const rate = rates[u.pin] || 200;
                     const safeName = u.ad_soyad.replace(/'/g, "\\'");
                     const deviceBtnHtml = u.device_id 
-                        ? '<button onclick="resetDevice(\'' + u.pin + '\', \'' + safeName + '\')" class="btn-cyber" style="background:#3b82f6; color:#fff; font-size:10px; font-family:\'Poppins\', sans-serif; font-weight:600; padding:8px 14px; margin-right:15px;">📱 CİHAZ KİLİDİNİ AÇ</button>' 
-                        : '<span style="font-family:\'Poppins\', sans-serif; font-size:12px; font-weight:600; color:var(--text-muted); margin-right:15px; display:inline-block;">Cihaz Eşleşmemiş</span>';
+                        ? `<button onclick="resetDevice('${u.pin}', '${safeName}')" class="btn-cyber btn-device-reset" data-pin="${u.pin}" style="background:#3b82f6; color:#fff; font-size:10px; font-family:'Poppins', sans-serif; font-weight:600; padding:8px 14px; margin-right:15px;">📱 CİHAZ KİLİDİNİ AÇ</button>` 
+                        : `<span style="font-family:'Poppins', sans-serif; font-size:12px; font-weight:600; color:var(--text-muted); margin-right:15px; display:inline-block;">Cihaz Eşleşmemiş</span>`;
 
                     return `
                     <tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
@@ -3576,6 +3578,7 @@
             }
 
             async function deleteStaff(identifier, name = "Personel") {
+                console.log("🚀 deleteStaff tetiklendi:", identifier, name);
                 const confirmed = await cyberConfirm("DİKKAT!", `${name} isimli personeli silmek istediğinize emin misiniz?`);
                 if (!confirmed) return;
 
@@ -3587,6 +3590,7 @@
                 }
 
                 const { data, error } = await _supabase.from('users').delete().eq(queryColumn, identifier).select();
+                console.log("📦 deleteStaff Supabase Yanıtı:", { data, error });
                 if (error) {
                     showToast("HATA", error.message, "error");
                 } else if (!data || data.length === 0) {
@@ -3600,6 +3604,7 @@
             }
 
             async function resetDevice(identifier, name = "Personel") {
+                console.log("🚀 resetDevice tetiklendi:", identifier, name);
                 const confirmed = await cyberConfirm("CİHAZ SIFIRLAMA", `${name} isimli personelin cihaz kilidi (telefon eşleşmesi) kaldırılsın mı?`);
                 if (!confirmed) return;
 
@@ -3611,6 +3616,7 @@
                 }
 
                 const { data, error } = await _supabase.from('users').update({ device_id: null }).eq(queryColumn, identifier).select();
+                console.log("📦 resetDevice Supabase Yanıtı:", { data, error });
                 if (error) {
                     showToast("HATA", error.message, "error");
                 } else if (!data || data.length === 0) {
@@ -3618,6 +3624,13 @@
                     alert("Yetki Hatası (RLS): Supabase panelinde 'users' tablosu için RLS aktif edilmiş ancak anonim/yönetici güncelleme yetkisi (UPDATE policy) tanımlanmamış. Bu yüzden cihaz kilidi kaldırılamıyor.\n\nÇözüm: Supabase > Authentication > Policies kısmından 'users' tablosuna UPDATE yetkisi verin.");
                 } else { 
                     showToast("BAŞARILI", `✅ ${name} cihaz kilidi açıldı. Yeni telefondan giriş yapabilir.`, "success"); 
+                    
+                    // Ekrandaki butonu anında 'Cihaz Eşleşmemiş' yazısına çevirelim (Kullanıcıya %100 anında görsel tepki!)
+                    const btn = document.querySelector(`button.btn-device-reset[data-pin="${identifier}"]`) || document.querySelector(`button[onclick*="resetDevice('${identifier}'"]`);
+                    if (btn && btn.parentElement) {
+                        btn.outerHTML = `<span style="font-family:'Poppins', sans-serif; font-size:12px; font-weight:600; color:var(--text-muted); margin-right:15px; display:inline-block;">Cihaz Eşleşmemiş</span>`;
+                    }
+
                     if (typeof fetchStaffList === 'function') fetchStaffList();
                     if (typeof loadStaffList === 'function') loadStaffList();
                 }
