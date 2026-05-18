@@ -3513,7 +3513,7 @@
                 else { showToast("BAŞARILI", `${name} eklendi.`, "success"); nameIn.value = ""; pinIn.value = ""; fetchStaffList(); }
             }
 
-            window.deleteStaff = async function(identifier, name = "Personel") {
+            async function deleteStaff(identifier, name = "Personel") {
                 const confirmed = await cyberConfirm("DİKKAT!", `${name} isimli personeli silmek istediğinize emin misiniz?`);
                 if (!confirmed) return;
 
@@ -3531,9 +3531,9 @@
                     if (typeof fetchStaffList === 'function') fetchStaffList();
                     if (typeof loadStaffList === 'function') loadStaffList();
                 }
-            };
+            }
 
-            window.resetDevice = async function(identifier, name = "Personel") {
+            async function resetDevice(identifier, name = "Personel") {
                 const confirmed = await cyberConfirm("CİHAZ SIFIRLAMA", `${name} isimli personelin cihaz kilidi (telefon eşleşmesi) kaldırılsın mı?`);
                 if (!confirmed) return;
 
@@ -3551,7 +3551,7 @@
                     if (typeof fetchStaffList === 'function') fetchStaffList();
                     if (typeof loadStaffList === 'function') loadStaffList();
                 }
-            };
+            }
 
             function updateClock() {
                 const el = document.getElementById('liveClock');
