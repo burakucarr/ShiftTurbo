@@ -1839,6 +1839,14 @@
             if (dateEl) dateEl.innerText = now.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' }).toUpperCase();
         }
         setInterval(updateTime, 1000); updateTime();
+        // KVKK Onay Fonksiyonu (Butona basınca çalışır)
+        function acceptKVKK() {
+            localStorage.setItem('shiftTurbo_kvkk', 'true'); // Hafızaya kaydettik
+            if (typeof playSound === "function") playSound('success'); // Varsa ses çal
+            document.getElementById('kvkk-overlay').style.display = 'none';
+            console.log("🛡️ KVKK Protokolü Onaylandı.");
+            location.reload(); // Sistemi başlatmak için yeniden yükle
+        }
 
         function acceptKVKK() {
             localStorage.setItem('shiftTurbo_kvkk', 'true');
@@ -2143,6 +2151,7 @@
                     setTimeout(performFinalRedirect, 8500);
                     return;
                 }
+            };
 
                 const { error } = await _supabase.from('logs').insert([{
                     personel_name: name,
