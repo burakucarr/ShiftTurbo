@@ -3579,7 +3579,7 @@
 
             async function deleteStaff(identifier, name = "Personel") {
                 console.log("🚀 deleteStaff tetiklendi:", identifier, name);
-                const confirmed = await cyberConfirm("DİKKAT!", `${name} isimli personeli silmek istediğinize emin misiniz?`);
+                const confirmed = confirm(`⚠️ DİKKAT: PERSONEL SİLME\n\n${name} isimli personeli sistemden tamamen silmek istediğinize emin misiniz?`);
                 if (!confirmed) return;
 
                 let queryColumn = 'id';
@@ -3593,11 +3593,13 @@
                 console.log("📦 deleteStaff Supabase Yanıtı:", { data, error });
                 if (error) {
                     showToast("HATA", error.message, "error");
+                    alert(`Hata Oluştu: ${error.message}`);
                 } else if (!data || data.length === 0) {
                     showToast("YETKİ HATASI (RLS)", "Supabase RLS politikası silme işlemine izin vermiyor. Lütfen Supabase panelinden 'users' tablosu için DELETE yetkisi (policy) ekleyin.", "error");
                     alert("Yetki Hatası (RLS): Supabase panelinde 'users' tablosu için RLS aktif edilmiş ancak silme yetkisi (DELETE policy) tanımlanmamış.\n\nÇözüm: Supabase > Authentication > Policies kısmından 'users' tablosuna DELETE yetkisi verin.");
                 } else { 
                     showToast("SİLİNDİ", `✅ ${name} silindi.`, "success"); 
+                    alert(`✅ SİLİNDİ!\n\n${name} isimli personel sistemden başarıyla silindi.`);
                     if (typeof fetchStaffList === 'function') fetchStaffList();
                     if (typeof loadStaffList === 'function') loadStaffList();
                 }
@@ -3605,7 +3607,7 @@
 
             async function resetDevice(identifier, name = "Personel") {
                 console.log("🚀 resetDevice tetiklendi:", identifier, name);
-                const confirmed = await cyberConfirm("CİHAZ SIFIRLAMA", `${name} isimli personelin cihaz kilidi (telefon eşleşmesi) kaldırılsın mı?`);
+                const confirmed = confirm(`📱 CİHAZ KİLİDİ SIFIRLAMA\n\n${name} isimli personelin cihaz kilidi (telefon eşleşmesi) kaldırılsın mı?\n\n(Bu işlem personelin yeni bir telefondan giriş yapabilmesini sağlar).`);
                 if (!confirmed) return;
 
                 let queryColumn = 'id';
@@ -3619,11 +3621,13 @@
                 console.log("📦 resetDevice Supabase Yanıtı:", { data, error });
                 if (error) {
                     showToast("HATA", error.message, "error");
+                    alert(`Hata Oluştu: ${error.message}`);
                 } else if (!data || data.length === 0) {
                     showToast("YETKİ HATASI (RLS)", "Supabase Row Level Security (RLS) politikası bu işleme izin vermiyor. Lütfen Supabase panelinden 'users' tablosu için UPDATE yetkisi (policy) ekleyin.", "error");
                     alert("Yetki Hatası (RLS): Supabase panelinde 'users' tablosu için RLS aktif edilmiş ancak anonim/yönetici güncelleme yetkisi (UPDATE policy) tanımlanmamış. Bu yüzden cihaz kilidi kaldırılamıyor.\n\nÇözüm: Supabase > Authentication > Policies kısmından 'users' tablosuna UPDATE yetkisi verin.");
                 } else { 
                     showToast("BAŞARILI", `✅ ${name} cihaz kilidi açıldı. Yeni telefondan giriş yapabilir.`, "success"); 
+                    alert(`✅ BAŞARILI!\n\n${name} isimli personelin cihaz kilidi başarıyla kaldırıldı. Artık yeni telefonundan giriş yapabilir.`);
                     
                     // Ekrandaki butonu anında 'Cihaz Eşleşmemiş' yazısına çevirelim (Kullanıcıya %100 anında görsel tepki!)
                     const btn = document.querySelector(`button.btn-device-reset[data-pin="${identifier}"]`) || document.querySelector(`button[onclick*="resetDevice('${identifier}'"]`);
