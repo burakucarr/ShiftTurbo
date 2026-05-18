@@ -1,23 +1,23 @@
-const CACHE_NAME = 'shift-turbo-v6'; // Sürüm yükseltmek zorunlu cache silmeyi tetikler
+const CACHE_NAME = 'shift-turbo-v7'; // Sürüm yükseltmek zorunlu cache silmeyi tetikler
 const ASSETS_TO_CACHE = [
-  '/',
-  '/index.html',
-  '/yonetici.html', // admin.html yerine sizin dosya adınız yonetici.html'dir
-  '/manifest.json',
+  './',
+  './index.html',
+  './yonetici.html',
+  './manifest.json',
   'https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Orbitron:wght@500;700;900&display=swap',
-  '/audio/kimlik_dogrulandi_1.mp3',
-  '/audio/kimlik_dogrulandi_2.mp3',
-  '/audio/kimlik_dogrulandi_3.mp3',
-  '/audio/mesai_baslat_1.mp3',
-  '/audio/mesai_baslat_2.mp3',
-  '/audio/mesai_baslat_3.mp3',
-  '/audio/mesai_bitir_1.mp3',
-  '/audio/mesai_bitir_2.mp3',
-  '/audio/mesai_bitir_3.mp3',
-  '/audio/mesai_baslat_cevrimdisi_1.mp3',
-  '/audio/mesai_baslat_cevrimdisi_2.mp3',
-  '/audio/mesai_bitir_cevrimdisi_1.mp3',
-  '/audio/mesai_bitir_cevrimdisi_2.mp3'
+  './audio/kimlik_dogrulandi_1.mp3',
+  './audio/kimlik_dogrulandi_2.mp3',
+  './audio/kimlik_dogrulandi_3.mp3',
+  './audio/mesai_baslat_1.mp3',
+  './audio/mesai_baslat_2.mp3',
+  './audio/mesai_baslat_3.mp3',
+  './audio/mesai_bitir_1.mp3',
+  './audio/mesai_bitir_2.mp3',
+  './audio/mesai_bitir_3.mp3',
+  './audio/mesai_baslat_cevrimdisi_1.mp3',
+  './audio/mesai_baslat_cevrimdisi_2.mp3',
+  './audio/mesai_bitir_cevrimdisi_1.mp3',
+  './audio/mesai_bitir_cevrimdisi_2.mp3'
 ];
 
 // 🛠️ Kurulum: Dosyaları Önbelleğe Al
