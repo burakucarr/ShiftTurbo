@@ -1642,7 +1642,14 @@
         // 🛡️ UCR TECHNOLOGY — DIRECT SUPABASE CONNECTION
         const supabaseUrl = 'https://tnvjdppcyctmqkirlwmy.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRudmpkcHBjeWN0bXFraXJsd215Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3MzY0NTIsImV4cCI6MjA4ODMxMjQ1Mn0.Ft4JXQtbcXz1-qO7n06fV1vGtP4DbCVUWDojEAFoALI';
-        const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
+        let _supabase = null;
+        try {
+            if (typeof supabase !== 'undefined') {
+                _supabase = supabase.createClient(supabaseUrl, supabaseKey);
+            } else {
+                console.warn("⚠️ Supabase CDN yüklenemedi! Çevrimdışı mod devrede.");
+            }
+        } catch(e) { console.error("Supabase Init Hatası:", e); }
 
         let html5QrCode = null;
         let currentPin = "";
@@ -2478,10 +2485,17 @@
             }
         };
 
-        window.onload = async () => {
+        let isAppBooted = false;
+        const startApp = async () => {
+            if (isAppBooted) return;
+            isAppBooted = true;
             initNetworkMonitor(); checkKVKKStatus();
             if (localStorage.getItem('shiftTurbo_kvkk') === 'true') bootSystem();
         };
+
+        window.addEventListener('DOMContentLoaded', startApp);
+        window.addEventListener('load', startApp);
+        setTimeout(startApp, 1000);
 
         function initNetworkMonitor() {
             const updateStatus = () => {
