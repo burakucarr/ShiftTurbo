@@ -1958,6 +1958,23 @@
         </div>
     </div>
 
+    <!-- ✏️ SAATLİK ÜCRET GİRİŞ MODALI -->
+    <div id="hourly-rate-modal"
+        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(10px); z-index: 200000; align-items: center; justify-content: center;">
+        <div class="confirm-card" style="max-width: 400px; text-align: left;">
+            <div class="confirm-title" style="margin-bottom: 20px;">✏️ HIZLI SAATLİK ÜCRET GİRİŞİ</div>
+            <div style="margin-bottom: 15px;">
+                <label id="hourly-rate-label" style="font-family: 'Orbitron'; font-size: 11px; color: var(--primary); display: block; margin-bottom: 8px;">PERSONEL ADI</label>
+                <input type="text" id="hourly-rate-input" placeholder="Örn: 250 veya 300.50"
+                    style="width: 100%; background: rgba(0,0,0,0.5); border: 1px solid var(--border); padding: 12px; border-radius: 12px; color: white; font-family: 'Poppins'; outline: none; font-size: 16px; font-weight: bold; text-align: center;">
+            </div>
+            <div style="display: flex; gap: 15px; margin-top: 25px;">
+                <button class="btn-modal btn-cancel" onclick="document.getElementById('hourly-rate-modal').style.display='none'">İPTAL</button>
+                <button class="btn-modal btn-confirm" id="hourly-rate-save-btn">KAYDET</button>
+            </div>
+        </div>
+    </div>
+
     <!-- 🔐 GİRİŞ EKRANI (LOGIN OVERLAY) -->
     <div id="loginOverlay">
         <div class="beams-container">
@@ -2327,12 +2344,48 @@
         window.saveHourlyRate = saveHourlyRate;
 
         function promptHourlyRate(pin, name, currentRate) {
-            const input = prompt(`${name} için yeni saatlik ücreti girin (TL):`, currentRate);
-            if (input === null) return;
-            const cleanStr = input.trim().replace(',', '.');
-            const val = parseFloat(cleanStr);
-            if (isNaN(val) || val <= 0) { showToast("UYARI", "Geçerli bir saatlik ücret girmediniz.", "error"); return; }
-            saveHourlyRate(pin, name, val);
+            const modal = document.getElementById('hourly-rate-modal');
+            const label = document.getElementById('hourly-rate-label');
+            const input = document.getElementById('hourly-rate-input');
+            const saveBtn = document.getElementById('hourly-rate-save-btn');
+
+            if (!modal || !label || !input || !saveBtn) {
+                const inputVal = prompt(`${name} için yeni saatlik ücreti girin (TL):`, currentRate);
+                if (inputVal === null) return;
+                const cleanStr = inputVal.trim().replace(',', '.');
+                const val = parseFloat(cleanStr);
+                if (isNaN(val) || val <= 0) { showToast("UYARI", "Geçerli bir saatlik ücret girmediniz.", "error"); return; }
+                saveHourlyRate(pin, name, val);
+                return;
+            }
+
+            label.innerText = `${name.toUpperCase()} İÇİN SAATLİK ÜCRET (TL):`;
+            input.value = currentRate;
+            modal.style.display = 'flex';
+            input.focus();
+            input.select();
+
+            const cleanup = () => {
+                modal.style.display = 'none';
+                saveBtn.onclick = null;
+                input.onkeydown = null;
+            };
+
+            const onSave = () => {
+                const cleanStr = input.value.trim().replace(',', '.');
+                const val = parseFloat(cleanStr);
+                if (isNaN(val) || val <= 0) { showToast("UYARI", "Geçerli bir saatlik ücret girmediniz.", "error"); return; }
+                saveHourlyRate(pin, name, val);
+                cleanup();
+            };
+
+            const onKeyDown = (e) => {
+                if (e.key === 'Enter') { onSave(); }
+                if (e.key === 'Escape') { cleanup(); }
+            };
+
+            saveBtn.onclick = onSave;
+            input.onkeydown = onKeyDown;
         }
         window.promptHourlyRate = promptHourlyRate;
 
@@ -3629,6 +3682,7 @@
                     const scoreM = document.getElementById('score-modal');
                     const confirmM = document.getElementById('cyber-confirm-modal');
                     const passM = document.getElementById('password-modal');
+                    const hourlyM = document.getElementById('hourly-rate-modal');
 
                     if (confirmM && confirmM.style.display === 'flex') {
                         const cancelBtn = confirmM.querySelector('.btn-out, .btn-red, button[onclick*="false"]');
@@ -3636,6 +3690,7 @@
                         else confirmM.style.display = 'none';
                         return;
                     }
+                    if (hourlyM && hourlyM.style.display === 'flex') { hourlyM.style.display = 'none'; return; }
                     if (passM && passM.style.display === 'flex') { passM.style.display = 'none'; return; }
                     if (financeM && financeM.style.display === 'flex') { if (typeof closeFinanceModal === 'function') closeFinanceModal(); else financeM.style.display = 'none'; return; }
                     if (scoreM && scoreM.style.display === 'flex') { if (typeof toggleScoreModal === 'function') toggleScoreModal(false); else scoreM.style.display = 'none'; return; }
