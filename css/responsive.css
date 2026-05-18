@@ -1,0 +1,224 @@
+/* ============================================
+   📱 SHIFTURBO — RESPONSIVE FIXES
+   Mobil uyumluluk düzeltmeleri
+   ============================================ */
+
+/* === YÖNETİCİ PANELİ RESPONSIVE === */
+
+/* İstatistik Grid — Tablet ve altı */
+@media (max-width: 900px) {
+    .stats-grid {
+        grid-template-columns: 1fr 1fr !important;
+        gap: 15px !important;
+    }
+}
+
+@media (max-width: 600px) {
+    .stats-grid {
+        grid-template-columns: 1fr !important;
+        gap: 12px !important;
+    }
+    .stat-card {
+        padding: 20px 15px !important;
+    }
+    .stat-val {
+        font-size: 28px !important;
+    }
+}
+
+/* Toolbar — Mobilde alt alta */
+@media (max-width: 768px) {
+    .toolbar {
+        flex-direction: column !important;
+        gap: 15px !important;
+        padding: 15px !important;
+    }
+    .toolbar div {
+        flex-wrap: wrap !important;
+        width: 100% !important;
+        justify-content: center !important;
+    }
+    .toolbar select,
+    .toolbar input {
+        width: 100% !important;
+        min-width: unset !important;
+    }
+    .toolbar .btn-cyber {
+        width: 100% !important;
+    }
+}
+
+/* Tablo — Mobilde yatay kaydırma */
+@media (max-width: 768px) {
+    #adminPanel > table,
+    #staff-management table {
+        display: block;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        white-space: nowrap;
+    }
+    td, th {
+        padding: 12px 10px !important;
+        font-size: 11px !important;
+    }
+    .badge {
+        font-size: 9px !important;
+        padding: 4px 8px !important;
+    }
+    .score-box {
+        font-size: 10px !important;
+        padding: 3px 8px !important;
+    }
+}
+
+/* Top Nav — Mobilde responsive */
+@media (max-width: 768px) {
+    .top-nav {
+        flex-direction: column !important;
+        gap: 15px !important;
+        text-align: center !important;
+    }
+    .live-trend-container {
+        margin: 0 auto !important;
+    }
+    .admin-label {
+        margin-left: 0 !important;
+        padding-left: 0 !important;
+        border-left: none !important;
+        margin-top: 5px;
+    }
+    #adminPanel {
+        padding: 15px !important;
+    }
+}
+
+/* Personel Yönetim Grid — Mobilde alt alta */
+@media (max-width: 768px) {
+    #staff-management div[style*="grid-template-columns: 1fr 1fr 1fr"] {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+/* AI Box — Mobilde düzenleme */
+@media (max-width: 600px) {
+    #ai-box {
+        padding: 12px !important;
+        border-radius: 15px !important;
+    }
+    #ai-box::after {
+        font-size: 7px !important;
+        right: 12px !important;
+    }
+    .ai-chat-messages {
+        max-height: 120px !important;
+    }
+    .ai-suggestions {
+        gap: 6px !important;
+    }
+    .suggestion-btn {
+        font-size: 8px !important;
+        padding: 4px 8px !important;
+    }
+}
+
+/* Duyuru Paneli — Mobilde */
+@media (max-width: 768px) {
+    #broadcast-panel {
+        flex-direction: column !important;
+    }
+    #broadcast-panel input {
+        width: 100% !important;
+    }
+}
+
+/* Login Card — Küçük ekranlar */
+@media (max-width: 400px) {
+    .login-card {
+        padding: 2.5rem 1.5rem !important;
+        border-radius: 30px !important;
+    }
+    .brand-logo-text-login {
+        font-size: 18px !important;
+        letter-spacing: 8px !important;
+    }
+    .time-display-login {
+        font-size: 48px !important;
+    }
+}
+
+/* Toast — Mobilde tam genişlik */
+@media (max-width: 500px) {
+    #toast-container {
+        left: 10px !important;
+        right: 10px !important;
+    }
+    .cyber-toast {
+        min-width: unset !important;
+        max-width: unset !important;
+        width: 100% !important;
+    }
+}
+
+/* === PERSONEL TERMİNALİ RESPONSIVE === */
+
+@media (max-width: 400px) {
+    .card {
+        padding: 1.5rem 1rem !important;
+        border-radius: 20px !important;
+    }
+    .brand-logo-text {
+        font-size: 14px !important;
+        letter-spacing: 5px !important;
+    }
+    .btn-scan {
+        font-size: 10px !important;
+        padding: 16px !important;
+        letter-spacing: 1.5px !important;
+    }
+    .numpad {
+        max-width: 200px !important;
+    }
+    .num-btn {
+        padding: 10px !important;
+        font-size: 14px !important;
+    }
+    .pin-input {
+        font-size: 18px !important;
+        letter-spacing: 8px !important;
+    }
+}
+
+/* Landing Page — Mobilde */
+@media (max-width: 480px) {
+    .landing-title {
+        font-size: 24px !important;
+        letter-spacing: 5px !important;
+    }
+    .l-card h3 {
+        font-size: 12px !important;
+    }
+    .l-card p {
+        font-size: 10px !important;
+    }
+    .btn-enter-terminal {
+        font-size: 12px !important;
+        padding: 16px 30px !important;
+    }
+}
+
+/* Confirm Modal — Küçük ekranlar */
+@media (max-width: 480px) {
+    .confirm-card {
+        padding: 25px !important;
+        border-radius: 20px !important;
+    }
+    .confirm-title {
+        font-size: 12px !important;
+    }
+    .confirm-msg {
+        font-size: 12px !important;
+    }
+    .confirm-actions {
+        flex-direction: column !important;
+    }
+}

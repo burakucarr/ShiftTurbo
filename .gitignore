@@ -1,0 +1,15 @@
+# 🔐 GİZLİ DOSYALAR — GitHub'a asla gönderilmez
+config.js
+
+# Ortam değişken dosyaları
+.env
+.env.local
+.env.production
+
+# Editor klasörleri
+.vscode/
+.idea/
+
+# OS dosyaları
+.DS_Store
+Thumbs.db

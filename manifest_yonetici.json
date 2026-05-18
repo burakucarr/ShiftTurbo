@@ -1,18 +1,16 @@
 {
-  "short_name": "ShiftTurbo",
-  "name": "ShiftTurbo Personel Takip Sistemi",
-  "description": "ShiftTurbo Akıllı Personel Takip ve Mesai Yönetimi",
+  "short_name": "ShiftTurbo Admin",
+  "name": "ShiftTurbo Yönetici Paneli",
+  "description": "ShiftTurbo AI Pro Yönetici Paneli",
   "icons": [
     {
       "src": "logom.png",
-
       "type": "image/png",
       "sizes": "512x512",
       "purpose": "any maskable"
     }
-
   ],
-  "start_url": "/index.html",
+  "start_url": "/yonetici.html",
   "display": "standalone",
   "orientation": "portrait",
   "theme_color": "#020617",

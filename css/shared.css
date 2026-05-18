@@ -1,0 +1,319 @@
+/* ============================================
+   🎨 SHIFTURBO — SHARED DESIGN SYSTEM (shared.css)
+   UCR Technology — Ortak Stil Kütüphanesi
+   ============================================ */
+
+/* 🎛️ DESIGN TOKENS */
+:root {
+    --primary: #f48120;
+    --bg: #030712;
+    --card: rgba(15, 23, 42, 0.7);
+    --glass: rgba(255, 255, 255, 0.03);
+    --border: rgba(255, 255, 255, 0.1);
+    --success: #10b981;
+    --error: #ef4444;
+    --ai-glow: rgba(139, 92, 246, 0.4);
+}
+
+:root[data-theme="light"] {
+    --bg: #f8fafc;
+    --card: rgba(255, 255, 255, 0.85);
+    --glass: rgba(0, 0, 0, 0.03);
+    --border: rgba(0, 0, 0, 0.15);
+    --text-main: #0f172a;
+    --text-muted: #64748b;
+}
+
+/* 🔤 GLOBAL RESET & BASE */
+* { 
+    box-sizing: border-box; 
+    scrollbar-width: thin;
+    scrollbar-color: rgba(16, 185, 129, 0.5) #0f172a;
+}
+
+/* ==========================================================================
+   🌀 CYBER-NOIR CUSTOM SCROLLBAR (Tüm Tarayıcılar İçin)
+   ========================================================================== */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+::-webkit-scrollbar-track {
+    background: #0f172a;
+    border-radius: 8px;
+}
+::-webkit-scrollbar-thumb {
+    background: rgba(16, 185, 129, 0.4);
+    border-radius: 8px;
+    border: 1px solid rgba(16, 185, 129, 0.2);
+    transition: background 0.3s ease;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(16, 185, 129, 0.8);
+    box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    margin: 0;
+    min-height: 100vh;
+    color: white;
+}
+
+/* 🎬 GLOBAL ANIMATIONS */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-10px); }
+    75% { transform: translateX(10px); }
+}
+
+@keyframes statusBarPulse {
+    0%, 100% { opacity: 1; filter: brightness(1); }
+    50% { opacity: 0.6; filter: brightness(1.5); }
+}
+
+@keyframes dataStream {
+    0% { transform: translateY(0); }
+    100% { transform: translateY(200%); }
+}
+
+@keyframes scannerGlow {
+    0% { box-shadow: 0 0 5px var(--primary); }
+    50% { box-shadow: 0 0 25px var(--primary); }
+    100% { box-shadow: 0 0 5px var(--primary); }
+}
+
+@keyframes spin {
+    100% { transform: rotate(360deg); }
+}
+
+@keyframes pulse {
+    50% { opacity: 0.5; }
+}
+
+@keyframes ucrPulse {
+    0% { transform: scale(1); opacity: 1; filter: brightness(1); }
+    50% { transform: scale(1.3); opacity: 0.6; filter: brightness(1.5); }
+    100% { transform: scale(1); opacity: 1; filter: brightness(1); }
+}
+
+@keyframes planeFly {
+    0% { transform: translate(0, 0) scale(1) rotate(0deg); opacity: 1; }
+    20% { transform: translate(-10px, 10px) scale(1.1) rotate(-10deg); }
+    100% { transform: translate(300px, -300px) scale(0) rotate(15deg); opacity: 0; }
+}
+
+/* 🎭 UTILITY CLASSES */
+.shake { animation: shake 0.3s ease-in-out; border-color: var(--error) !important; }
+.fade-in { animation: fadeIn 0.4s ease-out forwards; }
+.blink { animation: statusBarPulse 2s infinite; }
+.plane-animation { display: inline-block; font-size: 20px; animation: planeFly 1.5s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
+
+/* 📊 STATUS BAR */
+#status-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 4px;
+    background: var(--primary);
+    z-index: 1000;
+    box-shadow: 0 0 15px var(--primary);
+    animation: statusBarPulse 3s infinite ease-in-out;
+}
+
+/* 🏷️ UCR BRAND BADGE */
+.ucr-badge {
+    position: fixed !important;
+    bottom: 18px !important;
+    right: 20px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    font-family: 'Segoe UI', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    color: #ffffff;
+    padding: 8px 16px;
+    background: rgba(20, 20, 20, 0.65);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 0 15px rgba(244, 129, 32, 0.3), 0 0 30px rgba(0, 0, 0, 0.5);
+    z-index: 2147483647 !important;
+    transition: all .3s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: default;
+    user-select: none;
+}
+
+.ucr-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #f48120;
+    box-shadow: 0 0 8px #f48120, 0 0 16px #f48120;
+    animation: ucrPulse 2s infinite ease-in-out;
+}
+
+.ucr-badge:hover {
+    transform: translateY(-5px) scale(1.02);
+    box-shadow: 0 0 25px rgba(244, 129, 32, 0.6);
+    background: rgba(30, 30, 30, 0.8);
+    border-color: rgba(244, 129, 32, 0.5);
+}
+
+/* ⏰ TIME DISPLAY */
+.time-display, .time-display-login {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 64px;
+    font-weight: 200;
+    line-height: 1;
+    letter-spacing: -3px;
+    background: linear-gradient(180deg, #fff 40%, rgba(255, 255, 255, 0.3) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin: 0;
+}
+
+.date-display, .date-display-login {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 10px;
+    font-weight: 300;
+    color: rgba(255, 255, 255, 0.4);
+    letter-spacing: 5px;
+    text-transform: uppercase;
+    margin-top: 5px;
+    display: block;
+}
+
+/* ℹ️ ABOUT MODAL */
+#about-modal {
+    display: none;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    background: rgba(0, 0, 0, 0.85) !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+    z-index: 999999 !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.about-content {
+    background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%) !important;
+    padding: 30px !important;
+    border-radius: 25px !important;
+    border: 1px solid rgba(244, 129, 32, 0.5) !important;
+    width: 85% !important;
+    max-width: 320px !important;
+    text-align: center !important;
+    position: relative !important;
+    box-shadow: 0 0 50px rgba(0, 0, 0, 1);
+}
+
+.about-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 15px;
+    text-align: left;
+    margin-top: 20px;
+}
+
+.about-item {
+    border-left: 2px solid var(--primary);
+    padding-left: 12px;
+}
+
+.about-label {
+    font-family: 'Orbitron';
+    font-size: 8px;
+    color: var(--primary);
+    letter-spacing: 1px;
+    display: block;
+    margin-bottom: 4px;
+}
+
+.about-value {
+    font-family: 'Poppins';
+    font-size: 11px;
+    color: #cbd5e1;
+    font-weight: 500;
+}
+
+/* 🏗️ BRAND SIGNATURE (shared elements) */
+.arch-signature { margin-top: 30px; opacity: 0.25; pointer-events: none; transition: opacity 0.5s ease; }
+.arch-label { font-family: 'Orbitron'; font-size: 6px; letter-spacing: 3px; color: var(--primary); display: block; margin-bottom: 2px; }
+.arch-name { font-family: 'Orbitron'; font-size: 9px; font-weight: 400; color: rgba(255, 255, 255, 0.7); letter-spacing: 2px; }
+
+/* 📡 DUYURU BANNER */
+@keyframes broadcastGlow {
+    0% { background-position: 0% center; }
+    100% { background-position: 200% center; }
+}
+
+#broadcast-banner {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background: linear-gradient(90deg, #f48120, #ffba7a, #f48120);
+    background-size: 200% auto;
+    color: #000;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 11px;
+    font-weight: 900;
+    padding: 8px 0;
+    z-index: 1000000;
+    text-align: center;
+    letter-spacing: 1px;
+    display: none;
+    box-shadow: 0 2px 20px rgba(244, 129, 32, 0.5);
+    animation: broadcastGlow 3s linear infinite;
+}
+
+/* 🔐 ERROR & STATUS */
+.status-error { color: var(--error) !important; opacity: 1 !important; }
+#status.success-glow { color: var(--success) !important; text-shadow: 0 0 15px var(--success); transition: 0.3s; }
+
+/* ============================================
+   📱 RESPONSIVE — MOBILE FIRST
+   ============================================ */
+
+@media (max-width: 768px) {
+    .ucr-badge {
+        font-size: 10px;
+        padding: 6px 12px;
+        bottom: 10px !important;
+        right: 10px !important;
+    }
+
+    .time-display, .time-display-login {
+        font-size: 48px;
+    }
+
+    .about-content {
+        width: 92% !important;
+        padding: 20px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .time-display, .time-display-login {
+        font-size: 40px;
+        letter-spacing: -2px;
+    }
+
+    .date-display, .date-display-login {
+        font-size: 8px;
+        letter-spacing: 3px;
+    }
+}
