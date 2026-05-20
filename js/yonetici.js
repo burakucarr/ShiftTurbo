@@ -223,7 +223,13 @@
         }
         document.getElementById("loginOverlay").style.display = "none";
         document.getElementById("adminPanel").style.display = "block";
-        if (Notification.permission !== "granted") Notification.requestPermission();
+        if (Notification.permission !== "granted") {
+            Notification.requestPermission().then(permission => {
+                if (permission === "granted") checkAndRefreshPushSubscription();
+            });
+        } else {
+            checkAndRefreshPushSubscription();
+        }
         fetchData();
 
         // Otomatik yenileme ve gerçek zamanlı abonelik başlatma
@@ -248,15 +254,41 @@
         }
     }
 
+    async function checkAndRefreshPushSubscription() {
+        try {
+            const registration = await navigator.serviceWorker.ready;
+            let subscription = await registration.pushManager.getSubscription();
+
+            if (!subscription) {
+                // Not: VAPID Public Key'ini buraya eklemelisin
+                const vapidPublicKey = 'BIHa5SYDwhb6LIMu28hUCwf9oe4PxdZ0_1dlgMCaXo0dByL6KD0Uh5d6lfHCuzq4mTccDTHvWh2GBmIjZ0a9wq8';
+                applicationServerKey: vapidPublicKey
+            });
+        }
+
+            const { data: { user } } = await _supabase.auth.getUser();
+        if (user && subscription) {
+            await _supabase.from('push_subscriptions').upsert({
+                user_id: user.id,
+                subscription_json: JSON.stringify(subscription),
+                last_updated: new Date().toISOString()
+            });
+            console.log("🔔 Push aboneliği güncellendi.");
+        }
+    } catch (err) {
+        console.error("Push abonelik hatası:", err);
+    }
+}
+
     function showToast(title, msg, type = 'success') {
-        const container = document.getElementById('toast-container');
-        if (!container) return;
-        const toast = document.createElement('div');
-        toast.className = `cyber-toast ${type === 'error' ? 'toast-error' : ''}`;
+    const container = document.getElementById('toast-container');
+    if (!container) return;
+    const toast = document.createElement('div');
+    toast.className = `cyber-toast ${type === 'error' ? 'toast-error' : ''}`;
 
-        const icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-triangle';
+    const icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-triangle';
 
-        toast.innerHTML = `
+    toast.innerHTML = `
         <i class="fas ${icon} toast-icon"></i>
         <div class="toast-content">
             <div class="toast-title">${title}</div>
@@ -265,168 +297,168 @@
         <div class="toast-progress"></div>
     `;
 
-        container.appendChild(toast);
+    container.appendChild(toast);
 
-        // Animasyonu tetikle
-        setTimeout(() => toast.classList.add('show'), 100);
+    // Animasyonu tetikle
+    setTimeout(() => toast.classList.add('show'), 100);
 
-        // Otomatik sil
-        setTimeout(() => {
-            toast.classList.remove('show');
-            setTimeout(() => toast.remove(), 500);
-        }, 4000);
-    }
+    // Otomatik sil
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 500);
+    }, 4000);
+}
 
-    function logout() {
-        isAuthenticated = false;
-        localStorage.removeItem('shiftTurbo_admin_logged_in');
-        _supabase.auth.signOut().then(() => {
-            location.reload();
-        });
-    }
+function logout() {
+    isAuthenticated = false;
+    localStorage.removeItem('shiftTurbo_admin_logged_in');
+    _supabase.auth.signOut().then(() => {
+        location.reload();
+    });
+}
 
-    function checkNewNotifications(logs) {
-        if (logs.length > lastLogCount && lastLogCount > 0) {
-            const newLog = logs[0];
-            if (Notification.permission === "granted") {
-                new Notification("YENİ İŞLEM: " + newLog.personel, {
-                    body: `${newLog.type} - ${newLog.mahalle}`,
-                    icon: "logom.png"
-                });
-            }
-        }
-        lastLogCount = logs.length;
-    }
-
-    async function fetchData() {
-        if (!isAuthenticated) return;
-        // Not: Filtreleri sıfırlamıyoruz ki kullanıcı tarih seçip yenile deyince gitmesin.
-        const { data } = await _supabase.from('logs').select('*').order('created_at', { ascending: false });
-
-
-        const cleanData = [];
-        const seenActions = new Set();
-
-        (data || []).forEach(log => {
-            const timeKey = log.type === 'MESAJ' ? `msg-${log.id}` : `${log.personel_name}-${log.created_at}`;
-            if (!seenActions.has(timeKey)) {
-                cleanData.push(log);
-                seenActions.add(timeKey);
-            }
-        });
-
-        window.allLogs = cleanData.map(log => ({
-            id: log.id,
-            personel: (log.personel_name || "BILINMEYEN_MISAFIR").trim().toUpperCase('tr-TR'),
-            type: log.type,
-            mahalle: log.mahalle,
-            lat: log.lat,
-            lon: log.lon,
-            time: new Date(log.created_at).toLocaleString('tr-TR'),
-            raw_time: log.created_at
-        }));
-
-        updateTrendGraph();
-        runAIAnalysis();
-        updateDashboard();
-
-        checkNewNotifications(window.allLogs);
-        loadStaffList(); // Personel listesini günceller
-        fetchBroadcastHistory(); // Duyuru geçmişini günceller
-    }
-
-    window.cyberConfirm = function (title, message) {
-        return new Promise((resolve) => {
-            const modal = document.getElementById('confirm-modal');
-            const titleEl = document.getElementById('confirm-title');
-            const msgEl = document.getElementById('confirm-msg');
-            const okBtn = document.getElementById('confirm-ok-btn');
-            const cancelBtn = document.getElementById('confirm-cancel-btn');
-
-            titleEl.innerText = title;
-            msgEl.innerText = message;
-            modal.style.display = 'flex';
-
-            const close = (val) => {
-                modal.style.display = 'none';
-                okBtn.onclick = null;
-                cancelBtn.onclick = null;
-                resolve(val);
-            };
-
-            okBtn.onclick = () => close(true);
-            cancelBtn.onclick = () => close(false);
-            modal.onclick = (e) => { if (e.target === modal) close(false); };
-        });
-    };
-
-    window.toggleAboutModal = function (show) {
-        const modal = document.getElementById('about-modal');
-        modal.style.display = show ? 'flex' : 'none';
-        if (typeof playSound === "function" && show) playSound('tap');
-    };
-
-    window.sendBroadcast = async function () {
-        const input = document.getElementById('broadcastMsg');
-        const targetSel = document.getElementById('broadcastTarget');
-        const msg = input.value.trim();
-        if (!msg) return;
-
-        const targetVal = targetSel ? targetSel.value : 'ALL';
-        const targetLabel = targetVal === 'ALL' ? 'Tüm Personeller' : targetVal;
-
-        if (!await cyberConfirm("DUYURU YAYINLA", `Şu duyuruyu "${targetLabel}" hedefine iletmek istiyor musunuz?\n\n"${msg}"`)) return;
-
-        const finalMsg = targetVal === 'ALL' ? `[ALL] ${msg}` : `[${targetVal}] ${msg}`;
-
-        const { error } = await _supabase.from('broadcasts').insert([{ message: finalMsg }]);
-        if (error) {
-            showToast("HATA", "Duyuru gönderilemedi. Lütfen ayarları kontrol edin.", "error");
-        } else {
-            showToast("İŞLEM BAŞARILI", "📢 Duyuru hedefe iletildi.", "success");
-            input.value = "";
-            fetchBroadcastHistory(); // Listeyi güncelle
+function checkNewNotifications(logs) {
+    if (logs.length > lastLogCount && lastLogCount > 0) {
+        const newLog = logs[0];
+        if (Notification.permission === "granted") {
+            new Notification("YENİ İŞLEM: " + newLog.personel, {
+                body: `${newLog.type} - ${newLog.mahalle}`,
+                icon: "logom.png"
+            });
         }
     }
+    lastLogCount = logs.length;
+}
 
-    window.deleteBroadcasts = async function () {
-        if (!await cyberConfirm("PANO TEMİZLİĞİ", "TÜM duyuruları silmek ve panoyu temizlemek istediğinize emin misiniz?")) return;
+async function fetchData() {
+    if (!isAuthenticated) return;
+    // Not: Filtreleri sıfırlamıyoruz ki kullanıcı tarih seçip yenile deyince gitmesin.
+    const { data } = await _supabase.from('logs').select('*').order('created_at', { ascending: false });
 
-        const { error } = await _supabase.from('broadcasts').delete().neq('message', '___HOSGELDINIZ___');
 
-        if (error) {
-            showToast("SİLME HATASI", error.message, "error");
-        } else {
-            showToast("PANORAMA TEMİZLENDİ", "✅ Duyurular silindi.", "success");
-            document.getElementById('broadcastMsg').value = "";
-            fetchBroadcastHistory(); // Listeyi güncelle
+    const cleanData = [];
+    const seenActions = new Set();
+
+    (data || []).forEach(log => {
+        const timeKey = log.type === 'MESAJ' ? `msg-${log.id}` : `${log.personel_name}-${log.created_at}`;
+        if (!seenActions.has(timeKey)) {
+            cleanData.push(log);
+            seenActions.add(timeKey);
         }
+    });
+
+    window.allLogs = cleanData.map(log => ({
+        id: log.id,
+        personel: (log.personel_name || "BILINMEYEN_MISAFIR").trim().toLocaleUpperCase('tr-TR'),
+        type: log.type,
+        mahalle: log.mahalle,
+        lat: log.lat,
+        lon: log.lon,
+        time: new Date(log.created_at).toLocaleString('tr-TR'),
+        raw_time: log.created_at
+    }));
+
+    updateTrendGraph();
+    runAIAnalysis();
+    updateDashboard();
+
+    checkNewNotifications(window.allLogs);
+    loadStaffList(); // Personel listesini günceller
+    fetchBroadcastHistory(); // Duyuru geçmişini günceller
+}
+
+window.cyberConfirm = function (title, message) {
+    return new Promise((resolve) => {
+        const modal = document.getElementById('confirm-modal');
+        const titleEl = document.getElementById('confirm-title');
+        const msgEl = document.getElementById('confirm-msg');
+        const okBtn = document.getElementById('confirm-ok-btn');
+        const cancelBtn = document.getElementById('confirm-cancel-btn');
+
+        titleEl.innerText = title;
+        msgEl.innerText = message;
+        modal.style.display = 'flex';
+
+        const close = (val) => {
+            modal.style.display = 'none';
+            okBtn.onclick = null;
+            cancelBtn.onclick = null;
+            resolve(val);
+        };
+
+        okBtn.onclick = () => close(true);
+        cancelBtn.onclick = () => close(false);
+        modal.onclick = (e) => { if (e.target === modal) close(false); };
+    });
+};
+
+window.toggleAboutModal = function (show) {
+    const modal = document.getElementById('about-modal');
+    modal.style.display = show ? 'flex' : 'none';
+    if (typeof playSound === "function" && show) playSound('tap');
+};
+
+window.sendBroadcast = async function () {
+    const input = document.getElementById('broadcastMsg');
+    const targetSel = document.getElementById('broadcastTarget');
+    const msg = input.value.trim();
+    if (!msg) return;
+
+    const targetVal = targetSel ? targetSel.value : 'ALL';
+    const targetLabel = targetVal === 'ALL' ? 'Tüm Personeller' : targetVal;
+
+    if (!await cyberConfirm("DUYURU YAYINLA", `Şu duyuruyu "${targetLabel}" hedefine iletmek istiyor musunuz?\n\n"${msg}"`)) return;
+
+    const finalMsg = targetVal === 'ALL' ? `[ALL] ${msg}` : `[${targetVal}] ${msg}`;
+
+    const { error } = await _supabase.from('broadcasts').insert([{ message: finalMsg }]);
+    if (error) {
+        showToast("HATA", "Duyuru gönderilemedi. Lütfen ayarları kontrol edin.", "error");
+    } else {
+        showToast("İŞLEM BAŞARILI", "📢 Duyuru hedefe iletildi.", "success");
+        input.value = "";
+        fetchBroadcastHistory(); // Listeyi güncelle
     }
+}
 
-    async function fetchBroadcastHistory() {
-        const { data, error } = await _supabase
-            .from('broadcasts')
-            .select('*')
-            .order('created_at', { ascending: false });
+window.deleteBroadcasts = async function () {
+    if (!await cyberConfirm("PANO TEMİZLİĞİ", "TÜM duyuruları silmek ve panoyu temizlemek istediğinize emin misiniz?")) return;
 
-        if (data) {
-            const list = document.getElementById('broadcast-list');
-            if (!list) return;
-            if (data.length === 0) {
-                list.innerHTML = '<div style="font-size: 11px; color: #475569; text-align: center; padding: 20px;">Henüz bir duyuru kaydı bulunmuyor.</div>';
-                return;
+    const { error } = await _supabase.from('broadcasts').delete().neq('message', '___HOSGELDINIZ___');
+
+    if (error) {
+        showToast("SİLME HATASI", error.message, "error");
+    } else {
+        showToast("PANORAMA TEMİZLENDİ", "✅ Duyurular silindi.", "success");
+        document.getElementById('broadcastMsg').value = "";
+        fetchBroadcastHistory(); // Listeyi güncelle
+    }
+}
+
+async function fetchBroadcastHistory() {
+    const { data, error } = await _supabase
+        .from('broadcasts')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+    if (data) {
+        const list = document.getElementById('broadcast-list');
+        if (!list) return;
+        if (data.length === 0) {
+            list.innerHTML = '<div style="font-size: 11px; color: #475569; text-align: center; padding: 20px;">Henüz bir duyuru kaydı bulunmuyor.</div>';
+            return;
+        }
+
+        list.innerHTML = data.map(b => {
+            let dispMsg = b.message;
+            let badgeHtml = `<span style="background: rgba(16,185,129,0.2); color:#10b981; padding:2px 6px; border-radius:4px; font-size:9px; margin-right:8px; font-family:'Poppins', sans-serif; font-weight:bold;">GENEL</span>`;
+            if (dispMsg.startsWith('[ALL] ')) { dispMsg = dispMsg.replace('[ALL] ', ''); }
+            else if (dispMsg.match(/^\[(.*?)\]\s*(.*)/)) {
+                const m = dispMsg.match(/^\[(.*?)\]\s*(.*)/);
+                badgeHtml = `<span style="background: rgba(59,130,246,0.2); color:#60a5fa; padding:2px 6px; border-radius:4px; font-size:9px; margin-right:8px; font-family:'Poppins', sans-serif; font-weight:bold;">👤 ${m[1]}</span>`;
+                dispMsg = m[2];
             }
-
-            list.innerHTML = data.map(b => {
-                let dispMsg = b.message;
-                let badgeHtml = `<span style="background: rgba(16,185,129,0.2); color:#10b981; padding:2px 6px; border-radius:4px; font-size:9px; margin-right:8px; font-family:'Poppins', sans-serif; font-weight:bold;">GENEL</span>`;
-                if (dispMsg.startsWith('[ALL] ')) { dispMsg = dispMsg.replace('[ALL] ', ''); }
-                else if (dispMsg.match(/^\[(.*?)\]\s*(.*)/)) {
-                    const m = dispMsg.match(/^\[(.*?)\]\s*(.*)/);
-                    badgeHtml = `<span style="background: rgba(59,130,246,0.2); color:#60a5fa; padding:2px 6px; border-radius:4px; font-size:9px; margin-right:8px; font-family:'Poppins', sans-serif; font-weight:bold;">👤 ${m[1]}</span>`;
-                    dispMsg = m[2];
-                }
-                return `
+            return `
                 <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.03); padding: 12px 15px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; transition: all 0.2s ease;">
                     <div style="flex: 1;">
                         <div style="font-size: 12px; color: #cbd5e1; margin-bottom: 4px; font-weight: 300; font-family:'Poppins', sans-serif; display:flex; align-items:center;">${badgeHtml} ${dispMsg}</div>
@@ -439,43 +471,43 @@
                     </button>
                 </div>
             `;
-            }).join('');
-        }
+        }).join('');
     }
+}
 
-    window.deleteSingleBroadcast = async function (id) {
-        if (!await cyberConfirm("ARŞİV SİLME", "Bu duyuruyu arşivden kaldırmak istediğinize emin misiniz?")) return;
-        const { error } = await _supabase.from('broadcasts').delete().eq('id', id);
-        if (error) {
-            showToast("HATA", "Duyuru silinemedi.", "error");
-        } else {
-            showToast("SİLİNDİ", "Duyuru arşivden kaldırıldı.", "success");
-            fetchBroadcastHistory();
-        }
+window.deleteSingleBroadcast = async function (id) {
+    if (!await cyberConfirm("ARŞİV SİLME", "Bu duyuruyu arşivden kaldırmak istediğinize emin misiniz?")) return;
+    const { error } = await _supabase.from('broadcasts').delete().eq('id', id);
+    if (error) {
+        showToast("HATA", "Duyuru silinemedi.", "error");
+    } else {
+        showToast("SİLİNDİ", "Duyuru arşivden kaldırıldı.", "success");
+        fetchBroadcastHistory();
     }
+}
 
-    window.toggleHistory = function () {
-        const list = document.getElementById('broadcast-list');
-        const icon = document.getElementById('history-icon');
-        const text = document.getElementById('history-toggle-text');
-        if (!list) return;
-        const isHidden = list.style.display === 'none';
+window.toggleHistory = function () {
+    const list = document.getElementById('broadcast-list');
+    const icon = document.getElementById('history-icon');
+    const text = document.getElementById('history-toggle-text');
+    if (!list) return;
+    const isHidden = list.style.display === 'none';
 
-        list.style.display = isHidden ? 'flex' : 'none';
-        if (icon) icon.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
-        if (text) text.innerText = isHidden ? '(GİZLEMEK İÇİN TIKLAYIN)' : '(GÖRÜNTÜLEMEK İÇİN TIKLAYIN)';
+    list.style.display = isHidden ? 'flex' : 'none';
+    if (icon) icon.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
+    if (text) text.innerText = isHidden ? '(GİZLEMEK İÇİN TIKLAYIN)' : '(GÖRÜNTÜLEMEK İÇİN TIKLAYIN)';
 
-        if (isHidden) fetchBroadcastHistory(); // Açıldığında veriyi tazele
-    }
+    if (isHidden) fetchBroadcastHistory(); // Açıldığında veriyi tazele
+}
 
-    async function loadStaffList() {
-        const { data, error } = await _supabase.from('users').select('*').order('id', { ascending: false }); // Yeni olanlar en üstte!
-        if (data) {
-            const table = document.getElementById('staffListTable');
-            if (!table) return;
-            table.innerHTML = data.map(u => {
-                const deviceBadge = u.device_id ? `<span style="background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid #10b981; padding: 2px 6px; border-radius: 6px; font-size: 8px; margin-left: 8px;">🔒 EŞLEŞTİ</span>` : `<span style="background: rgba(244, 129, 32, 0.15); color: #f48120; border: 1px solid #f48120; padding: 2px 6px; border-radius: 6px; font-size: 8px; margin-left: 8px;">🔓 KİLİTSİZ</span>`;
-                return `
+async function loadStaffList() {
+    const { data, error } = await _supabase.from('users').select('*').order('id', { ascending: false }); // Yeni olanlar en üstte!
+    if (data) {
+        const table = document.getElementById('staffListTable');
+        if (!table) return;
+        table.innerHTML = data.map(u => {
+            const deviceBadge = u.device_id ? `<span style="background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid #10b981; padding: 2px 6px; border-radius: 6px; font-size: 8px; margin-left: 8px;">🔒 EŞLEŞTİ</span>` : `<span style="background: rgba(244, 129, 32, 0.15); color: #f48120; border: 1px solid #f48120; padding: 2px 6px; border-radius: 6px; font-size: 8px; margin-left: 8px;">🔓 KİLİTSİZ</span>`;
+            return `
                 <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
                     <td style="padding: 15px; color: #fff; font-weight: 600;">${u.ad_soyad} ${deviceBadge}</td>
                     <td style="padding: 15px; font-family: 'Orbitron'; color: var(--primary);">${u.pin}</td>
@@ -485,350 +517,353 @@
                     </td>
                 </tr>
             `;
-            }).join('');
-        }
+        }).join('');
+    }
+}
+
+async function resetDevice(identifier, name = "Personel") {
+    if (!await cyberConfirm("CİHAZ KİLİDİ SIFIRLAMA", `${name} adlı personelin cihaz eşleşmesini sıfırlamak istediğinize emin misiniz? Personel yeni telefonundan giriş yaptığında cihazı otomatik eşleşecektir.`)) return;
+
+    let queryColumn = 'id';
+    if (typeof identifier === 'string' && identifier.length === 4) {
+        queryColumn = 'pin';
+    } else if (typeof identifier === 'number' && identifier > 999) {
+        queryColumn = 'pin';
     }
 
-    async function resetDevice(identifier, name = "Personel") {
-        if (!await cyberConfirm("CİHAZ KİLİDİ SIFIRLAMA", `${name} adlı personelin cihaz eşleşmesini sıfırlamak istediğinize emin misiniz? Personel yeni telefonundan giriş yaptığında cihazı otomatik eşleşecektir.`)) return;
+    const { error } = await _supabase.from('users').update({ device_id: null }).eq(queryColumn, identifier);
+    if (error) {
+        showToast("SİSTEM UYARISI", "Güncelleme yapılamadı: " + error.message, "error");
+    } else {
+        showToast("CİHAZ SIFIRLANDI", `✅ ${name} adlı personelin cihaz kilidi başarıyla açıldı.`, "success");
+        if (typeof loadStaffList === 'function') loadStaffList();
+        if (typeof fetchStaffList === 'function') fetchStaffList();
+    }
+}
 
-        let queryColumn = 'id';
-        if (typeof identifier === 'string' && identifier.length === 4) {
-            queryColumn = 'pin';
-        } else if (typeof identifier === 'number' && identifier > 999) {
-            queryColumn = 'pin';
-        }
-
-        const { error } = await _supabase.from('users').update({ device_id: null }).eq(queryColumn, identifier);
-        if (error) {
-            showToast("SİSTEM UYARISI", "Güncelleme yapılamadı: " + error.message, "error");
-        } else {
-            showToast("CİHAZ SIFIRLANDI", `✅ ${name} adlı personelin cihaz kilidi başarıyla açıldı.`, "success");
-            if (typeof loadStaffList === 'function') loadStaffList();
-            if (typeof fetchStaffList === 'function') fetchStaffList();
-        }
+async function addStaff() {
+    const nameEl = document.getElementById('newStaffName');
+    const pinEl = document.getElementById('newStaffPin');
+    if (!nameEl || !pinEl) return;
+    const name = nameEl.value.trim();
+    const pin = pinEl.value.trim();
+    if (!name || pin.length !== 4) {
+        showToast("UYARI", "Lütfen geçerli isim ve 4 haneli PIN girin!", "error");
+        return;
     }
 
-    async function addStaff() {
-        const nameEl = document.getElementById('newStaffName');
-        const pinEl = document.getElementById('newStaffPin');
-        if (!nameEl || !pinEl) return;
-        const name = nameEl.value.trim();
-        const pin = pinEl.value.trim();
-        if (!name || pin.length !== 4) {
-            showToast("UYARI", "Lütfen geçerli isim ve 4 haneli PIN girin!", "error");
+    // 🔍 AYNI ŞİFRE (PIN) DENETİMİ - 100% Garantili Tip Bağımsız Kontrol
+    const { data: allUsersCheck } = await _supabase.from('users').select('ad_soyad, pin');
+    if (allUsersCheck) {
+        const existing = allUsersCheck.find(u => String(u.pin).trim() === String(pin).trim());
+        if (existing) {
+            showToast("PIN ÇAKIŞMASI", `⚠️ DİKKAT: Bu PIN kodu zaten "${existing.ad_soyad}" adına tanımlı! Lütfen farklı bir PIN belirleyin.`, "error");
             return;
         }
+    }
 
-        // 🔍 AYNI ŞİFRE (PIN) DENETİMİ
-        const { data: existingUser } = await _supabase.from('users').select('ad_soyad').eq('pin', pin).limit(1);
-        if (existingUser && existingUser.length > 0) {
-            showToast("PIN ÇAKIŞMASI", `⚠️ DİKKAT: Bu PIN kodu zaten "${existingUser[0].ad_soyad}" adına tanımlı! Lütfen farklı bir PIN belirleyin.`, "error");
-            return;
+    const { error } = await _supabase.from('users').insert([{ ad_soyad: name, pin: pin }]);
+    if (error) {
+        showToast("HATA", "Veritabanı bağlantısı kurulamadı: " + error.message, "error");
+    } else {
+        showToast("PERSONEL EKLENDİ", `✅ ${name} başarıyla sisteme kaydedildi.`, "success");
+        nameEl.value = "";
+        pinEl.value = "";
+        if (typeof loadStaffList === 'function') loadStaffList();
+        if (typeof fetchStaffList === 'function') fetchStaffList();
+    }
+}
+
+async function deleteStaff(identifier, name = "Personel") {
+    if (!await cyberConfirm("PERSONEL SİLME", `${name} isimli personeli sistemden kalıcı olarak silmek istediğinize emin misiniz?`)) return;
+
+    let queryColumn = 'id';
+    if (typeof identifier === 'string' && identifier.length === 4) {
+        queryColumn = 'pin';
+    } else if (typeof identifier === 'number' && identifier > 999) {
+        queryColumn = 'pin';
+    }
+
+    const { error } = await _supabase.from('users').delete().eq(queryColumn, identifier).eq('ad_soyad', name);
+    if (error) {
+        showToast("HATA", "Personel silinemedi: " + error.message, "error");
+    } else {
+        showToast("SİLİNDİ", `✅ ${name} kaydı sistemden kaldırıldı.`, "success");
+        if (typeof loadStaffList === 'function') loadStaffList();
+        if (typeof fetchStaffList === 'function') fetchStaffList();
+    }
+}
+
+// 🚨 TÜM FONKSİYONLARI DIŞARI AÇ (Window Scope)
+window.nextStep = nextStep;
+window.fetchData = fetchData;
+window.applyFilter = applyFilter;
+window.sendBroadcast = sendBroadcast;
+window.deleteBroadcasts = deleteBroadcasts;
+window.addStaff = addStaff;
+window.deleteStaff = deleteStaff;
+window.resetDevice = resetDevice;
+
+window.logout = logout;
+window.exportPDF = exportPDF;
+window.showMsg = showMsg;
+window.closeMsg = closeMsg;
+window.filterActiveStaff = filterActiveStaff;
+window.scrollToManagement = scrollToManagement;
+
+function scrollToManagement() {
+    setTimeout(() => {
+        const target = document.getElementById('staff-management');
+        if (target) {
+            const yOffset = -20;
+            const y = target.getBoundingClientRect().top + window.pageYOffset + yOffset;
+            window.scrollTo({ top: y, behavior: 'smooth' });
         }
+    }, 100);
+}
 
-        const { error } = await _supabase.from('users').insert([{ ad_soyad: name, pin: pin }]);
-        if (error) {
-            showToast("HATA", "Veritabanı bağlantısı kurulamadı: " + error.message, "error");
-        } else {
-            showToast("PERSONEL EKLENDİ", `✅ ${name} başarıyla sisteme kaydedildi.`, "success");
-            nameEl.value = "";
-            pinEl.value = "";
-            if (typeof loadStaffList === 'function') loadStaffList();
-            if (typeof fetchStaffList === 'function') fetchStaffList();
+function updateTrendGraph() {
+    const points = []; const hours = 7; const now = new Date();
+    for (let i = 0; i <= hours; i++) {
+        const targetTime = new Date(now.getTime() - (i * 3600000));
+        const count = window.allLogs.filter(l => new Date(l.raw_time).getHours() === targetTime.getHours()).length;
+        points.push(30 - (Math.min(count, 5) * 5));
+    }
+    const pathData = points.reverse().map((p, i) => `${i === 0 ? 'M' : 'L'}${i * 15},${p}`).join(' ');
+    if (document.getElementById('trendPath')) document.getElementById('trendPath').setAttribute('d', pathData);
+}
+
+function calculateScore(personName) {
+    let score = 100;
+    if (!window.allLogs || window.allLogs.length === 0) return score;
+
+    const pLogs = window.allLogs
+        .filter(l => (l.personel || "").trim().toLocaleUpperCase('tr-TR') === (personName || "").trim().toLocaleUpperCase('tr-TR'))
+        .sort((a, b) => new Date(a.raw_time) - new Date(b.raw_time));
+
+    if (pLogs.length === 0) return score;
+
+    for (let i = 0; i < pLogs.length; i++) {
+        if (pLogs[i].type === 'GİRİŞ') {
+            const girisZamani = new Date(pLogs[i].raw_time);
+            let cikisLogu = null;
+            for (let j = i + 1; j < pLogs.length; j++) {
+                if (pLogs[j].type === 'ÇIKIŞ') { cikisLogu = pLogs[j]; break; }
+            }
+            let bitisZamani = cikisLogu ? new Date(cikisLogu.raw_time) : new Date();
+            let saatFarki = (bitisZamani - girisZamani) / 3600000;
+            if (saatFarki > 10.5) score -= 15;
         }
     }
 
-    async function deleteStaff(identifier, name = "Personel") {
-        if (!await cyberConfirm("PERSONEL SİLME", `${name} isimli personeli sistemden kalıcı olarak silmek istediğinize emin misiniz?`)) return;
-
-        let queryColumn = 'id';
-        if (typeof identifier === 'string' && identifier.length === 4) {
-            queryColumn = 'pin';
-        } else if (typeof identifier === 'number' && identifier > 999) {
-            queryColumn = 'pin';
+    pLogs.forEach(log => {
+        if (log.mahalle && log.mahalle.includes('DOĞRULUK:')) {
+            const match = log.mahalle.match(/DOĞRULUK:\s*(\d+)m/);
+            if (match && parseInt(match[1]) > 300) score -= 5;
         }
+    });
 
-        const { error } = await _supabase.from('users').delete().eq(queryColumn, identifier);
-        if (error) {
-            showToast("HATA", "Personel silinemedi: " + error.message, "error");
-        } else {
-            showToast("SİLİNDİ", `✅ ${name} kaydı sistemden kaldırıldı.`, "success");
-            if (typeof loadStaffList === 'function') loadStaffList();
-            if (typeof fetchStaffList === 'function') fetchStaffList();
-        }
-    }
+    score += Math.floor(pLogs.length / 5) * 2;
+    return Math.min(Math.max(score, 10), 100);
+}
 
-    // 🚨 TÜM FONKSİYONLARI DIŞARI AÇ (Window Scope)
-    window.nextStep = nextStep;
-    window.fetchData = fetchData;
-    window.applyFilter = applyFilter;
-    window.sendBroadcast = sendBroadcast;
-    window.deleteBroadcasts = deleteBroadcasts;
-    window.addStaff = addStaff;
-    window.deleteStaff = deleteStaff;
-    window.resetDevice = resetDevice;
+function runAIAnalysis() {
+    const names = [...new Set(window.allLogs.map(l => l.personel))]
+        .filter(n => !n.includes("BILINMEYEN") && !n.includes("BİLİNMEYEN"));
 
-    window.logout = logout;
-    window.exportPDF = exportPDF;
-    window.showMsg = showMsg;
-    window.closeMsg = closeMsg;
-    window.filterActiveStaff = filterActiveStaff;
-    window.scrollToManagement = scrollToManagement;
-
-    function scrollToManagement() {
-        setTimeout(() => {
-            const target = document.getElementById('staff-management');
-            if (target) {
-                const yOffset = -20;
-                const y = target.getBoundingClientRect().top + window.pageYOffset + yOffset;
-                window.scrollTo({ top: y, behavior: 'smooth' });
-            }
-        }, 100);
-    }
-
-    function updateTrendGraph() {
-        const points = []; const hours = 7; const now = new Date();
-        for (let i = 0; i <= hours; i++) {
-            const targetTime = new Date(now.getTime() - (i * 3600000));
-            const count = window.allLogs.filter(l => new Date(l.raw_time).getHours() === targetTime.getHours()).length;
-            points.push(30 - (Math.min(count, 5) * 5));
-        }
-        const pathData = points.reverse().map((p, i) => `${i === 0 ? 'M' : 'L'}${i * 15},${p}`).join(' ');
-        if (document.getElementById('trendPath')) document.getElementById('trendPath').setAttribute('d', pathData);
-    }
-
-    function calculateScore(personName) {
-        let score = 100;
-        if (!window.allLogs || window.allLogs.length === 0) return score;
-
-        const pLogs = window.allLogs
-            .filter(l => (l.personel || "").trim().toUpperCase() === (personName || "").trim().toUpperCase())
-            .sort((a, b) => new Date(a.raw_time) - new Date(b.raw_time));
-
-        if (pLogs.length === 0) return score;
-
-        for (let i = 0; i < pLogs.length; i++) {
-            if (pLogs[i].type === 'GİRİŞ') {
-                const girisZamani = new Date(pLogs[i].raw_time);
-                let cikisLogu = null;
-                for (let j = i + 1; j < pLogs.length; j++) {
-                    if (pLogs[j].type === 'ÇIKIŞ') { cikisLogu = pLogs[j]; break; }
-                }
-                let bitisZamani = cikisLogu ? new Date(cikisLogu.raw_time) : new Date();
-                let saatFarki = (bitisZamani - girisZamani) / 3600000;
-                if (saatFarki > 10.5) score -= 15;
-            }
-        }
-
-        pLogs.forEach(log => {
-            if (log.mahalle && log.mahalle.includes('DOĞRULUK:')) {
-                const match = log.mahalle.match(/DOĞRULUK:\s*(\d+)m/);
-                if (match && parseInt(match[1]) > 300) score -= 5;
-            }
-        });
-
-        score += Math.floor(pLogs.length / 5) * 2;
-        return Math.min(Math.max(score, 10), 100);
-    }
-
-    function runAIAnalysis() {
-        const names = [...new Set(window.allLogs.map(l => l.personel))]
-            .filter(n => !n.includes("BILINMEYEN") && !n.includes("BİLİNMEYEN"));
-
-        if (names.length === 0) {
-            const aiText = document.getElementById('ai-text');
-            if (aiText) aiText.innerHTML = "🧠 Veri akışı bekleniyor...";
-            return;
-        }
-
-        let activeStaff = 0;
-        let criticalCount = 0;
-        let bestPerson = { name: "", score: -1, hours: 0 };
-        let worstPerson = { name: "", score: 101 };
-        let remoteStaffNames = [];
-        let overtimeStaffNames = [];
-        let totalActionsToday = window.allLogs.filter(l => new Date(l.raw_time).toDateString() === new Date().toDateString()).length;
-
-        const shopLat = 41.0000;
-        const shopLon = 28.0000;
-
-        names.forEach(name => {
-            const logs = window.allLogs.filter(l => l.personel === name);
-            const lastAction = logs.find(l => l.type === 'GİRİŞ' || l.type === 'ÇIKIŞ');
-            const score = calculateScore(name);
-
-            let totalHours = 0;
-            let lastIn = null;
-            logs.slice().reverse().forEach(log => {
-                if (log.type === 'GİRİŞ') lastIn = new Date(log.raw_time);
-                else if (log.type === 'ÇIKIŞ' && lastIn) {
-                    totalHours += (new Date(log.raw_time) - lastIn) / 3600000;
-                    lastIn = null;
-                }
-            });
-            if (lastIn) totalHours += (new Date() - lastIn) / 3600000;
-
-            if (score > bestPerson.score || (score === bestPerson.score && totalHours > bestPerson.hours)) { 
-                bestPerson = { name, score, hours: Math.round(totalHours || logs.length * 4.5) }; 
-            }
-            if (score < worstPerson.score) {
-                worstPerson = { name, score };
-            }
-
-            if (lastAction && lastAction.type === 'GİRİŞ') {
-                activeStaff++;
-                const hoursInShift = (new Date() - new Date(lastAction.raw_time)) / 3600000;
-                if (hoursInShift > 10.5) {
-                    criticalCount++;
-                    overtimeStaffNames.push(name);
-                }
-
-                const distLat = Math.abs(lastAction.lat - shopLat);
-                const distLon = Math.abs(lastAction.lon - shopLon);
-                if (distLat > 0.005 || distLon > 0.005) {
-                    remoteStaffNames.push(name);
-                }
-            }
-        });
-
+    if (names.length === 0) {
         const aiText = document.getElementById('ai-text');
-        let aiMsg = `<div style="display:flex; flex-direction:column; gap:12px;">`;
+        if (aiText) aiText.innerHTML = "🧠 Veri akışı bekleniyor...";
+        return;
+    }
 
-        if (remoteStaffNames.length > 0) {
-            aiMsg += `<div>📍 <b style="color:#f48120">DIŞ MEKAN GİRİŞİ:</b> <span style="color:#fff; background:#ef4444; padding:2px 6px; border-radius:4px;">${remoteStaffNames.join(", ")}</span> dükkan dışından işlem yaptı!</div>`;
-        } else if (criticalCount > 0) {
-            aiMsg += `<div>⚠️ <b style="color:#ef4444">KRİTİK DURUM:</b> Mesaisi 10.5 saati aşıp çıkış yapmayanlar var.</div>`;
-        } else {
-            aiMsg += `<div>✅ <b style="color:#10b981">GÜVENLİ:</b> Tüm personel dükkan sınırları içerisinde ve operasyon normal akışında.</div>`;
+    let activeStaff = 0;
+    let criticalCount = 0;
+    let bestPerson = { name: "", score: -1, hours: 0 };
+    let worstPerson = { name: "", score: 101 };
+    let remoteStaffNames = [];
+    let overtimeStaffNames = [];
+    let totalActionsToday = window.allLogs.filter(l => new Date(l.raw_time).toDateString() === new Date().toDateString()).length;
+
+    const shopLat = 41.0000;
+    const shopLon = 28.0000;
+
+    names.forEach(name => {
+        const logs = window.allLogs.filter(l => l.personel === name);
+        const lastAction = logs.find(l => l.type === 'GİRİŞ' || l.type === 'ÇIKIŞ');
+        const score = calculateScore(name);
+
+        let totalHours = 0;
+        let lastIn = null;
+        logs.slice().reverse().forEach(log => {
+            if (log.type === 'GİRİŞ') lastIn = new Date(log.raw_time);
+            else if (log.type === 'ÇIKIŞ' && lastIn) {
+                totalHours += (new Date(log.raw_time) - lastIn) / 3600000;
+                lastIn = null;
+            }
+        });
+        if (lastIn) totalHours += (new Date() - lastIn) / 3600000;
+
+        if (score > bestPerson.score || (score === bestPerson.score && totalHours > bestPerson.hours)) {
+            bestPerson = { name, score, hours: Math.round(totalHours || logs.length * 4.5) };
+        }
+        if (score < worstPerson.score) {
+            worstPerson = { name, score };
         }
 
-        if (bestPerson.name) {
-            const hoursDisplay = bestPerson.hours > 0 ? bestPerson.hours : 42;
-            aiMsg += `<div style="background: rgba(16, 185, 129, 0.1); border-left: 3px solid #10b981; padding: 12px; border-radius: 0 8px 8px 0; font-size: 11px; line-height: 1.5;">
+        if (lastAction && lastAction.type === 'GİRİŞ') {
+            activeStaff++;
+            const hoursInShift = (new Date() - new Date(lastAction.raw_time)) / 3600000;
+            if (hoursInShift > 10.5) {
+                criticalCount++;
+                overtimeStaffNames.push(name);
+            }
+
+            const distLat = Math.abs(lastAction.lat - shopLat);
+            const distLon = Math.abs(lastAction.lon - shopLon);
+            if (distLat > 0.005 || distLon > 0.005) {
+                remoteStaffNames.push(name);
+            }
+        }
+    });
+
+    const aiText = document.getElementById('ai-text');
+    let aiMsg = `<div style="display:flex; flex-direction:column; gap:12px;">`;
+
+    if (remoteStaffNames.length > 0) {
+        aiMsg += `<div>📍 <b style="color:#f48120">DIŞ MEKAN GİRİŞİ:</b> <span style="color:#fff; background:#ef4444; padding:2px 6px; border-radius:4px;">${remoteStaffNames.join(", ")}</span> dükkan dışından işlem yaptı!</div>`;
+    } else if (criticalCount > 0) {
+        aiMsg += `<div>⚠️ <b style="color:#ef4444">KRİTİK DURUM:</b> Mesaisi 10.5 saati aşıp çıkış yapmayanlar var.</div>`;
+    } else {
+        aiMsg += `<div>✅ <b style="color:#10b981">GÜVENLİ:</b> Tüm personel dükkan sınırları içerisinde ve operasyon normal akışında.</div>`;
+    }
+
+    if (bestPerson.name) {
+        const hoursDisplay = bestPerson.hours > 0 ? bestPerson.hours : 42;
+        aiMsg += `<div style="background: rgba(16, 185, 129, 0.1); border-left: 3px solid #10b981; padding: 12px; border-radius: 0 8px 8px 0; font-size: 11px; line-height: 1.5;">
                 💡 <b style="color:#10b981">TAVSİYE (ShiftAI Koç):</b> <b>${bestPerson.name}</b> bu hafta yoğun mesai (${hoursDisplay} saat) yaptı ve verimlilik puanı ${bestPerson.score}. Kendisine Cuma günü ek izin veya prim verilmesi operasyonel motivasyonu artıracaktır.
             </div>`;
-        }
+    }
 
-        if (worstPerson.name && worstPerson.score < 100) {
-            aiMsg += `<div style="background: rgba(239, 68, 68, 0.1); border-left: 3px solid #ef4444; padding: 12px; border-radius: 0 8px 8px 0; font-size: 11px; line-height: 1.5;">
+    if (worstPerson.name && worstPerson.score < 100) {
+        aiMsg += `<div style="background: rgba(239, 68, 68, 0.1); border-left: 3px solid #ef4444; padding: 12px; border-radius: 0 8px 8px 0; font-size: 11px; line-height: 1.5;">
                 ⚠️ <b style="color:#ef4444">DİKKAT (ShiftAI Analiz):</b> <b>${worstPerson.name}</b> son günlerde operasyonel esneklik ihlalleri veya gecikmeler gösteriyor (Puan: ${worstPerson.score}). Birebir iletişime geçilmesi ve durum değerlendirmesi yapılması önerilir.
             </div>`;
-        } else if (names.length > 1) {
-            const secondPerson = names.filter(n => n !== bestPerson.name)[0];
-            aiMsg += `<div style="background: rgba(59, 130, 246, 0.1); border-left: 3px solid #3b82f6; padding: 12px; border-radius: 0 8px 8px 0; font-size: 11px; line-height: 1.5;">
+    } else if (names.length > 1) {
+        const secondPerson = names.filter(n => n !== bestPerson.name)[0];
+        aiMsg += `<div style="background: rgba(59, 130, 246, 0.1); border-left: 3px solid #3b82f6; padding: 12px; border-radius: 0 8px 8px 0; font-size: 11px; line-height: 1.5;">
                 🔄 <b style="color:#3b82f6">ROTASYON ÖNERİSİ:</b> <b>${secondPerson}</b> aktif operasyonda istikrarlı devam ediyor. Gün içi mola rotasyonlarında öncelik tanınması enerji dengesini koruyacaktır.
             </div>`;
-        }
-
-        aiMsg += `<div style="font-size: 10px; color: #94a3b8; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 8px;">📊 <b>ÖZET:</b> Bugün ${totalActionsToday} işlem işlendi. Mağaza genel disiplin ortalaması: %${Math.round(names.reduce((acc, n) => acc + calculateScore(n), 0) / names.length)}.</div>`;
-        aiMsg += `</div>`;
-
-        const anomalies = [];
-        if (remoteStaffNames.length > 0) {
-            remoteStaffNames.forEach(name => anomalies.push({ type: 'OUTSIDE', name: name }));
-        }
-        if (overtimeStaffNames.length > 0) {
-            overtimeStaffNames.forEach(name => anomalies.push({ type: 'OVERTIME', name: name }));
-        }
-        if (window.ShiftAI) window.ShiftAI.updateSuggestions(anomalies);
-
-        if (aiText) aiText.innerHTML = aiMsg;
     }
 
-    function calculateRowDuration(currentLog, logs) {
-        const personLogs = logs.filter(l => l.personel === currentLog.personel).sort((a, b) => new Date(a.raw_time) - new Date(b.raw_time));
-        const lastGiris = personLogs.filter(l => new Date(l.raw_time) <= new Date(currentLog.raw_time) && l.type === 'GİRİŞ').pop();
-        if (!lastGiris) return "BAŞLANGIÇ YOK";
-        const followingCikis = personLogs.filter(l => new Date(l.raw_time) > new Date(lastGiris.raw_time) && l.type === 'ÇIKIŞ')[0];
-        let endTime = followingCikis ? new Date(followingCikis.raw_time) : new Date();
-        let diff = Math.max(0, endTime - new Date(lastGiris.raw_time));
-        return `${Math.floor(diff / 360000)}s ${Math.floor((diff % 3600000) / 60000)}dk`;
-    }
+    aiMsg += `<div style="font-size: 10px; color: #94a3b8; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 8px;">📊 <b>ÖZET:</b> Bugün ${totalActionsToday} işlem işlendi. Mağaza genel disiplin ortalaması: %${Math.round(names.reduce((acc, n) => acc + calculateScore(n), 0) / names.length)}.</div>`;
+    aiMsg += `</div>`;
 
-    function checkCriticalAlert(log, all) {
-        if (log.type !== 'GİRİŞ') return false;
-        const personLogs = all.filter(l => l.personel === log.personel);
+    const anomalies = [];
+    if (remoteStaffNames.length > 0) {
+        remoteStaffNames.forEach(name => anomalies.push({ type: 'OUTSIDE', name: name }));
+    }
+    if (overtimeStaffNames.length > 0) {
+        overtimeStaffNames.forEach(name => anomalies.push({ type: 'OVERTIME', name: name }));
+    }
+    if (window.ShiftAI) window.ShiftAI.updateSuggestions(anomalies);
+
+    if (aiText) aiText.innerHTML = aiMsg;
+}
+
+function calculateRowDuration(currentLog, logs) {
+    const personLogs = logs.filter(l => l.personel === currentLog.personel).sort((a, b) => new Date(a.raw_time) - new Date(b.raw_time));
+    const lastGiris = personLogs.filter(l => new Date(l.raw_time) <= new Date(currentLog.raw_time) && l.type === 'GİRİŞ').pop();
+    if (!lastGiris) return "BAŞLANGIÇ YOK";
+    const followingCikis = personLogs.filter(l => new Date(l.raw_time) > new Date(lastGiris.raw_time) && l.type === 'ÇIKIŞ')[0];
+    let endTime = followingCikis ? new Date(followingCikis.raw_time) : new Date();
+    let diff = Math.max(0, endTime - new Date(lastGiris.raw_time));
+    return `${Math.floor(diff / 360000)}s ${Math.floor((diff % 3600000) / 60000)}dk`;
+}
+
+function checkCriticalAlert(log, all) {
+    if (log.type !== 'GİRİŞ') return false;
+    const personLogs = all.filter(l => l.personel === log.personel);
+    const lastMainAction = personLogs.find(l => l.type === 'GİRİŞ' || l.type === 'ÇIKIŞ');
+    if (lastMainAction && lastMainAction.type === 'ÇIKIŞ') return false;
+    const lastGiris = personLogs.find(l => l.type === 'GİRİŞ');
+    if (lastGiris && lastGiris.id !== log.id) return false;
+    const girisZamani = new Date(log.raw_time);
+    const simdi = new Date();
+    const farkSaat = (simdi - girisZamani) / 3600000;
+    return farkSaat > 10;
+}
+
+function updateDashboard() {
+    const staffSelect = document.getElementById('staffFilter');
+    const currentStaff = staffSelect ? staffSelect.value : 'all';
+    const names = [...new Set(window.allLogs.map(l => l.personel))].sort();
+    if (staffSelect) {
+        staffSelect.innerHTML = '<option value="all">TÜMÜ</option>' + names.map(n => `<option value="${n}">${n}</option>`).join('');
+        if (currentStaff && [...names, 'all'].includes(currentStaff)) {
+            staffSelect.value = currentStaff;
+        }
+    }
+    const statTotal = document.getElementById('stat-total');
+    if (statTotal) statTotal.innerText = window.allLogs.length;
+    let realActiveCount = 0;
+    names.forEach(name => {
+        const personLogs = window.allLogs.filter(l => l.personel === name);
         const lastMainAction = personLogs.find(l => l.type === 'GİRİŞ' || l.type === 'ÇIKIŞ');
-        if (lastMainAction && lastMainAction.type === 'ÇIKIŞ') return false;
-        const lastGiris = personLogs.find(l => l.type === 'GİRİŞ');
-        if (lastGiris && lastGiris.id !== log.id) return false;
-        const girisZamani = new Date(log.raw_time);
-        const simdi = new Date();
-        const farkSaat = (simdi - girisZamani) / 3600000;
-        return farkSaat > 10;
+        if (lastMainAction && lastMainAction.type === 'GİRİŞ') realActiveCount++;
+    });
+    const statStaff = document.getElementById('stat-staff');
+    if (statStaff) statStaff.innerText = realActiveCount;
+    const statToday = document.getElementById('stat-today');
+    if (statToday) statToday.innerText = window.allLogs.filter(l => new Date(l.raw_time).toDateString() === new Date().toDateString()).length;
+
+    if (isActiveStaffMode) {
+        filterActiveStaff(false);
+    } else {
+        applyFilter(false);
     }
+}
 
-    function updateDashboard() {
-        const staffSelect = document.getElementById('staffFilter');
-        const currentStaff = staffSelect ? staffSelect.value : 'all';
-        const names = [...new Set(window.allLogs.map(l => l.personel))].sort();
-        if (staffSelect) {
-            staffSelect.innerHTML = '<option value="all">TÜMÜ</option>' + names.map(n => `<option value="${n}">${n}</option>`).join('');
-            if (currentStaff && [...names, 'all'].includes(currentStaff)) {
-                staffSelect.value = currentStaff;
-            }
-        }
-        const statTotal = document.getElementById('stat-total');
-        if (statTotal) statTotal.innerText = window.allLogs.length;
-        let realActiveCount = 0;
-        names.forEach(name => {
-            const personLogs = window.allLogs.filter(l => l.personel === name);
-            const lastMainAction = personLogs.find(l => l.type === 'GİRİŞ' || l.type === 'ÇIKIŞ');
-            if (lastMainAction && lastMainAction.type === 'GİRİŞ') realActiveCount++;
-        });
-        const statStaff = document.getElementById('stat-staff');
-        if (statStaff) statStaff.innerText = realActiveCount;
-        const statToday = document.getElementById('stat-today');
-        if (statToday) statToday.innerText = window.allLogs.filter(l => new Date(l.raw_time).toDateString() === new Date().toDateString()).length;
-
-        if (isActiveStaffMode) {
-            filterActiveStaff(false);
-        } else {
-            applyFilter(false);
-        }
+function applyFilter(fromUser = true) {
+    if (fromUser !== false) {
+        isActiveStaffMode = false;
     }
+    const staffEl = document.getElementById('staffFilter');
+    const sDEl = document.getElementById('startDate');
+    const eDEl = document.getElementById('endDate');
+    const staff = staffEl ? staffEl.value : 'all';
+    const sD = sDEl ? sDEl.value : '';
+    const eD = eDEl ? eDEl.value : '';
+    let filtered = window.allLogs;
+    if (staff !== "all") filtered = filtered.filter(l => l.personel === staff);
+    if (sD) filtered = filtered.filter(l => new Date(l.raw_time) >= new Date(sD));
+    if (eD) filtered = filtered.filter(l => new Date(l.raw_time) <= new Date(eD + "T23:59:59"));
 
-    function applyFilter(fromUser = true) {
-        if (fromUser !== false) {
-            isActiveStaffMode = false;
-        }
-        const staffEl = document.getElementById('staffFilter');
-        const sDEl = document.getElementById('startDate');
-        const eDEl = document.getElementById('endDate');
-        const staff = staffEl ? staffEl.value : 'all';
-        const sD = sDEl ? sDEl.value : '';
-        const eD = eDEl ? eDEl.value : '';
-        let filtered = window.allLogs;
-        if (staff !== "all") filtered = filtered.filter(l => l.personel === staff);
-        if (sD) filtered = filtered.filter(l => new Date(l.raw_time) >= new Date(sD));
-        if (eD) filtered = filtered.filter(l => new Date(l.raw_time) <= new Date(eD + "T23:59:59"));
+    const logTableEl = document.getElementById('logTable');
+    if (logTableEl) {
+        logTableEl.innerHTML = filtered.map(log => {
+            const isCrit = checkCriticalAlert(log, window.allLogs);
+            const score = calculateScore(log.personel);
+            const isNew = (new Date() - new Date(log.raw_time)) < 30000;
+            const isMessage = log.type === 'MESAJ';
+            const isUnknown = log.personel.includes("BILINMEYEN") || log.personel.includes("BİLİNMEYEN");
+            const durationText = calculateRowDuration(log, window.allLogs);
 
-        const logTableEl = document.getElementById('logTable');
-        if (logTableEl) {
-            logTableEl.innerHTML = filtered.map(log => {
-                const isCrit = checkCriticalAlert(log, window.allLogs);
-                const score = calculateScore(log.personel);
-                const isNew = (new Date() - new Date(log.raw_time)) < 30000;
-                const isMessage = log.type === 'MESAJ';
-                const isUnknown = log.personel.includes("BILINMEYEN") || log.personel.includes("BİLİNMEYEN");
-                const durationText = calculateRowDuration(log, window.allLogs);
+            const clickAction = isMessage ? `onclick="showMsg('${log.personel}', '${log.mahalle.replace(/'/g, "\\'")}', '${log.time}')"` : "";
+            const badgeStyle = isMessage ? 'background: #9333ea; cursor: pointer; border-color: #a78bfa;' : '';
+            const displayText = isMessage ? '📩 MESAJI OKU' : log.type;
 
-                const clickAction = isMessage ? `onclick="showMsg('${log.personel}', '${log.mahalle.replace(/'/g, "\\'")}', '${log.time}')"` : "";
-                const badgeStyle = isMessage ? 'background: #9333ea; cursor: pointer; border-color: #a78bfa;' : '';
-                const displayText = isMessage ? '📩 MESAJI OKU' : log.type;
+            let isOffline = log.mahalle && log.mahalle.includes('⚡ Çevrimdışı');
+            let noteText = isMessage ? '📝 Personel Bildirimi Gönderdi' : log.mahalle.replace(' (⚡ Çevrimdışı)', '');
+            let offlineBadge = isOffline ? `<br><span style="background: rgba(245, 158, 11, 0.2); color: #f59e0b; border: 1px solid #f59e0b; padding: 2px 6px; border-radius: 6px; font-size: 8px; font-family: 'Orbitron'; display: inline-block; margin-top: 5px;">⚡ ÇEVRİMDİŞI EŞİTLENDİ</span>` : '';
 
-                let isOffline = log.mahalle && log.mahalle.includes('⚡ Çevrimdışı');
-                let noteText = isMessage ? '📝 Personel Bildirimi Gönderdi' : log.mahalle.replace(' (⚡ Çevrimdışı)', '');
-                let offlineBadge = isOffline ? `<br><span style="background: rgba(245, 158, 11, 0.2); color: #f59e0b; border: 1px solid #f59e0b; padding: 2px 6px; border-radius: 6px; font-size: 8px; font-family: 'Orbitron'; display: inline-block; margin-top: 5px;">⚡ ÇEVRİMDİŞI EŞİTLENDİ</span>` : '';
+            const scoreBox = !isUnknown ? `<div class="score-box ${score < 70 ? 'low-score' : ''}">⭐ ${score} Puan</div>` : '';
 
-                const scoreBox = !isUnknown ? `<div class="score-box ${score < 70 ? 'low-score' : ''}">⭐ ${score} Puan</div>` : '';
+            const actionCol = isMessage
+                ? `<a href="javascript:void(0)" ${clickAction} class="btn-msg-read" style="margin-bottom:8px; display:inline-block;">AÇ / OKU</a><br><span class="log-time-highlight" style="font-size:15px; font-family:'Orbitron', sans-serif; color:var(--text-main); font-weight:700;"><i class="fas fa-clock time-icon" style="color:var(--primary); margin-right:5px;"></i> ${log.time}</span><br><span style="font-size:12px; font-family:'Poppins', sans-serif; font-weight:600; color:var(--text-muted); display:inline-block; margin-top:4px;">📅 ${log.date_str || log.time}</span>`
+                : `<span class="log-time-highlight" style="font-size:15px; font-family:'Orbitron', sans-serif; color:var(--text-main); font-weight:700;"><i class="fas fa-clock time-icon" style="color:var(--primary); margin-right:5px;"></i> ${log.time}</span><br><span style="font-size:12px; font-family:'Poppins', sans-serif; font-weight:600; color:var(--text-muted); display:inline-block; margin-top:4px;">📅 ${log.date_str || log.time}</span>`;
 
-                const actionCol = isMessage
-                    ? `<a href="javascript:void(0)" ${clickAction} class="btn-msg-read" style="margin-bottom:8px; display:inline-block;">AÇ / OKU</a><br><span class="log-time-highlight" style="font-size:15px; font-family:'Orbitron', sans-serif; color:var(--text-main); font-weight:700;"><i class="fas fa-clock time-icon" style="color:var(--primary); margin-right:5px;"></i> ${log.time}</span><br><span style="font-size:12px; font-family:'Poppins', sans-serif; font-weight:600; color:var(--text-muted); display:inline-block; margin-top:4px;">📅 ${log.date_str || log.time}</span>`
-                    : `<span class="log-time-highlight" style="font-size:15px; font-family:'Orbitron', sans-serif; color:var(--text-main); font-weight:700;"><i class="fas fa-clock time-icon" style="color:var(--primary); margin-right:5px;"></i> ${log.time}</span><br><span style="font-size:12px; font-family:'Poppins', sans-serif; font-weight:600; color:var(--text-muted); display:inline-block; margin-top:4px;">📅 ${log.date_str || log.time}</span>`;
-
-                return `<tr class="${isCrit ? 'critical-alarm' : ''} ${isNew ? 'new-action-row' : ''}">
+            return `<tr class="${isCrit ? 'critical-alarm' : ''} ${isNew ? 'new-action-row' : ''}">
 <td style="font-family:'Poppins', sans-serif; font-size:15px; font-weight:700; letter-spacing:0.5px; color:var(--text-main);">
     ${log.personel}<br>
     ${scoreBox}
@@ -841,100 +876,100 @@
 <td><div class="${isMessage ? 'msg-text-truncate' : ''}">${noteText}</div>${offlineBadge}<br><a href="https://www.google.com/maps?q=${log.lat},${log.lon}" target="_blank" style="color:#3b82f6; font-size:10px; font-weight:700; text-decoration:none; display:inline-block; margin-top:5px;">📍 KONUM</a></td>
 <td>${actionCol}</td>
 </tr>`;
-            }).join('');
+        }).join('');
+    }
+}
+
+function filterActiveStaff(fromUser = true) {
+    if (fromUser !== false) {
+        isActiveStaffMode = true;
+    }
+    const names = [...new Set(allLogs.map(l => l.personel))];
+    const activeLogsOnly = [];
+
+    names.forEach(name => {
+        const personLogs = allLogs.filter(l => l.personel === name);
+        const lastWorkAction = personLogs.find(l => l.type === 'GİRİŞ' || l.type === 'ÇIKIŞ');
+        if (lastWorkAction && lastWorkAction.type === 'GİRİŞ') {
+            activeLogsOnly.push(lastWorkAction);
+        }
+    });
+
+    const logTable = document.getElementById('logTable');
+    if (logTable) {
+        if (activeLogsOnly.length === 0) {
+            logTable.innerHTML = `<tr><td colspan="4" style="text-align:center; padding:50px; opacity:0.5; font-family:'Orbitron';">Şu an dükkanda aktif personel bulunmuyor.</td></tr>`;
+        } else {
+            renderCustomTable(activeLogsOnly);
         }
     }
 
-    function filterActiveStaff(fromUser = true) {
-        if (fromUser !== false) {
-            isActiveStaffMode = true;
-        }
-        const names = [...new Set(allLogs.map(l => l.personel))];
-        const activeLogsOnly = [];
+    const staffFilterEl = document.getElementById('staffFilter');
+    if (staffFilterEl) staffFilterEl.value = 'all';
+    const aiTextEl = document.getElementById('ai-text');
+    if (aiTextEl) aiTextEl.innerHTML = `⚡ <b>GÜNCEL TAKİP:</b> Personel mesaj gönderse dahi mesai takibi devam eder. Şu an ${activeLogsOnly.length} personel içeride.`;
 
-        names.forEach(name => {
-            const personLogs = allLogs.filter(l => l.personel === name);
-            const lastWorkAction = personLogs.find(l => l.type === 'GİRİŞ' || l.type === 'ÇIKIŞ');
-            if (lastWorkAction && lastWorkAction.type === 'GİRİŞ') {
-                activeLogsOnly.push(lastWorkAction);
-            }
-        });
-
-        const logTable = document.getElementById('logTable');
-        if (logTable) {
-            if (activeLogsOnly.length === 0) {
-                logTable.innerHTML = `<tr><td colspan="4" style="text-align:center; padding:50px; opacity:0.5; font-family:'Orbitron';">Şu an dükkanda aktif personel bulunmuyor.</td></tr>`;
-            } else {
-                renderCustomTable(activeLogsOnly);
-            }
-        }
-
-        const staffFilterEl = document.getElementById('staffFilter');
-        if (staffFilterEl) staffFilterEl.value = 'all';
-        const aiTextEl = document.getElementById('ai-text');
-        if (aiTextEl) aiTextEl.innerHTML = `⚡ <b>GÜNCEL TAKİP:</b> Personel mesaj gönderse dahi mesai takibi devam eder. Şu an ${activeLogsOnly.length} personel içeride.`;
-
-        if (fromUser !== false) {
-            scrollToManagement();
-        }
-    }
-
-    function filterDailyTraffic() {
-        const sDEl = document.getElementById('startDate');
-        const eDEl = document.getElementById('endDate');
-        const staffEl = document.getElementById('staffFilter');
-        
-        if (sDEl && eDEl) {
-            const now = new Date();
-            const yesterday = new Date(now.getTime() - (24 * 60 * 60 * 1000));
-            sDEl.value = yesterday.toISOString().slice(0, 10);
-            eDEl.value = now.toISOString().slice(0, 10);
-        }
-        if (staffEl) staffEl.value = 'all';
-
-        isActiveStaffMode = false;
-        applyFilter();
-        showToast("GÜNLÜK TRAFİK", "Son 24 saatlik operasyon hareketleri listelendi.", "info");
+    if (fromUser !== false) {
         scrollToManagement();
     }
+}
 
-    function filterTotalRecords() {
-        const sDEl = document.getElementById('startDate');
-        const eDEl = document.getElementById('endDate');
-        const staffEl = document.getElementById('staffFilter');
-        
-        if (sDEl) sDEl.value = '';
-        if (eDEl) eDEl.value = '';
-        if (staffEl) staffEl.value = 'all';
+function filterDailyTraffic() {
+    const sDEl = document.getElementById('startDate');
+    const eDEl = document.getElementById('endDate');
+    const staffEl = document.getElementById('staffFilter');
 
-        isActiveStaffMode = false;
-        applyFilter();
-        showToast("TOPLAM KAYIT", "Tüm geçmiş operasyon hareketleri listelendi.", "info");
-        scrollToManagement();
+    if (sDEl && eDEl) {
+        const now = new Date();
+        const yesterday = new Date(now.getTime() - (24 * 60 * 60 * 1000));
+        sDEl.value = yesterday.toISOString().slice(0, 10);
+        eDEl.value = now.toISOString().slice(0, 10);
     }
+    if (staffEl) staffEl.value = 'all';
 
-    function renderCustomTable(data) {
-        const table = document.getElementById('logTable');
-        if (!table) return;
-        table.innerHTML = data.map(log => {
-            const isCrit = checkCriticalAlert(log, allLogs);
-            const score = calculateScore(log.personel);
-            const isMessage = log.type === 'MESAJ';
-            const durationText = calculateRowDuration(log, allLogs);
+    isActiveStaffMode = false;
+    applyFilter();
+    showToast("GÜNLÜK TRAFİK", "Son 24 saatlik operasyon hareketleri listelendi.", "info");
+    scrollToManagement();
+}
 
-            const clickAction = isMessage ? `onclick="showMsg('${log.personel}', '${log.mahalle.replace(/'/g, "\\'")}', '${log.time}')"` : "";
-            const badgeStyle = isMessage ? 'background: #9333ea; cursor: pointer; border-color: #a78bfa;' : '';
-            const displayText = isMessage ? '📩 MESAJI OKU' : log.type;
+function filterTotalRecords() {
+    const sDEl = document.getElementById('startDate');
+    const eDEl = document.getElementById('endDate');
+    const staffEl = document.getElementById('staffFilter');
 
-            let isOffline = log.mahalle && log.mahalle.includes('⚡ Çevrimdışı');
-            let noteText = log.mahalle.replace(' (⚡ Çevrimdışı)', '');
-            let offlineBadge = isOffline ? `<br><span style="background: rgba(245, 158, 11, 0.2); color: #f59e0b; border: 1px solid #f59e0b; padding: 2px 6px; border-radius: 6px; font-size: 8px; font-family: 'Orbitron'; display: inline-block; margin-top: 5px;">⚡ ÇEVRİMDİŞI EŞİTLENDİ</span>` : '';
+    if (sDEl) sDEl.value = '';
+    if (eDEl) eDEl.value = '';
+    if (staffEl) staffEl.value = 'all';
 
-            const actionCol = isMessage
-                ? `<a href="javascript:void(0)" ${clickAction} class="btn-msg-read" style="margin-bottom:8px; display:inline-block;">AÇ / OKU</a><br><span class="log-time-highlight" style="font-size:15px; font-family:'Orbitron', sans-serif; color:var(--text-main); font-weight:700;"><i class="fas fa-clock time-icon" style="color:var(--primary); margin-right:5px;"></i> ${log.time.split(' ')[1] || log.time}</span><br><span style="font-size:12px; font-family:'Poppins', sans-serif; font-weight:600; color:var(--text-muted); display:inline-block; margin-top:4px;">📅 ${log.time.split(' ')[0] || log.time}</span>`
-                : `<span class="log-time-highlight" style="font-size:15px; font-family:'Orbitron', sans-serif; color:var(--text-main); font-weight:700;"><i class="fas fa-clock time-icon" style="color:var(--primary); margin-right:5px;"></i> ${log.time.split(' ')[1] || log.time}</span><br><span style="font-size:12px; font-family:'Poppins', sans-serif; font-weight:600; color:var(--text-muted); display:inline-block; margin-top:4px;">📅 ${log.time.split(' ')[0] || log.time}</span>`;
+    isActiveStaffMode = false;
+    applyFilter();
+    showToast("TOPLAM KAYIT", "Tüm geçmiş operasyon hareketleri listelendi.", "info");
+    scrollToManagement();
+}
 
-            return `<tr class="${isCrit ? 'critical-alarm' : ''}">
+function renderCustomTable(data) {
+    const table = document.getElementById('logTable');
+    if (!table) return;
+    table.innerHTML = data.map(log => {
+        const isCrit = checkCriticalAlert(log, allLogs);
+        const score = calculateScore(log.personel);
+        const isMessage = log.type === 'MESAJ';
+        const durationText = calculateRowDuration(log, allLogs);
+
+        const clickAction = isMessage ? `onclick="showMsg('${log.personel}', '${log.mahalle.replace(/'/g, "\\'")}', '${log.time}')"` : "";
+        const badgeStyle = isMessage ? 'background: #9333ea; cursor: pointer; border-color: #a78bfa;' : '';
+        const displayText = isMessage ? '📩 MESAJI OKU' : log.type;
+
+        let isOffline = log.mahalle && log.mahalle.includes('⚡ Çevrimdışı');
+        let noteText = log.mahalle.replace(' (⚡ Çevrimdışı)', '');
+        let offlineBadge = isOffline ? `<br><span style="background: rgba(245, 158, 11, 0.2); color: #f59e0b; border: 1px solid #f59e0b; padding: 2px 6px; border-radius: 6px; font-size: 8px; font-family: 'Orbitron'; display: inline-block; margin-top: 5px;">⚡ ÇEVRİMDİŞI EŞİTLENDİ</span>` : '';
+
+        const actionCol = isMessage
+            ? `<a href="javascript:void(0)" ${clickAction} class="btn-msg-read" style="margin-bottom:8px; display:inline-block;">AÇ / OKU</a><br><span class="log-time-highlight" style="font-size:15px; font-family:'Orbitron', sans-serif; color:var(--text-main); font-weight:700;"><i class="fas fa-clock time-icon" style="color:var(--primary); margin-right:5px;"></i> ${log.time.split(' ')[1] || log.time}</span><br><span style="font-size:12px; font-family:'Poppins', sans-serif; font-weight:600; color:var(--text-muted); display:inline-block; margin-top:4px;">📅 ${log.time.split(' ')[0] || log.time}</span>`
+            : `<span class="log-time-highlight" style="font-size:15px; font-family:'Orbitron', sans-serif; color:var(--text-main); font-weight:700;"><i class="fas fa-clock time-icon" style="color:var(--primary); margin-right:5px;"></i> ${log.time.split(' ')[1] || log.time}</span><br><span style="font-size:12px; font-family:'Poppins', sans-serif; font-weight:600; color:var(--text-muted); display:inline-block; margin-top:4px;">📅 ${log.time.split(' ')[0] || log.time}</span>`;
+
+        return `<tr class="${isCrit ? 'critical-alarm' : ''}">
 <td style="font-family:'Poppins', sans-serif; font-size:15px; font-weight:700; letter-spacing:0.5px; color:var(--text-main);">
     ${log.personel}<br>
     <div class="score-box ${score < 70 ? 'low-score' : ''}">⭐ ${score} Puan</div>
@@ -947,253 +982,253 @@
 <td>${noteText}${offlineBadge}<br><a href="https://www.google.com/maps?q=${log.lat},${log.lon}" target="_blank" style="color:#3b82f6; font-size:10px; font-weight:700; text-decoration:none; display:inline-block; margin-top:5px;">📍 KONUM</a></td>
 <td>${actionCol}</td>
 </tr>`;
-        }).join('');
+    }).join('');
+}
+
+function showMsg(person, text, time) {
+    document.getElementById('msg-body').innerHTML = `<b style="color:var(--text-main);">${person}:</b><br><br>"${text}"`;
+    document.getElementById('msg-time-footer').innerText = `GÖNDERİM ZAMANI: ${time}`;
+    document.getElementById('msg-modal').style.display = 'flex';
+}
+
+function closeMsg() { document.getElementById('msg-modal').style.display = 'none'; }
+
+function cleanPdfText(text) {
+    if (!text) return "";
+    let str = text.toString();
+    str = str.replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, '');
+    str = str.replace(/[\u2600-\u27BF]/g, '');
+    str = str.replace(/[\u2300-\u23FF]/g, '');
+    str = str.replace(/[\u2B50]/g, '');
+    str = str.replace(/⏱️|📩|📍|⭐|⚠️|📝|⚡|💸|📊|📜|📄/g, '');
+    str = str.replace(/AÇ \/ OKU/g, '');
+
+    const trMap = {
+        'Ç': 'C', 'ç': 'c',
+        'Ğ': 'G', 'ğ': 'g',
+        'İ': 'I', 'ı': 'i',
+        'Ö': 'O', 'ö': 'o',
+        'Ş': 'S', 'ş': 's',
+        'Ü': 'U', 'ü': 'u'
+    };
+    str = str.replace(/[ÇçĞğİıÖöŞşÜü]/g, match => trMap[match]);
+
+    return str.trim();
+}
+
+async function exportPDF() {
+    const staffEl = document.getElementById('staffFilter');
+    const sDEl = document.getElementById('startDate');
+    const eDEl = document.getElementById('endDate');
+    if (!staffEl) return;
+    const staff = staffEl.value;
+    const sD = sDEl ? sDEl.value : '';
+    const eD = eDEl ? eDEl.value : '';
+
+    let filteredLogs = allLogs;
+    if (staff !== "all") filteredLogs = filteredLogs.filter(l => l.personel === staff);
+    if (sD) filteredLogs = filteredLogs.filter(l => new Date(l.raw_time) >= new Date(sD));
+    if (eD) filteredLogs = filteredLogs.filter(l => new Date(l.raw_time) <= new Date(eD + "T23:59:59"));
+
+    if (filteredLogs.length === 0) {
+        showToast("UYARI", "Seçili kriterlerde kayıt bulunamadığı için rapor oluşturulamadı.", "warning");
+        return;
     }
 
-    function showMsg(person, text, time) {
-        document.getElementById('msg-body').innerHTML = `<b style="color:var(--text-main);">${person}:</b><br><br>"${text}"`;
-        document.getElementById('msg-time-footer').innerText = `GÖNDERİM ZAMANI: ${time}`;
-        document.getElementById('msg-modal').style.display = 'flex';
+    showToast("RAPOR HAZIRLANIYOR", "Fontlar ayarlanıyor, lütfen bekleyin...", "info");
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF('p', 'pt', 'a4');
+    const originalAddPage = doc.addPage;
+    doc.addPage = function () {
+        originalAddPage.apply(this, arguments);
+        doc.setFillColor(10, 15, 30);
+        doc.rect(0, 0, doc.internal.pageSize.width, doc.internal.pageSize.height, 'F');
+    };
+    const now = new Date();
+
+    try {
+        const fontUrl = 'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/fonts/Roboto/Roboto-Regular.ttf';
+        const resp = await fetch(fontUrl);
+        const blob = await resp.blob();
+        const base64Font = await new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result.split(',')[1]);
+            reader.readAsDataURL(blob);
+        });
+
+        doc.addFileToVFS("Roboto-Regular.ttf", base64Font);
+        doc.addFont("Roboto-Regular.ttf", "Roboto", "normal");
+        doc.setFont("Roboto");
+    } catch (e) {
+        console.warn("Font yüklenemedi, varsayılan fonta geçiliyor.", e);
     }
 
-    function closeMsg() { document.getElementById('msg-modal').style.display = 'none'; }
+    doc.setFillColor(10, 15, 30);
+    doc.rect(0, 0, doc.internal.pageSize.width, doc.internal.pageSize.height, 'F');
 
-    function cleanPdfText(text) {
-        if (!text) return "";
-        let str = text.toString();
-        str = str.replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, '');
-        str = str.replace(/[\u2600-\u27BF]/g, '');
-        str = str.replace(/[\u2300-\u23FF]/g, '');
-        str = str.replace(/[\u2B50]/g, '');
-        str = str.replace(/⏱️|📩|📍|⭐|⚠️|📝|⚡|💸|📊|📜|📄/g, '');
-        str = str.replace(/AÇ \/ OKU/g, '');
+    doc.setTextColor(244, 129, 32);
+    doc.setFont('Roboto', 'bold'); doc.setFontSize(24);
+    doc.text(cleanPdfText("SHIFT TURBO"), 40, 50);
 
-        const trMap = {
-            'Ç': 'C', 'ç': 'c',
-            'Ğ': 'G', 'ğ': 'g',
-            'İ': 'I', 'ı': 'i',
-            'Ö': 'O', 'ö': 'o',
-            'Ş': 'S', 'ş': 's',
-            'Ü': 'U', 'ü': 'u'
-        };
-        str = str.replace(/[ÇçĞğİıÖöŞşÜü]/g, match => trMap[match]);
+    doc.setFontSize(11); doc.setTextColor(148, 163, 184); doc.setFont('Roboto', 'normal');
+    doc.text(cleanPdfText("OPERASYON RAPORU | YONETICI TERMINALI"), 40, 72);
 
-        return str.trim();
-    }
+    doc.setDrawColor(244, 129, 32); doc.setLineWidth(1.5);
+    doc.line(40, 85, doc.internal.pageSize.width - 40, 85);
 
-    async function exportPDF() {
-        const staffEl = document.getElementById('staffFilter');
-        const sDEl = document.getElementById('startDate');
-        const eDEl = document.getElementById('endDate');
-        if (!staffEl) return;
-        const staff = staffEl.value;
-        const sD = sDEl ? sDEl.value : '';
-        const eD = eDEl ? eDEl.value : '';
+    doc.setFontSize(10); doc.setTextColor(203, 213, 225);
+    doc.text(cleanPdfText(`Filtre: ${staff === 'all' ? 'Tüm Personel' : staff} | Tarih: ${sD || 'Başlangıç Belirtilmedi'} - ${eD || 'Bugün'}`), 40, 110);
 
-        let filteredLogs = allLogs;
-        if (staff !== "all") filteredLogs = filteredLogs.filter(l => l.personel === staff);
-        if (sD) filteredLogs = filteredLogs.filter(l => new Date(l.raw_time) >= new Date(sD));
-        if (eD) filteredLogs = filteredLogs.filter(l => new Date(l.raw_time) <= new Date(eD + "T23:59:59"));
+    const summaryData = {}; const groupedLogs = {};
+    filteredLogs.forEach(log => { if (!groupedLogs[log.personel]) groupedLogs[log.personel] = []; groupedLogs[log.personel].push(log); });
 
-        if (filteredLogs.length === 0) {
-            showToast("UYARI", "Seçili kriterlerde kayıt bulunamadığı için rapor oluşturulamadı.", "warning");
-            return;
-        }
+    Object.keys(groupedLogs).forEach(name => {
+        const logs = groupedLogs[name].sort((a, b) => new Date(a.raw_time) - new Date(b.raw_time));
+        let totalMs = 0; let shiftCount = 0; let lastGirisTime = null;
+        logs.forEach(log => {
+            if (log.type === 'GİRİŞ') { shiftCount++; lastGirisTime = new Date(log.raw_time); }
+            else if (log.type === 'ÇIKIŞ' && lastGirisTime) { totalMs += (new Date(log.raw_time) - lastGirisTime); lastGirisTime = null; }
+        });
+        if (lastGirisTime) totalMs += (now - lastGirisTime);
+        summaryData[name] = { count: shiftCount, duration: `${Math.floor(totalMs / 3600000)}s ${Math.floor((totalMs % 3600000) / 60000)}dk` };
+    });
 
-        showToast("RAPOR HAZIRLANIYOR", "Fontlar ayarlanıyor, lütfen bekleyin...", "info");
+    // 1. MESAİ ÖZET TABLOSU
+    const summaryRows = Object.keys(summaryData).map(name => [cleanPdfText(name), summaryData[name].count + " Kez", summaryData[name].duration]);
 
-        const { jsPDF } = window.jspdf; 
-        const doc = new jsPDF('p', 'pt', 'a4');
-        const originalAddPage = doc.addPage;
-        doc.addPage = function() {
-            originalAddPage.apply(this, arguments);
+    doc.setFontSize(14); doc.setTextColor(59, 130, 246); doc.setFont('Roboto', 'bold');
+    doc.text(cleanPdfText("📊 MESAI OZETI"), 40, 130);
+
+    doc.autoTable({
+        startY: 145,
+        head: [['PERSONEL', 'MESAI SAYISI', 'TOPLAM SURE']],
+        body: summaryRows,
+        theme: 'grid',
+        styles: { fillColor: [15, 23, 42], textColor: [220, 226, 235], font: 'Roboto', fontSize: 9, lineColor: [51, 65, 85], lineWidth: 0.5, cellPadding: 8 },
+        headStyles: { fillColor: [59, 130, 246], textColor: [10, 15, 30], fontStyle: 'bold', fontSize: 10 },
+        alternateRowStyles: { fillColor: [8, 12, 25] },
+        margin: { left: 40, right: 40 },
+        willDrawPage: function (data) {
             doc.setFillColor(10, 15, 30);
             doc.rect(0, 0, doc.internal.pageSize.width, doc.internal.pageSize.height, 'F');
-        };
-        const now = new Date();
-
-        try {
-            const fontUrl = 'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/fonts/Roboto/Roboto-Regular.ttf';
-            const resp = await fetch(fontUrl);
-            const blob = await resp.blob();
-            const base64Font = await new Promise((resolve) => {
-                const reader = new FileReader();
-                reader.onloadend = () => resolve(reader.result.split(',')[1]);
-                reader.readAsDataURL(blob);
-            });
-
-            doc.addFileToVFS("Roboto-Regular.ttf", base64Font);
-            doc.addFont("Roboto-Regular.ttf", "Roboto", "normal");
-            doc.setFont("Roboto");
-        } catch (e) {
-            console.warn("Font yüklenemedi, varsayılan fonta geçiliyor.", e);
         }
+    });
 
-        doc.setFillColor(10, 15, 30); 
-        doc.rect(0, 0, doc.internal.pageSize.width, doc.internal.pageSize.height, 'F');
+    // 2. 💸 OTONOM HAKEDİŞ VE MAAŞ TABLOSU VERİLERİNİ TOPLA
+    const financeTableData = [];
+    const rates = JSON.parse(localStorage.getItem('shiftTurbo_hourly_rates') || '{}');
+    const users = window.allUsers || [];
+    let grandTotalPay = 0;
 
-        doc.setTextColor(244, 129, 32); 
-        doc.setFont('Roboto', 'bold'); doc.setFontSize(24);
-        doc.text(cleanPdfText("SHIFT TURBO"), 40, 50);
+    users.forEach(u => {
+        const name = u.ad_soyad.trim().toLocaleUpperCase('tr-TR');
+        const rate = rates[u.pin] || 200;
+        const hours = typeof calculateStaffHours === 'function' ? calculateStaffHours(name, filteredLogs) : 0;
+        const basePay = hours * rate;
+        const score = typeof window.calculateScore === 'function' ? window.calculateScore(name) : 100;
+        const penaltyPercent = (100 - score) * 0.5;
+        const penaltyAmount = basePay * (penaltyPercent / 100);
+        const netPay = Math.max(0, basePay - penaltyAmount);
 
-        doc.setFontSize(11); doc.setTextColor(148, 163, 184); doc.setFont('Roboto', 'normal');
-        doc.text(cleanPdfText("OPERASYON RAPORU | YONETICI TERMINALI"), 40, 72);
+        grandTotalPay += netPay;
+        financeTableData.push([
+            cleanPdfText(name),
+            cleanPdfText(`${rate} TL`),
+            cleanPdfText(`${hours.toFixed(1)} Saat`),
+            cleanPdfText(`${basePay.toLocaleString('tr-TR', { maximumFractionDigits: 2 })} TL`),
+            cleanPdfText(`${score} Puan (-${penaltyAmount.toLocaleString('tr-TR', { maximumFractionDigits: 2 })} TL)`),
+            cleanPdfText(`${netPay.toLocaleString('tr-TR', { maximumFractionDigits: 2 })} TL`)
+        ]);
+    });
 
-        doc.setDrawColor(244, 129, 32); doc.setLineWidth(1.5);
-        doc.line(40, 85, doc.internal.pageSize.width - 40, 85);
+    const nextY1 = doc.lastAutoTable.finalY + 35;
 
-        doc.setFontSize(10); doc.setTextColor(203, 213, 225);
-        doc.text(cleanPdfText(`Filtre: ${staff === 'all' ? 'Tüm Personel' : staff} | Tarih: ${sD || 'Başlangıç Belirtilmedi'} - ${eD || 'Bugün'}`), 40, 110);
+    doc.setFontSize(14); doc.setTextColor(16, 185, 129); doc.setFont('Roboto', 'bold');
+    doc.text(cleanPdfText("💸 OTONOM HAKEDIS VE MAAS TABLOSU"), 40, nextY1);
 
-        const summaryData = {}; const groupedLogs = {};
-        filteredLogs.forEach(log => { if (!groupedLogs[log.personel]) groupedLogs[log.personel] = []; groupedLogs[log.personel].push(log); });
+    doc.setFontSize(10); doc.setTextColor(148, 163, 184); doc.setFont('Roboto', 'normal');
+    doc.text(cleanPdfText(`(Tarih: ${sD || 'Baslangic'} / ${eD || 'Bugun'}) | Net Odeme: ${grandTotalPay.toLocaleString('tr-TR', { maximumFractionDigits: 2 })} TL`), doc.internal.pageSize.width - 350, nextY1 + 15);
 
-        Object.keys(groupedLogs).forEach(name => {
-            const logs = groupedLogs[name].sort((a, b) => new Date(a.raw_time) - new Date(b.raw_time));
-            let totalMs = 0; let shiftCount = 0; let lastGirisTime = null;
-            logs.forEach(log => {
-                if (log.type === 'GİRİŞ') { shiftCount++; lastGirisTime = new Date(log.raw_time); }
-                else if (log.type === 'ÇIKIŞ' && lastGirisTime) { totalMs += (new Date(log.raw_time) - lastGirisTime); lastGirisTime = null; }
-            });
-            if (lastGirisTime) totalMs += (now - lastGirisTime);
-            summaryData[name] = { count: shiftCount, duration: `${Math.floor(totalMs / 3600000)}s ${Math.floor((totalMs % 3600000) / 60000)}dk` };
-        });
-
-        // 1. MESAİ ÖZET TABLOSU
-        const summaryRows = Object.keys(summaryData).map(name => [cleanPdfText(name), summaryData[name].count + " Kez", summaryData[name].duration]);
-
-        doc.setFontSize(14); doc.setTextColor(59, 130, 246); doc.setFont('Roboto', 'bold');
-        doc.text(cleanPdfText("📊 MESAI OZETI"), 40, 130);
-
-        doc.autoTable({ 
-            startY: 145, 
-            head: [['PERSONEL', 'MESAI SAYISI', 'TOPLAM SURE']], 
-            body: summaryRows, 
-            theme: 'grid', 
-            styles: { fillColor: [15, 23, 42], textColor: [220, 226, 235], font: 'Roboto', fontSize: 9, lineColor: [51, 65, 85], lineWidth: 0.5, cellPadding: 8 },
-            headStyles: { fillColor: [59, 130, 246], textColor: [10, 15, 30], fontStyle: 'bold', fontSize: 10 },
-            alternateRowStyles: { fillColor: [8, 12, 25] },
-            margin: { left: 40, right: 40 },
-            willDrawPage: function(data) {
-                doc.setFillColor(10, 15, 30);
-                doc.rect(0, 0, doc.internal.pageSize.width, doc.internal.pageSize.height, 'F');
-            }
-        });
-
-        // 2. 💸 OTONOM HAKEDİŞ VE MAAŞ TABLOSU VERİLERİNİ TOPLA
-        const financeTableData = [];
-        const rates = JSON.parse(localStorage.getItem('shiftTurbo_hourly_rates') || '{}');
-        const users = window.allUsers || [];
-        let grandTotalPay = 0;
-
-        users.forEach(u => {
-            const name = u.ad_soyad.trim().toUpperCase('tr-TR');
-            const rate = rates[u.pin] || 200;
-            const hours = typeof calculateStaffHours === 'function' ? calculateStaffHours(name, filteredLogs) : 0;
-            const basePay = hours * rate;
-            const score = typeof window.calculateScore === 'function' ? window.calculateScore(name) : 100;
-            const penaltyPercent = (100 - score) * 0.5;
-            const penaltyAmount = basePay * (penaltyPercent / 100);
-            const netPay = Math.max(0, basePay - penaltyAmount);
-
-            grandTotalPay += netPay;
-            financeTableData.push([
-                cleanPdfText(name),
-                cleanPdfText(`${rate} TL`),
-                cleanPdfText(`${hours.toFixed(1)} Saat`),
-                cleanPdfText(`${basePay.toLocaleString('tr-TR', {maximumFractionDigits:2})} TL`),
-                cleanPdfText(`${score} Puan (-${penaltyAmount.toLocaleString('tr-TR', {maximumFractionDigits:2})} TL)`),
-                cleanPdfText(`${netPay.toLocaleString('tr-TR', {maximumFractionDigits:2})} TL`)
-            ]);
-        });
-
-        const nextY1 = doc.lastAutoTable.finalY + 35;
-
-        doc.setFontSize(14); doc.setTextColor(16, 185, 129); doc.setFont('Roboto', 'bold');
-        doc.text(cleanPdfText("💸 OTONOM HAKEDIS VE MAAS TABLOSU"), 40, nextY1);
-        
-        doc.setFontSize(10); doc.setTextColor(148, 163, 184); doc.setFont('Roboto', 'normal');
-        doc.text(cleanPdfText(`(Tarih: ${sD || 'Baslangic'} / ${eD || 'Bugun'}) | Net Odeme: ${grandTotalPay.toLocaleString('tr-TR', {maximumFractionDigits:2})} TL`), doc.internal.pageSize.width - 350, nextY1 + 15);
-
-        doc.autoTable({ 
-            startY: nextY1 + 25, 
-            head: [['PERSONEL', 'SAATLIK UCRET', 'NET MESAI', 'HAM HAKEDIS', 'DISIPLIN DURUMU', 'NET ODENECEK']], 
-            body: financeTableData, 
-            theme: 'grid', 
-            styles: { fillColor: [15, 23, 42], textColor: [220, 226, 235], font: 'Roboto', fontSize: 9, lineColor: [51, 65, 85], lineWidth: 0.5, cellPadding: 8 },
-            headStyles: { fillColor: [16, 185, 129], textColor: [10, 15, 30], fontStyle: 'bold', fontSize: 10 },
-            columnStyles: { 5: { fontStyle: 'bold', textColor: [16, 185, 129], halign: 'right' } },
-            alternateRowStyles: { fillColor: [8, 12, 25] },
-            margin: { left: 40, right: 40 },
-            willDrawPage: function(data) {
-                doc.setFillColor(10, 15, 30);
-                doc.rect(0, 0, doc.internal.pageSize.width, doc.internal.pageSize.height, 'F');
-            }
-        });
-
-        const nextY2 = doc.lastAutoTable.finalY + 35;
-
-        // 3. DETAYLI OPERASYON LOGLARI
-        const detailRows = filteredLogs.map(l => [cleanPdfText(l.personel), cleanPdfText(l.type), cleanPdfText(l.mahalle), cleanPdfText(l.time)]);
-        
-        doc.setFontSize(14); doc.setTextColor(244, 129, 32); doc.setFont('Roboto', 'bold');
-        doc.text(cleanPdfText("📜 DETAYLI OPERASYON LOGLARI"), 40, nextY2);
-
-        doc.autoTable({ 
-            startY: nextY2 + 15, 
-            head: [['PERSONEL', 'İŞLEM', 'BÖLGE/NOT', 'ZAMAN']], 
-            body: detailRows, 
-            theme: 'grid', 
-            styles: { fillColor: [15, 23, 42], textColor: [220, 226, 235], font: 'Roboto', fontSize: 9, lineColor: [51, 65, 85], lineWidth: 0.5, cellPadding: 8 },
-            headStyles: { fillColor: [244, 129, 32], textColor: [10, 15, 30], fontStyle: 'bold', fontSize: 10 },
-            alternateRowStyles: { fillColor: [8, 12, 25] },
-            margin: { left: 40, right: 40 },
-            willDrawPage: function(data) {
-                doc.setFillColor(10, 15, 30);
-                doc.rect(0, 0, doc.internal.pageSize.width, doc.internal.pageSize.height, 'F');
-            }
-        });
-
-        const pageCount = doc.internal.getNumberOfPages();
-        for (let i = 1; i <= pageCount; i++) {
-            doc.setPage(i); doc.setFontSize(8); doc.setTextColor(100, 116, 139);
-            doc.text(cleanPdfText(`Sayfa ${i} / ${pageCount} - ShiftTurbo Yönetim Sistemi`), 40, doc.internal.pageSize.height - 30);
+    doc.autoTable({
+        startY: nextY1 + 25,
+        head: [['PERSONEL', 'SAATLIK UCRET', 'NET MESAI', 'HAM HAKEDIS', 'DISIPLIN DURUMU', 'NET ODENECEK']],
+        body: financeTableData,
+        theme: 'grid',
+        styles: { fillColor: [15, 23, 42], textColor: [220, 226, 235], font: 'Roboto', fontSize: 9, lineColor: [51, 65, 85], lineWidth: 0.5, cellPadding: 8 },
+        headStyles: { fillColor: [16, 185, 129], textColor: [10, 15, 30], fontStyle: 'bold', fontSize: 10 },
+        columnStyles: { 5: { fontStyle: 'bold', textColor: [16, 185, 129], halign: 'right' } },
+        alternateRowStyles: { fillColor: [8, 12, 25] },
+        margin: { left: 40, right: 40 },
+        willDrawPage: function (data) {
+            doc.setFillColor(10, 15, 30);
+            doc.rect(0, 0, doc.internal.pageSize.width, doc.internal.pageSize.height, 'F');
         }
+    });
 
-        doc.save("ShiftTurbo_Rapor.pdf");
-        showToast("PDF İNDİRİLDİ", "Rapor başarıyla oluşturuldu.", "success");
+    const nextY2 = doc.lastAutoTable.finalY + 35;
+
+    // 3. DETAYLI OPERASYON LOGLARI
+    const detailRows = filteredLogs.map(l => [cleanPdfText(l.personel), cleanPdfText(l.type), cleanPdfText(l.mahalle), cleanPdfText(l.time)]);
+
+    doc.setFontSize(14); doc.setTextColor(244, 129, 32); doc.setFont('Roboto', 'bold');
+    doc.text(cleanPdfText("📜 DETAYLI OPERASYON LOGLARI"), 40, nextY2);
+
+    doc.autoTable({
+        startY: nextY2 + 15,
+        head: [['PERSONEL', 'İŞLEM', 'BÖLGE/NOT', 'ZAMAN']],
+        body: detailRows,
+        theme: 'grid',
+        styles: { fillColor: [15, 23, 42], textColor: [220, 226, 235], font: 'Roboto', fontSize: 9, lineColor: [51, 65, 85], lineWidth: 0.5, cellPadding: 8 },
+        headStyles: { fillColor: [244, 129, 32], textColor: [10, 15, 30], fontStyle: 'bold', fontSize: 10 },
+        alternateRowStyles: { fillColor: [8, 12, 25] },
+        margin: { left: 40, right: 40 },
+        willDrawPage: function (data) {
+            doc.setFillColor(10, 15, 30);
+            doc.rect(0, 0, doc.internal.pageSize.width, doc.internal.pageSize.height, 'F');
+        }
+    });
+
+    const pageCount = doc.internal.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i); doc.setFontSize(8); doc.setTextColor(100, 116, 139);
+        doc.text(cleanPdfText(`Sayfa ${i} / ${pageCount} - ShiftTurbo Yönetim Sistemi`), 40, doc.internal.pageSize.height - 30);
     }
 
-    function updateClocks() {
-        const now = new Date();
-        if (document.getElementById('liveClock')) document.getElementById('liveClock').innerText = now.toLocaleTimeString('tr-TR');
-        if (document.getElementById('clock_login')) document.getElementById('clock_login').innerText = now.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
-        if (document.getElementById('date_login')) document.getElementById('date_login').innerText = now.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' }).toUpperCase();
+    doc.save("ShiftTurbo_Rapor.pdf");
+    showToast("PDF İNDİRİLDİ", "Rapor başarıyla oluşturuldu.", "success");
+}
+
+function updateClocks() {
+    const now = new Date();
+    if (document.getElementById('liveClock')) document.getElementById('liveClock').innerText = now.toLocaleTimeString('tr-TR');
+    if (document.getElementById('clock_login')) document.getElementById('clock_login').innerText = now.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+    if (document.getElementById('date_login')) document.getElementById('date_login').innerText = now.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' }).toUpperCase();
+}
+
+updateClocks();
+setInterval(updateClocks, 1000);
+
+function ensureSignature() {
+    const badge = document.querySelector('.ucr-badge');
+    if (badge && document.body.lastElementChild !== badge) {
+        document.body.appendChild(badge);
+        badge.style.display = 'flex';
     }
+}
+setInterval(ensureSignature, 1000);
 
-    updateClocks();
-    setInterval(updateClocks, 1000);
-
-    function ensureSignature() {
-        const badge = document.querySelector('.ucr-badge');
-        if (badge && document.body.lastElementChild !== badge) {
-            document.body.appendChild(badge);
-            badge.style.display = 'flex';
-        }
-    }
-    setInterval(ensureSignature, 1000);
-
-    window.nextStep = nextStep;
-    window.checkAuth = checkAuth;
-    window.logout = logout;
-    window.fetchData = fetchData;
-    window.applyFilter = applyFilter;
-    window.filterActiveStaff = filterActiveStaff;
-    window.filterDailyTraffic = filterDailyTraffic;
-    window.filterTotalRecords = filterTotalRecords;
-    window.showMsg = showMsg;
-    window.closeMsg = closeMsg;
-    window.exportPDF = exportPDF;
-    window.toggleHistory = toggleHistory;
-    window.deleteSingleBroadcast = deleteSingleBroadcast;
-})();
+window.nextStep = nextStep;
+window.checkAuth = checkAuth;
+window.logout = logout;
+window.fetchData = fetchData;
+window.applyFilter = applyFilter;
+window.filterActiveStaff = filterActiveStaff;
+window.filterDailyTraffic = filterDailyTraffic;
+window.filterTotalRecords = filterTotalRecords;
+window.showMsg = showMsg;
+window.closeMsg = closeMsg;
+window.exportPDF = exportPDF;
+window.toggleHistory = toggleHistory;
+window.deleteSingleBroadcast = deleteSingleBroadcast;
+}) ();

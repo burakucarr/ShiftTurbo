@@ -372,9 +372,13 @@ function cancelAction() { document.getElementById('action-confirm').style.displa
 
 async function executeAction() {
     if (!pendingType) return;
+    const okBtn = document.getElementById('final-ok-btn');
+    if (okBtn) okBtn.disabled = true; // ÇİFT TIKLAMAYI ENGELLE
+
     if (isSyncingOffline) {
         playSound('error');
-        document.getElementById('status').innerText = "🔄 ÇEVRİMD DIŞI KAYITLAR AKTARILIYOR... (Lütfen Bekleyin)";
+        document.getElementById('status').innerText = "🔄 ÇEVRİMDİŞI KAYITLAR AKTARILIYOR... (Lütfen Bekleyin)";
+        if (okBtn) okBtn.disabled = false;
         return;
     }
     window.isExecutingAction = true; // Realtime kanalı sinsi reload atmasın diye bayrak açıldı!
@@ -382,43 +386,114 @@ async function executeAction() {
     const name = localStorage.getItem('shiftTurbo_user');
 
     let buluttakiSonDurum = localStorage.getItem('shiftTurbo_last_status_' + name) || 'ÇIKIŞ';
+    let cloudTime = 0;
     if (navigator.onLine) {
         try {
             const res = await _supabase
                 .from('logs')
-                .select('type')
-                .eq('personel_name', name)
+                .select('type, personel, personel_name, created_at')
                 .in('type', ['GİRİŞ', 'ÇIKIŞ'])
                 .order('created_at', { ascending: false })
-                .limit(1);
-            if (res && res.data && res.data.length > 0) {
-                buluttakiSonDurum = res.data[0].type;
-                localStorage.setItem('shiftTurbo_last_status_' + name, buluttakiSonDurum);
+                .limit(500);
+            if (res && res.data) {
+                const myLogs = res.data.filter(l => {
+                    const n1 = (l.personel_name || "").trim().toLocaleUpperCase('tr-TR');
+                    const n2 = (l.personel || "").trim().toLocaleUpperCase('tr-TR');
+                    const me = (name || "").trim().toLocaleUpperCase('tr-TR');
+                    return n1 === me || n2 === me;
+                });
+                if (myLogs.length > 0) {
+                    buluttakiSonDurum = myLogs[0].type;
+                    cloudTime = new Date(myLogs[0].created_at).getTime();
+                    localStorage.setItem('shiftTurbo_last_status_' + name, buluttakiSonDurum);
+                }
             }
         } catch (e) { console.warn("Supabase son durum çekilemedi:", e); }
     }
 
-    // HİBRİT KONTROL: Çevrimdışı kuyrukta bu personele ait daha güncel bir işlem var mı?
+    // HİBRİT KONTROL: Çevrimdışı kuyrukta bu personele ait DAHA YENİ bir işlem var mı?
     const currentOfflineQueue = JSON.parse(localStorage.getItem('shiftTurbo_offline_queue') || '[]');
     const personOfflineLogs = currentOfflineQueue.filter(item => item.personel_name === name);
     if (personOfflineLogs.length > 0) {
         const lastOfflineItem = personOfflineLogs[personOfflineLogs.length - 1];
-        buluttakiSonDurum = lastOfflineItem.type;
-        localStorage.setItem('shiftTurbo_last_status_' + name, buluttakiSonDurum);
-        console.log(`⚡ Çevrimdışı kuyruktan son durum algılandı: ${buluttakiSonDurum}`);
+        const offlineTime = new Date(lastOfflineItem.device_time || 0).getTime();
+        if (offlineTime > cloudTime) {
+            buluttakiSonDurum = lastOfflineItem.type;
+            localStorage.setItem('shiftTurbo_last_status_' + name, buluttakiSonDurum);
+            console.log(`⚡ Çevrimdışı kuyruktan daha yeni bir son durum algılandı: ${buluttakiSonDurum}`);
+        }
     }
 
     if (type === 'ÇIKIŞ' && buluttakiSonDurum === 'ÇIKIŞ') {
+        localStorage.setItem('shiftTurbo_last_status_' + name, 'ÇIKIŞ');
         playSound('error');
-        document.getElementById('status').innerText = "❌ ZATEN ÇIKIŞ YAPILMIŞ! (VEYA KUYRUKTA BEKLİYOR)";
-        setTimeout(() => { location.reload(); }, 1500);
+        document.getElementById('status').innerText = "❌ ZATEN ÇIKIŞ YAPILMIŞ!";
+        
+        // ANINDA GİZLE:
+        const mainActions = document.getElementById('main-actions');
+        const confirmBox = document.getElementById('confirm-box');
+        const pinPad = document.getElementById('pin-pad');
+        const gamificationCard = document.getElementById('gamification-card');
+        const actionConfirm = document.getElementById('action-confirm');
+        const scanBtn = document.getElementById('scanBtn');
+        const greetingEl = document.getElementById('greeting');
+        
+        if (mainActions) mainActions.style.display = 'none';
+        if (confirmBox) confirmBox.style.display = 'none';
+        if (pinPad) pinPad.style.display = 'none';
+        if (gamificationCard) gamificationCard.style.display = 'none';
+        if (actionConfirm) actionConfirm.style.display = 'none';
+        if (greetingEl) greetingEl.innerText = "SİSTEM BAĞLANTISI";
+        if (scanBtn) scanBtn.style.display = 'block';
+
+        const errorMsgBody = document.getElementById('error-msg-body');
+        const errorModal = document.getElementById('error-modal');
+        if (errorMsgBody && errorModal) {
+            errorMsgBody.innerHTML = `<b>⚠️ BİLGİLENDİRME (DAHA ÖNCEDEN ÇIKIŞ YAPILDI):</b><br><br>Sistem kayıtlarında zaten başarılı bir çıkış işleminiz bulunmaktadır.<br><br>Çıkış işleminiz daha önce merkeze iletilmiş ve güvence altına alınmıştır. Tekrar çıkış yapmanıza gerek yoktur.`;
+            errorModal.style.display = 'flex';
+        }
+        try { speakAI("Sayın personel, sistemde daha önceden çıkış yaptınız. Çıkış kaydınız zaten mevcuttur."); } catch(e) {}
+        
+        localStorage.removeItem('shiftTurbo_user');
+        localStorage.removeItem('auth_active');
+        localStorage.removeItem('isShiftActive');
+        localStorage.removeItem('temp_user_name');
+        localStorage.removeItem('temp_user_pin');
+        
+        setTimeout(() => {
+            if (errorModal) errorModal.style.display = 'none';
+            if (typeof startQR === 'function') startQR(); // Anında QR okuma ekranına dön
+        }, 5000);
         return;
     }
 
     if (type === 'GİRİŞ' && buluttakiSonDurum === 'GİRİŞ') {
         playSound('error');
-        document.getElementById('status').innerText = "❌ ZATEN MESAİDESİNİZ! (VEYA KUYRUKTA BEKLİYOR)";
-        setTimeout(() => { location.reload(); }, 1500);
+        document.getElementById('status').innerText = "❌ ZATEN MESAİDESİNİZ!";
+        
+        // ANINDA GİZLE
+        const mainActions = document.getElementById('main-actions');
+        const confirmBox = document.getElementById('confirm-box');
+        const pinPad = document.getElementById('pin-pad');
+        const gamificationCard = document.getElementById('gamification-card');
+        const actionConfirm = document.getElementById('action-confirm');
+        if (mainActions) mainActions.style.display = 'none';
+        if (confirmBox) confirmBox.style.display = 'none';
+        if (pinPad) pinPad.style.display = 'none';
+        if (gamificationCard) gamificationCard.style.display = 'none';
+        if (actionConfirm) actionConfirm.style.display = 'none';
+        
+        const errorMsgBody = document.getElementById('error-msg-body');
+        const errorModal = document.getElementById('error-modal');
+        if (errorMsgBody && errorModal) {
+            errorMsgBody.innerHTML = `<b>⚠️ BİLGİLENDİRME (ZATEN MESAİDESİNİZ):</b><br><br>Sistem kayıtlarında zaten aktif bir mesai başlangıcınız bulunmaktadır.<br><br>Giriş işleminiz daha önce merkeze iletilmiştir. İyi çalışmalar dileriz.`;
+            errorModal.style.display = 'flex';
+        }
+        try { speakAI("Sayın personel, sistemde zaten aktif bir mesai kaydınız bulunmaktadır."); } catch(e) {}
+        setTimeout(() => { 
+            if (errorModal) errorModal.style.display = 'none';
+            location.reload(); 
+        }, 5000);
         return;
     }
 
@@ -459,11 +534,27 @@ async function executeAction() {
                 window.isRedirectingNow = true;
                 console.log("🚀 Ses tamamen bitti veya garanti süre doldu, sayfa yönlendiriliyor!");
                 if (type === 'ÇIKIŞ') {
+                    const mainActions = document.getElementById('main-actions');
+                    const confirmBox = document.getElementById('confirm-box');
+                    const pinPad = document.getElementById('pin-pad');
+                    const gamificationCard = document.getElementById('gamification-card');
+                    const scanBtn = document.getElementById('scanBtn');
+                    const greetingEl = document.getElementById('greeting');
+                    const actionConfirm = document.getElementById('action-confirm');
+                    if (mainActions) mainActions.style.display = 'none';
+                    if (confirmBox) confirmBox.style.display = 'none';
+                    if (pinPad) pinPad.style.display = 'none';
+                    if (gamificationCard) gamificationCard.style.display = 'none';
+                    if (actionConfirm) actionConfirm.style.display = 'none';
+                    if (greetingEl) greetingEl.innerText = "SİSTEM BAĞLANTISI";
+                    if (scanBtn) scanBtn.style.display = 'block';
+
                     localStorage.removeItem('shiftTurbo_user');
                     localStorage.removeItem('auth_active');
                     localStorage.removeItem('isShiftActive');
                     localStorage.removeItem('temp_user_name');
-                    window.location.href = window.location.pathname;
+                    localStorage.removeItem('temp_user_pin');
+                    window.location.replace(window.location.pathname + '?reset=' + Date.now());
                 } else {
                     localStorage.setItem('isShiftActive', 'true');
                     location.reload();
@@ -511,11 +602,27 @@ async function executeAction() {
                 window.isRedirectingNow = true;
                 console.log("🚀 Ses tamamen bitti veya garanti süre doldu, sayfa yönlendiriliyor!");
                 if (type === 'ÇIKIŞ') {
+                    const mainActions = document.getElementById('main-actions');
+                    const confirmBox = document.getElementById('confirm-box');
+                    const pinPad = document.getElementById('pin-pad');
+                    const gamificationCard = document.getElementById('gamification-card');
+                    const scanBtn = document.getElementById('scanBtn');
+                    const greetingEl = document.getElementById('greeting');
+                    const actionConfirm = document.getElementById('action-confirm');
+                    if (mainActions) mainActions.style.display = 'none';
+                    if (confirmBox) confirmBox.style.display = 'none';
+                    if (pinPad) pinPad.style.display = 'none';
+                    if (gamificationCard) gamificationCard.style.display = 'none';
+                    if (actionConfirm) actionConfirm.style.display = 'none';
+                    if (greetingEl) greetingEl.innerText = "SİSTEM BAĞLANTISI";
+                    if (scanBtn) scanBtn.style.display = 'block';
+
                     localStorage.removeItem('shiftTurbo_user');
                     localStorage.removeItem('auth_active');
                     localStorage.removeItem('isShiftActive');
                     localStorage.removeItem('temp_user_name');
-                    window.location.href = window.location.pathname;
+                    localStorage.removeItem('temp_user_pin');
+                    window.location.replace(window.location.pathname + '?reset=' + Date.now());
                 } else {
                     localStorage.setItem('isShiftActive', 'true');
                     location.reload();
@@ -655,6 +762,7 @@ window.bootSystem = async () => {
                 localStorage.removeItem('auth_active');
                 localStorage.removeItem('isShiftActive');
                 localStorage.removeItem('temp_user_name');
+                localStorage.removeItem('temp_user_pin');
 
                 const errorMsgBody = document.getElementById('error-msg-body');
                 const errorModal = document.getElementById('error-modal');
@@ -668,26 +776,39 @@ window.bootSystem = async () => {
         }
 
         let lastAction = localStorage.getItem('shiftTurbo_last_status_' + user) || 'ÇIKIŞ';
+        let cloudTime = 0;
         if (navigator.onLine) {
             try {
                 const res = await _supabase
-                    .from('logs').select('type').eq('personel_name', user)
-                    .in('type', ['GİRİŞ', 'ÇIKIŞ']).order('created_at', { ascending: false }).limit(1);
-                if (res && res.data && res.data.length > 0) {
-                    lastAction = res.data[0].type;
-                    localStorage.setItem('shiftTurbo_last_status_' + user, lastAction);
+                    .from('logs').select('type, personel, personel_name, created_at')
+                    .in('type', ['GİRİŞ', 'ÇIKIŞ']).order('created_at', { ascending: false }).limit(500);
+                if (res && res.data) {
+                    const myLogs = res.data.filter(l => {
+                        const n1 = (l.personel_name || "").trim().toLocaleUpperCase('tr-TR');
+                        const n2 = (l.personel || "").trim().toLocaleUpperCase('tr-TR');
+                        const me = (user || "").trim().toLocaleUpperCase('tr-TR');
+                        return n1 === me || n2 === me;
+                    });
+                    if (myLogs.length > 0) {
+                        lastAction = myLogs[0].type;
+                        cloudTime = new Date(myLogs[0].created_at).getTime();
+                        localStorage.setItem('shiftTurbo_last_status_' + user, lastAction);
+                    }
                 }
             } catch (e) { console.warn("Supabase buton durumu çekilemedi:", e); }
         }
 
-        // HİBRİT KONTROL: Çevrimdışı kuyrukta bu personele ait daha güncel bir işlem var mı?
+        // HİBRİT KONTROL: Çevrimdışı kuyrukta bu personele ait DAHA YENİ bir işlem var mı?
         const currentOfflineQueue = JSON.parse(localStorage.getItem('shiftTurbo_offline_queue') || '[]');
         const personOfflineLogs = currentOfflineQueue.filter(item => item.personel_name === user);
         if (personOfflineLogs.length > 0) {
             const lastOfflineItem = personOfflineLogs[personOfflineLogs.length - 1];
-            lastAction = lastOfflineItem.type;
-            localStorage.setItem('shiftTurbo_last_status_' + user, lastAction);
-            console.log(`⚡ Çevrimdışı kuyruktan buton durumu algılandı: ${lastAction}`);
+            const offlineTime = new Date(lastOfflineItem.device_time || 0).getTime();
+            if (offlineTime > cloudTime) {
+                lastAction = lastOfflineItem.type;
+                localStorage.setItem('shiftTurbo_last_status_' + user, lastAction);
+                console.log(`⚡ Çevrimdışı kuyruktan daha yeni bir buton durumu algılandı: ${lastAction}`);
+            }
         }
 
         if (lastAction === 'GİRİŞ') {
@@ -695,14 +816,14 @@ window.bootSystem = async () => {
             document.getElementById('greeting').innerText = "SYSTEM ACTIVE / " + user.toUpperCase();
             mainActions.innerHTML = `
                 <button class="btn-out" onclick="requestConfirm('ÇIKIŞ')">MESAİ BİTİR</button>
-                <button class="btn-out btn-mini" onclick="localStorage.removeItem('shiftTurbo_user'); localStorage.removeItem('auth_active'); location.reload();" style="background: #334155; margin-top: 15px; font-family: 'Poppins', sans-serif; font-weight: bold; letter-spacing: 1px;">🔄 ANA EKRANA DÖN</button>
+                <button class="btn-out btn-mini" onclick="localStorage.removeItem('shiftTurbo_user'); localStorage.removeItem('auth_active'); localStorage.removeItem('isShiftActive'); localStorage.removeItem('temp_user_name'); localStorage.removeItem('temp_user_pin'); window.location.replace(window.location.pathname + '?reset=' + Date.now());" style="background: #334155; margin-top: 15px; font-family: 'Poppins', sans-serif; font-weight: bold; letter-spacing: 1px;">🔄 ANA EKRANA DÖN</button>
             `;
         } else {
             document.getElementById('status-bar').style.width = "50%";
             document.getElementById('greeting').innerText = "SYSTEM READY / " + user.toUpperCase();
             mainActions.innerHTML = `
                 <button class="btn-in" onclick="requestConfirm('GİRİŞ')">MESAİ BAŞLAT</button>
-                <button class="btn-out btn-mini" onclick="localStorage.removeItem('shiftTurbo_user'); localStorage.removeItem('auth_active'); location.reload();" style="background: #334155; margin-top: 15px; font-family: 'Poppins', sans-serif; font-weight: bold; letter-spacing: 1px;">🔄 ANA EKRANA DÖN</button>
+                <button class="btn-out btn-mini" onclick="localStorage.removeItem('shiftTurbo_user'); localStorage.removeItem('auth_active'); localStorage.removeItem('isShiftActive'); localStorage.removeItem('temp_user_name'); localStorage.removeItem('temp_user_pin'); window.location.replace(window.location.pathname + '?reset=' + Date.now());" style="background: #334155; margin-top: 15px; font-family: 'Poppins', sans-serif; font-weight: bold; letter-spacing: 1px;">🔄 ANA EKRANA DÖN</button>
             `;
         }
 
@@ -720,7 +841,7 @@ window.bootSystem = async () => {
                     let pScore = 100;
                     let pViolation = false;
                     const pLogs = allStoreLogs
-                        .filter(l => ((l.personel_name || l.personel || "").trim().toUpperCase() === (pName || "").trim().toUpperCase()))
+                        .filter(l => ((l.personel_name || l.personel || "").trim().toLocaleUpperCase('tr-TR') === (pName || "").trim().toLocaleUpperCase('tr-TR')))
                         .sort((a, b) => new Date(a.created_at || a.raw_time) - new Date(b.created_at || b.raw_time));
 
                     if (pLogs.length > 0) {
@@ -749,7 +870,7 @@ window.bootSystem = async () => {
                     }
 
                     if (pScore > maxScore) { maxScore = pScore; bestStaffName = pName; }
-                    if (pName.toUpperCase() === user.toUpperCase()) { currentUserScore = pScore; currentUserHasViolation = pViolation; }
+                    if (pName.toLocaleUpperCase('tr-TR') === user.toLocaleUpperCase('tr-TR')) { currentUserScore = pScore; currentUserHasViolation = pViolation; }
                 });
 
                 const badgesBox = document.getElementById('badges-container');
@@ -773,7 +894,7 @@ window.bootSystem = async () => {
                         badgesHtml += `<span style="background: rgba(59,130,246,0.15); border: 1px solid #3b82f6; color: #60a5fa; padding: 6px 12px; border-radius: 8px; font-family: 'Poppins', sans-serif; font-size: 11px; font-weight: bold; display: inline-flex; align-items: center; box-shadow: 0 0 10px rgba(59,130,246,0.2);">TAM UYUM</span>`;
                     }
 
-                    if (bestStaffName.toUpperCase() === user.toUpperCase() && currentUserScore >= 90) {
+                    if (bestStaffName.toLocaleUpperCase('tr-TR') === user.toLocaleUpperCase('tr-TR') && currentUserScore >= 90) {
                         badgesHtml += `<span style="background: rgba(245,158,11,0.15); border: 1px solid #f59e0b; color: #fbbf24; padding: 6px 12px; border-radius: 8px; font-family: 'Poppins', sans-serif; font-size: 11px; font-weight: bold; display: inline-flex; align-items: center; box-shadow: 0 0 10px rgba(245,158,11,0.2);">AYIN PERSONELİ</span>`;
                         gMsg += `<br><br><b>Tebrikler:</b> Bu ay mağazadaki en yüksek operasyonel puana sahipsiniz. Başarılarınızın devamını dileriz.`;
                     }
@@ -796,8 +917,60 @@ window.bootSystem = async () => {
 
     const currentUserForRealtime = localStorage.getItem('shiftTurbo_user');
     if (currentUserForRealtime && auth) {
-        _supabase.channel('db-changes').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'logs', filter: `personel_name=eq.${currentUserForRealtime}` }, payload => { 
+        _supabase.channel('db-changes').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'logs' }, payload => { 
+            if (payload && payload.new) {
+                const pName1 = (payload.new.personel_name || "").trim().toLocaleUpperCase('tr-TR');
+                const pName2 = (payload.new.personel || "").trim().toLocaleUpperCase('tr-TR');
+                const me = (currentUserForRealtime || "").trim().toLocaleUpperCase('tr-TR');
+                if (pName1 !== me && pName2 !== me) return;
+            } else {
+                return;
+            }
             if (window.isExecutingAction) return; // Anons çalıyorsa sinsi reload atma!
+            
+            if (payload && payload.new && payload.new.type === 'ÇIKIŞ') {
+                console.log("⚠️ Uzaktan YÖNETİCİ tarafından ÇIKIŞ işlemi algılandı! Oturum kapatılıyor...");
+                if (currentUserForRealtime) localStorage.setItem('shiftTurbo_last_status_' + currentUserForRealtime, 'ÇIKIŞ');
+                if (typeof playSound === 'function') playSound('error');
+                
+                const mainActions = document.getElementById('main-actions');
+                const confirmBox = document.getElementById('confirm-box');
+                const pinPad = document.getElementById('pin-pad');
+                const gamificationCard = document.getElementById('gamification-card');
+                const scanBtn = document.getElementById('scanBtn');
+                const greetingEl = document.getElementById('greeting');
+                const actionConfirm = document.getElementById('action-confirm');
+                if (mainActions) mainActions.style.display = 'none';
+                if (confirmBox) confirmBox.style.display = 'none';
+                if (pinPad) pinPad.style.display = 'none';
+                if (gamificationCard) gamificationCard.style.display = 'none';
+                if (actionConfirm) actionConfirm.style.display = 'none';
+                if (greetingEl) greetingEl.innerText = "SİSTEM BAĞLANTISI";
+                if (scanBtn) scanBtn.style.display = 'block';
+
+                localStorage.removeItem('shiftTurbo_user');
+                localStorage.removeItem('auth_active');
+                localStorage.removeItem('isShiftActive');
+                localStorage.removeItem('temp_user_name');
+                localStorage.removeItem('temp_user_pin');
+
+                const errorMsgBody = document.getElementById('error-msg-body');
+                const errorModal = document.getElementById('error-modal');
+                if (errorMsgBody && errorModal) {
+                    errorMsgBody.innerHTML = `<b>⚠️ BİLGİLENDİRME (MESAİ SONLANDIRILDI):</b><br><br>Mesainiz <b>Yönetici</b> tarafından uzaktan başarıyla sonlandırılmıştır.<br><br>Çıkış kaydınız merkeze iletilmiş ve güvence altına alınmıştır. İyi istirahatler dileriz.`;
+                    errorModal.style.display = 'flex';
+                }
+                try { speakAI("Sayın personel, mesainiz yönetici tarafından uzaktan sonlandırılmıştır. İyi istirahatler dileriz."); } catch(e) {}
+                
+                setTimeout(() => {
+                    if (errorModal) errorModal.style.display = 'none';
+                    if (typeof window.startQR === 'function') window.startQR(); // QR okuma ekranına dön
+                    else window.location.replace(window.location.pathname + '?reset=' + Date.now());
+                }, 5000);
+                return;
+            }
+
+            // Eğer yönetici Giriş yaparsa (nadiren olur)
             location.reload(); 
         }).subscribe();
         _supabase.channel('broadcast-changes').on('postgres_changes', { event: '*', schema: 'public', table: 'broadcasts' }, payload => { fetchLatestBroadcast(); }).subscribe();
@@ -852,7 +1025,7 @@ async function fetchLatestBroadcast() {
                     const match = m.match(/^\[(.*?)\]\s*(.*)/);
                     const target = match[1];
                     const content = match[2];
-                    if (target.toUpperCase() === user.toUpperCase()) {
+                    if (target.toLocaleUpperCase('tr-TR') === user.toLocaleUpperCase('tr-TR')) {
                         matchedMsg = "👤 ÖZEL BİLDİRİM: " + content;
                         break;
                     }

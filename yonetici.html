@@ -13,6 +13,12 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="ai_assistant.js?v=2"></script>
+    <script>
+        // Sayfa yüklenirken göz kırpmasını (flicker) önlemek için hızlı kontrol
+        if (localStorage.getItem('shiftTurbo_admin_logged_in') === 'true') {
+            document.documentElement.classList.add('admin-logged-in');
+        }
+    </script>
 
     <link rel="manifest" href="manifest_yonetici.json">
     <meta name="theme-color" content="#f48120">
@@ -22,6 +28,14 @@
     <link rel="icon" type="image/png" href="logom.png">
 
     <style>
+        /* Sayfa yüklenirken göz kırpmasını (flicker) önlemek için */
+        .admin-logged-in #loginOverlay {
+            display: none !important;
+        }
+        .admin-logged-in #adminPanel {
+            display: block !important;
+        }
+
         /* ============================================
            🎨 SHIFTURBO — SHARED DESIGN SYSTEM (shared.css)
            ============================================ */
@@ -1979,7 +1993,7 @@
     </div>
 
     <!-- 🔐 GİRİŞ EKRANI (LOGIN OVERLAY) -->
-    <div id="loginOverlay">
+    <div id="loginOverlay" style="display: flex;">
         <div class="beams-container">
             <div class="beam b1"></div>
             <div class="beam b2"></div>
@@ -2031,7 +2045,7 @@
     </div>
 
     <!-- 🖥️ YÖNETİCİ ANA EKRANI (ADMIN PANEL) -->
-    <div id="adminPanel">
+    <div id="adminPanel" style="display: none;">
         <div class="top-nav">
             <div style="display: flex; align-items: center; gap: 12px;">
                 <img src="logom.png" alt="ShiftTurbo Logo" style="width: 32px; height: 32px; object-fit: contain; filter: drop-shadow(0 0 10px var(--primary)); animation: pulse 3s infinite ease-in-out;">
@@ -2444,7 +2458,7 @@
             let grandTotal = 0;
 
             users.forEach(u => {
-                const name = u.ad_soyad.trim().toUpperCase('tr-TR');
+                const name = u.ad_soyad.trim().toLocaleUpperCase('tr-TR');
                 const rate = rates[u.pin] || 200;
                 const hours = calculateStaffHours(name, filteredLogs);
                 const basePay = hours * rate;
@@ -2503,14 +2517,31 @@
 
             // 🔐 Oturum Kalıcılığı (Session Persistence)
             window.addEventListener('DOMContentLoaded', async () => {
+                const loginOv = document.getElementById("loginOverlay");
+                const adminPn = document.getElementById("adminPanel");
+                
+                // localStorage'daki duruma göre ilk başlangıç durumunu eşitleyelim
+                if (localStorage.getItem('shiftTurbo_admin_logged_in') === 'true') {
+                    if (loginOv) loginOv.style.display = "none";
+                    if (adminPn) adminPn.style.display = "block";
+                } else {
+                    if (loginOv) loginOv.style.display = "flex";
+                    if (adminPn) adminPn.style.display = "none";
+                }
+
                 const { data: { session } } = await _supabase.auth.getSession();
                 
-                if (session || localStorage.getItem('shiftTurbo_admin_logged_in') === 'true') {
+                if (session) {
                     isAuthenticated = true;
                     localStorage.setItem('shiftTurbo_admin_logged_in', 'true');
+                    document.documentElement.classList.add('admin-logged-in');
                     showPanel();
                 } else {
-                    document.getElementById("loginOverlay").style.display = "flex";
+                    isAuthenticated = false;
+                    localStorage.removeItem('shiftTurbo_admin_logged_in');
+                    document.documentElement.classList.remove('admin-logged-in');
+                    if (loginOv) loginOv.style.display = "flex";
+                    if (adminPn) adminPn.style.display = "none";
                 }
             });
 
@@ -2697,6 +2728,7 @@
                 document.getElementById("loginOverlay").style.display = "none";
                 document.getElementById("adminPanel").style.display = "block";
                 if (Notification.permission !== "granted") Notification.requestPermission();
+                checkPWAPushStatus();
                 fetchData();
 
                 // Otomatik yenileme ve gerçek zamanlı abonelik başlatma
@@ -2831,6 +2863,8 @@
 
                     titleEl.innerText = title;
                     msgEl.innerText = msg;
+                    cancelBtn.style.display = 'inline-block';
+                    okBtn.innerText = 'ONAYLA';
                     modal.style.display = 'flex';
 
                     const cleanup = () => {
@@ -2848,6 +2882,42 @@
             }
             window.cyberConfirm = cyberConfirm;
 
+            // 🤖 CYBER-ALERT MODAL (Tek butonlu uyarı)
+            function cyberAlert(title, msg) {
+                console.log("🤖 cyberAlert çağrıldı:", title, msg);
+                return new Promise((resolve) => {
+                    const modal = document.getElementById('confirm-modal');
+                    const titleEl = document.getElementById('confirm-title');
+                    const msgEl = document.getElementById('confirm-msg');
+                    const cancelBtn = document.getElementById('confirm-cancel-btn');
+                    const okBtn = document.getElementById('confirm-ok-btn');
+
+                    if (!modal || !titleEl || !msgEl || !cancelBtn || !okBtn) {
+                        alert(`${title}\n\n${msg}`);
+                        resolve(true);
+                        return;
+                    }
+
+                    titleEl.innerText = title;
+                    msgEl.innerText = msg;
+                    cancelBtn.style.display = 'none'; // İptal butonunu gizle
+                    okBtn.innerText = 'TAMAM';
+                    modal.style.display = 'flex';
+
+                    const cleanup = () => {
+                        modal.style.display = 'none';
+                        cancelBtn.style.display = 'inline-block'; // Diğer modallar için eski haline getir
+                        okBtn.innerText = 'ONAYLA';
+                        okBtn.removeEventListener('click', onOk);
+                    };
+
+                    const onOk = () => { console.log("🤖 cyberAlert: TAMAM seçildi."); cleanup(); resolve(true); };
+
+                    okBtn.addEventListener('click', onOk);
+                });
+            }
+            window.cyberAlert = cyberAlert;
+
             function toggleAboutModal(show) {
                 const modal = document.getElementById('about-modal');
                 if (modal) modal.style.display = show ? 'flex' : 'none';
@@ -2860,7 +2930,7 @@
                 
                 if (error) {
                     console.error("Veri çekme hatası (logs):", error);
-                    if (error.message.includes("JWT") || error.message.includes("auth")) {
+                    if (error.message.includes("JWT") || error.message.includes("auth") || error.message.includes("security") || error.message.includes("policy") || error.code === 'PGRST301') {
                         showToast("OTURUM SÜRESİ DOLDU", "Lütfen tekrar giriş yapın.", "error");
                         logout();
                         return;
@@ -2880,11 +2950,11 @@
 
                 window.allLogs = cleanData.map(log => ({
                     id: log.id,
-                    personel: (log.personel_name || "BILINMEYEN_MISAFIR").trim().toUpperCase('tr-TR'),
+                    personel: (log.personel_name || "BILINMEYEN_MISAFIR").trim().toLocaleUpperCase('tr-TR'),
                     type: log.type,
                     mahalle: log.mahalle,
-                    lat: log.lat || log.lng || 41.0082,
-                    lon: log.lon || log.lng || 28.9784,
+                    lat: (log.lat !== null && log.lat !== undefined) ? log.lat : (log.lng !== null && log.lng !== undefined ? log.lng : 41.0082),
+                    lon: (log.lon !== null && log.lon !== undefined) ? log.lon : (log.lng !== null && log.lng !== undefined ? log.lng : 28.9784),
                     time: new Date(log.created_at).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }),
                     raw_time: log.created_at,
                     date_str: new Date(log.created_at).toLocaleDateString('tr-TR')
@@ -3047,7 +3117,7 @@
                 if (!window.allLogs || window.allLogs.length === 0) return score;
 
                 const pLogs = window.allLogs
-                    .filter(l => (l.personel || "").trim().toUpperCase() === (personName || "").trim().toUpperCase())
+                    .filter(l => (l.personel || "").trim().toLocaleUpperCase('tr-TR') === (personName || "").trim().toLocaleUpperCase('tr-TR'))
                     .sort((a, b) => new Date(a.raw_time) - new Date(b.raw_time));
 
                 if (pLogs.length === 0) return score;
@@ -3111,16 +3181,16 @@
                 let filtered = window.allLogs;
 
                 if (isActiveStaffMode) {
-                    const activeStaffNames = new Set();
+                    const activeStaffLogs = [];
                     const staffStatusMap = {};
                     window.allLogs.forEach(log => {
                         if (log.type === 'MESAJ') return;
                         if (!staffStatusMap[log.personel]) {
                             staffStatusMap[log.personel] = log.type;
-                            if (log.type === 'GİRİŞ') activeStaffNames.add(log.personel);
+                            if (log.type === 'GİRİŞ') activeStaffLogs.push(log);
                         }
                     });
-                    filtered = window.allLogs.filter(log => activeStaffNames.has(log.personel));
+                    filtered = activeStaffLogs;
                 } else {
                     if (selectedStaff) filtered = filtered.filter(l => l.personel === selectedStaff);
                     if (startDateInput) {
@@ -3286,7 +3356,7 @@
                 if (eD) filteredLogs = filteredLogs.filter(l => new Date(l.raw_time) <= new Date(eD + "T23:59:59"));
 
                 users.forEach(u => {
-                    const name = u.ad_soyad.trim().toUpperCase('tr-TR');
+                    const name = u.ad_soyad.trim().toLocaleUpperCase('tr-TR');
                     const rate = rates[u.pin] || 200;
                     const hours = typeof calculateStaffHours === 'function' ? calculateStaffHours(name, filteredLogs) : 0;
                     const basePay = hours * rate;
@@ -3458,6 +3528,31 @@
             window.toggleHistory = toggleHistory;
             window.deleteSingleBroadcast = deleteSingleBroadcast;
 
+            async function checkPWAPushStatus() {
+                if (!('serviceWorker' in navigator) || !('Notification' in window)) return;
+                try {
+                    const reg = await navigator.serviceWorker.ready;
+                    const sub = await reg.pushManager.getSubscription();
+                    const btn = document.getElementById('btn-pwa-push');
+                    if (btn) {
+                        if (sub) {
+                            btn.style.background = 'rgba(16, 185, 129, 0.2)';
+                            btn.style.color = '#10b981';
+                            btn.style.borderColor = '#10b981';
+                            btn.innerText = '🔔 BİLDİRİMLERİ KAPAT';
+                        } else {
+                            btn.style.background = 'rgba(147, 51, 234, 0.2)';
+                            btn.style.color = '#c084fc';
+                            btn.style.borderColor = '#9333ea';
+                            btn.innerText = '🔔 BİLDİRİMLERİ AÇ';
+                        }
+                    }
+                } catch (e) {
+                    console.error("Bildirim durumu kontrol edilemedi:", e);
+                }
+            }
+            window.checkPWAPushStatus = checkPWAPushStatus;
+
             async function initPWAPush() {
                 if (!('serviceWorker' in navigator) || !('Notification' in window)) {
                     showToast("DESTEKLENMİYOR", "Cihazınız veya tarayıcınız arka plan bildirimlerini desteklemiyor.", "error");
@@ -3465,13 +3560,46 @@
                 }
 
                 try {
+                    const reg = await navigator.serviceWorker.ready;
+                    let sub = await reg.pushManager.getSubscription();
+
+                    // EĞER ZATEN BİR ABONELİK VARSA: Kapat (Unsubscribe)
+                    if (sub) {
+                        const confirmed = await cyberConfirm("BİLDİRİMLERİ KAPAT", "Canlı mobil bildirim aboneliğinizi iptal etmek istediğinize emin misiniz?");
+                        if (!confirmed) return;
+
+                        // Tarayıcı push aboneliğini iptal et
+                        await sub.unsubscribe();
+
+                        // Veritabanından sil
+                        try {
+                            await _supabase.from('push_subscriptions').delete().eq('endpoint', sub.endpoint);
+                        } catch (dbEx) {
+                            console.error("Abonelik veritabanından silinemedi:", dbEx);
+                        }
+
+                        try {
+                            await _supabase.from('broadcasts').insert([{ message: '🔕 Arka Plan Bildirimleri Kapatıldı' }]);
+                        } catch(e){}
+
+                        showToast("BİLDİRİMLER DEAKTİF", "Arka plan mobil bildirimleri kapatıldı.", "info");
+                        const btn = document.getElementById('btn-pwa-push');
+                        if (btn) {
+                            btn.style.background = 'rgba(147, 51, 234, 0.2)';
+                            btn.style.color = '#c084fc';
+                            btn.style.borderColor = '#9333ea';
+                            btn.innerText = '🔔 BİLDİRİMLERİ AÇ';
+                        }
+                        return;
+                    }
+
+                    // EĞER ABONELİK YOKSA: Aç (Subscribe)
                     const perm = await Notification.requestPermission();
                     if (perm !== 'granted') {
                         showToast("İZİN REDDEDİLDİ", "Bildirim izni vermediğiniz için canlı mobil bildirimler aktif edilemedi.", "error");
                         return;
                     }
 
-                    const reg = await navigator.serviceWorker.ready;
                     if ('periodicSync' in reg) {
                         try {
                             await reg.periodicSync.register('check-shift-turbo-logs', {
@@ -3484,7 +3612,7 @@
                     }
 
                     // VAPID ile Push Subscription oluştur
-                    const publicVapidKey = 'BEl62iUYgUivxIkv390w4q5Wq6S0FsyuG71a2kZkO4U9s6K7-tX2Z23548971234567890abcdef1234567890';
+                    const publicVapidKey = 'BIHa5SYDwhb6LIMu28hUCwf9oe4PxdZ0_1dlgMCaXo0dByL6KD0Uh5d6lfHCuzq4mTccDTHvWh2GBmIjZ0a9wq8';
                     const urlBase64ToUint8Array = (base64String) => {
                         const padding = '='.repeat((4 - base64String.length % 4) % 4);
                         const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
@@ -3494,12 +3622,19 @@
                         return outputArray;
                     };
 
-                    let sub = await reg.pushManager.getSubscription();
-                    if (!sub) {
-                        sub = await reg.pushManager.subscribe({
-                            userVisibleOnly: true,
-                            applicationServerKey: urlBase64ToUint8Array(publicVapidKey)
-                        });
+                    sub = await reg.pushManager.subscribe({
+                        userVisibleOnly: true,
+                        applicationServerKey: urlBase64ToUint8Array(publicVapidKey)
+                    });
+
+                    // Aboneliği veritabanına kaydet / güncelle
+                    try {
+                        await _supabase.from('push_subscriptions').upsert([{
+                            endpoint: sub.endpoint,
+                            subscription: JSON.parse(JSON.stringify(sub))
+                        }], { onConflict: 'endpoint' });
+                    } catch (dbEx) {
+                        console.error("Abonelik veritabanına kaydedilemedi:", dbEx);
                     }
 
                     try {
@@ -3508,7 +3643,12 @@
 
                     showToast("MOBİL BİLDİRİMLER AKTİF!", "Tarayıcınız kapalı olsa bile arka planda bildirimler cep telefonunuza düşecek!", "success");
                     const btn = document.getElementById('btn-pwa-push');
-                    if(btn) { btn.style.background = 'rgba(16, 185, 129, 0.2)'; btn.style.color = '#10b981'; btn.style.borderColor = '#10b981'; btn.innerText = '🔔 BİLDİRİMLER AKTİF'; }
+                    if (btn) {
+                        btn.style.background = 'rgba(16, 185, 129, 0.2)';
+                        btn.style.color = '#10b981';
+                        btn.style.borderColor = '#10b981';
+                        btn.innerText = '🔔 BİLDİRİMLERİ KAPAT';
+                    }
                 } catch (e) {
                     console.error(e);
                     showToast("HATA", "Bildirim aboneliği başlatılamadı: " + e.message, "error");
@@ -3524,14 +3664,18 @@
                 if (error || !data || data.length === 0) { tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#64748b;">Personel kaydı yok.</td></tr>'; return; }
 
                 window.allUsers = data;
+                if (typeof renderLogs === 'function') renderLogs();
                 const rates = JSON.parse(localStorage.getItem('shiftTurbo_hourly_rates') || '{}');
 
                 tbody.innerHTML = data.map(u => {
                     const rate = rates[u.pin] || 200;
-                    const safeName = u.ad_soyad.replace(/'/g, "\\'");
+                    // Çift tırnak ve tek tırnakları tamamen temizle ki HTML onclick="..." niteliğini asla bozmasın!
+                    const cleanName = u.ad_soyad ? u.ad_soyad.replace(/["']/g, '').replace(/[\r\n]/g, '').trim() : 'Personel';
+                    const cleanPin = u.pin;
+
                     const deviceBtnHtml = u.device_id 
-                        ? `<button onclick="resetDevice('${u.pin}', '${safeName}')" class="btn-cyber btn-device-reset" data-pin="${u.pin}" style="background:#3b82f6; color:#fff; font-size:10px; font-family:'Poppins', sans-serif; font-weight:600; padding:8px 14px; margin-right:15px;">📱 CİHAZ KİLİDİNİ AÇ</button>` 
-                        : `<span style="font-family:'Poppins', sans-serif; font-size:12px; font-weight:600; color:var(--text-muted); margin-right:15px; display:inline-block;">Cihaz Eşleşmemiş</span>`;
+                        ? `<button onclick="resetDevice('${cleanPin}', '${cleanName}')" class="btn-cyber btn-device-reset" style="background:#ef4444; color:#fff; font-size:10px; padding:6px 12px; height:auto; font-family:'Poppins', sans-serif; font-weight:bold; border-radius:8px; margin-right:15px;">🔓 KİLİDİ AÇ</button>`
+                        : `<span style="font-family:'Poppins', sans-serif; font-size:12px; font-weight:600; color:var(--text-muted); margin-right:15px; display:inline-block;">🟢 Girişe Hazır</span>`;
 
                     return `
                     <tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
@@ -3541,13 +3685,13 @@
                             <div style="display:flex; align-items:center; gap:8px;">
                                 <input type="text" id="rate-${u.pin}" value="${rate}" style="width:80px; background:var(--input-bg); border:1px solid var(--border); color:var(--primary); padding:6px 10px; border-radius:8px; font-family:'Poppins', sans-serif; font-weight:bold; font-size:14px; outline:none; text-align:center;">
                                 <span style="color:var(--text-muted); font-size:11px; font-family:'Poppins', sans-serif;">TL/saat</span>
-                                <button onclick="saveHourlyRate('${u.pin}', '${safeName}')" class="btn-cyber" style="background:#10b981; color:#fff; font-size:9px; padding:6px 10px; height:auto; font-family:'Poppins', sans-serif; font-weight:bold;">💾 KAYDET</button>
-                                <button onclick="promptHourlyRate('${u.pin}', '${safeName}', ${rate})" class="btn-cyber" style="background:#f59e0b; color:#fff; font-size:9px; padding:6px 10px; height:auto; font-family:'Poppins', sans-serif; font-weight:bold;">✏️ HIZLI GİR</button>
+                                <button onclick="saveHourlyRate('${cleanPin}', '${cleanName}')" class="btn-cyber" style="background:#10b981; color:#fff; font-size:9px; padding:6px 10px; height:auto; font-family:'Poppins', sans-serif; font-weight:bold;">💾 KAYDET</button>
+                                <button onclick="promptHourlyRate('${cleanPin}', '${cleanName}', ${rate})" class="btn-cyber" style="background:#f59e0b; color:#fff; font-size:9px; padding:6px 10px; height:auto; font-family:'Poppins', sans-serif; font-weight:bold;">✏️ HIZLI GİR</button>
                             </div>
                         </td>
                         <td style="padding:15px; text-align:right;">
                             ${deviceBtnHtml}
-                            <button onclick="deleteStaff('${u.pin}', '${safeName}')" class="btn-cyber" style="background:#ef4444; color:#fff; font-size:10px; font-family:'Poppins', sans-serif; font-weight:600; padding:8px 14px;">🗑️ SİL</button>
+                            <button onclick="deleteStaff('${cleanPin}', '${cleanName}')" class="btn-cyber" style="background:#ef4444; color:#fff; font-size:10px; font-family:'Poppins', sans-serif; font-weight:600; padding:8px 14px;">🗑️ SİL</button>
                         </td>
                     </tr>
                     `;
@@ -3572,6 +3716,16 @@
                 const confirmed = await cyberConfirm("PERSONEL EKLE", `${name} (PIN: ${pin}) eklensin mi?`);
                 if (!confirmed) return;
 
+                // 🔍 AYNI ŞİFRE (PIN) DENETİMİ (GÜVENLİK KİLİDİ) - 100% Garantili Tip Bağımsız Kontrol
+                const { data: allUsersCheck } = await _supabase.from('users').select('ad_soyad, pin');
+                if (allUsersCheck) {
+                    const existing = allUsersCheck.find(u => String(u.pin).trim() === String(pin).trim());
+                    if (existing) {
+                        showToast("PIN ÇAKIŞMASI", `⚠️ DİKKAT: Bu PIN kodu zaten "${existing.ad_soyad}" adına tanımlı! Lütfen farklı bir PIN belirleyin.`, "error");
+                        return;
+                    }
+                }
+
                 const { error } = await _supabase.from('users').insert([{ ad_soyad: name, pin: pin }]);
                 if (error) showToast("HATA", error.message, "error");
                 else { showToast("BAŞARILI", `${name} eklendi.`, "success"); nameIn.value = ""; pinIn.value = ""; fetchStaffList(); }
@@ -3579,62 +3733,67 @@
 
             async function deleteStaff(identifier, name = "Personel") {
                 console.log("🚀 deleteStaff tetiklendi:", identifier, name);
-                const confirmed = confirm(`⚠️ DİKKAT: PERSONEL SİLME\n\n${name} isimli personeli sistemden tamamen silmek istediğinize emin misiniz?`);
+                const confirmed = await cyberConfirm("⚠️ DİKKAT: PERSONEL SİLME", `${name} isimli personeli sistemden tamamen silmek istediğinize emin misiniz?`);
                 if (!confirmed) return;
 
-                let queryColumn = 'id';
-                if (typeof identifier === 'string' && identifier.length === 4) {
-                    queryColumn = 'pin';
-                } else if (typeof identifier === 'number' && identifier > 999) {
-                    queryColumn = 'pin';
+                // identifier her zaman PIN'dir. Önce doğrudan eşleştirme deneriz.
+                let { data, error } = await _supabase.from('users').delete().eq('pin', identifier).eq('ad_soyad', name).select();
+                console.log("📦 deleteStaff Supabase Yanıtı (İlk Deneme):", { data, error });
+
+                // Eğer data boş döndüyse ve identifier string ise, sayısal pine çevirip tekrar deneriz (Supabase tip uyuşmazlığına karşı)
+                if ((!data || data.length === 0) && !error && typeof identifier === 'string') {
+                    const numPin = parseInt(identifier, 10);
+                    if (!isNaN(numPin)) {
+                        const res = await _supabase.from('users').delete().eq('pin', numPin).eq('ad_soyad', name).select();
+                        data = res.data;
+                        error = res.error;
+                        console.log("📦 deleteStaff Supabase Yanıtı (Sayısal Deneme):", { data, error });
+                    }
                 }
 
-                const { data, error } = await _supabase.from('users').delete().eq(queryColumn, identifier).select();
-                console.log("📦 deleteStaff Supabase Yanıtı:", { data, error });
                 if (error) {
                     showToast("HATA", error.message, "error");
-                    alert(`Hata Oluştu: ${error.message}`);
+                    await cyberAlert("❌ HATA OLUŞTU", error.message);
                 } else if (!data || data.length === 0) {
                     showToast("YETKİ HATASI (RLS)", "Supabase RLS politikası silme işlemine izin vermiyor. Lütfen Supabase panelinden 'users' tablosu için DELETE yetkisi (policy) ekleyin.", "error");
-                    alert("Yetki Hatası (RLS): Supabase panelinde 'users' tablosu için RLS aktif edilmiş ancak silme yetkisi (DELETE policy) tanımlanmamış.\n\nÇözüm: Supabase > Authentication > Policies kısmından 'users' tablosuna DELETE yetkisi verin.");
+                    await cyberAlert("❌ YETKİ HATASI (RLS)", "Supabase panelinde 'users' tablosu için RLS aktif edilmiş ancak silme yetkisi (DELETE policy) tanımlanmamış.\n\nÇözüm: Supabase > Authentication > Policies kısmından 'users' tablosuna DELETE yetkisi verin.");
                 } else { 
                     showToast("SİLİNDİ", `✅ ${name} silindi.`, "success"); 
-                    alert(`✅ SİLİNDİ!\n\n${name} isimli personel sistemden başarıyla silindi.`);
+                    await cyberAlert("✅ SİLİNDİ", `${name} isimli personel sistemden başarıyla silindi.`);
                     if (typeof fetchStaffList === 'function') fetchStaffList();
                     if (typeof loadStaffList === 'function') loadStaffList();
                 }
             }
 
-            async function resetDevice(identifier, name = "Personel") {
-                console.log("🚀 resetDevice tetiklendi:", identifier, name);
-                const confirmed = confirm(`📱 CİHAZ KİLİDİ SIFIRLAMA\n\n${name} isimli personelin cihaz kilidi (telefon eşleşmesi) kaldırılsın mı?\n\n(Bu işlem personelin yeni bir telefondan giriş yapabilmesini sağlar).`);
+            async function resetDevice(pin, name = "Personel") {
+                console.log("🚀 resetDevice tetiklendi:", pin, name);
+                const confirmed = await cyberConfirm("📱 CİHAZ KİLİDİ SIFIRLAMA", `${name} isimli personelin telefon eşleşmesi kaldırılsın mı?\n\n(Bu işlem personelin yeni bir telefondan giriş yapabilmesini sağlar).`);
                 if (!confirmed) return;
 
-                let queryColumn = 'id';
-                if (typeof identifier === 'string' && identifier.length === 4) {
-                    queryColumn = 'pin';
-                } else if (typeof identifier === 'number' && identifier > 999) {
-                    queryColumn = 'pin';
+                // Önce normal pin ile dene
+                let { data, error } = await _supabase.from('users').update({ device_id: null }).eq('pin', pin).select();
+                console.log("📦 resetDevice Supabase Yanıtı (İlk Deneme):", { data, error });
+
+                // Eğer data boş döndüyse ve pin string ise, sayıya çevirip tekrar dene (Veritabanı tip uyuşmazlığı ihtimaline karşı)
+                if ((!data || data.length === 0) && !error && typeof pin === 'string') {
+                    const numPin = parseInt(pin, 10);
+                    if (!isNaN(numPin)) {
+                        const res = await _supabase.from('users').update({ device_id: null }).eq('pin', numPin).select();
+                        data = res.data;
+                        error = res.error;
+                        console.log("📦 resetDevice Supabase Yanıtı (Sayısal Deneme):", { data, error });
+                    }
                 }
 
-                const { data, error } = await _supabase.from('users').update({ device_id: null }).eq(queryColumn, identifier).select();
-                console.log("📦 resetDevice Supabase Yanıtı:", { data, error });
                 if (error) {
                     showToast("HATA", error.message, "error");
-                    alert(`Hata Oluştu: ${error.message}`);
+                    await cyberAlert("❌ HATA OLUŞTU", error.message);
                 } else if (!data || data.length === 0) {
-                    showToast("YETKİ HATASI (RLS)", "Supabase Row Level Security (RLS) politikası bu işleme izin vermiyor. Lütfen Supabase panelinden 'users' tablosu için UPDATE yetkisi (policy) ekleyin.", "error");
-                    alert("Yetki Hatası (RLS): Supabase panelinde 'users' tablosu için RLS aktif edilmiş ancak anonim/yönetici güncelleme yetkisi (UPDATE policy) tanımlanmamış. Bu yüzden cihaz kilidi kaldırılamıyor.\n\nÇözüm: Supabase > Authentication > Policies kısmından 'users' tablosuna UPDATE yetkisi verin.");
+                    showToast("YETKİ HATASI (RLS)", "Supabase RLS politikası güncelleme işlemine izin vermiyor. Lütfen Supabase panelinden 'users' tablosu için UPDATE yetkisi (policy) ekleyin.", "error");
+                    await cyberAlert("❌ YETKİ HATASI (RLS)", "Supabase panelinde 'users' tablosu için RLS aktif edilmiş ancak güncelleme yetkisi (UPDATE policy) tanımlanmamış.\n\nÇözüm: Supabase > Authentication > Policies kısmından 'users' tablosuna UPDATE yetkisi verin (Örn: `true` veya `auth.role() = 'anon'`).");
                 } else { 
                     showToast("BAŞARILI", `✅ ${name} cihaz kilidi açıldı. Yeni telefondan giriş yapabilir.`, "success"); 
-                    alert(`✅ BAŞARILI!\n\n${name} isimli personelin cihaz kilidi başarıyla kaldırıldı. Artık yeni telefonundan giriş yapabilir.`);
-                    
-                    // Ekrandaki butonu anında 'Cihaz Eşleşmemiş' yazısına çevirelim (Kullanıcıya %100 anında görsel tepki!)
-                    const btn = document.querySelector(`button.btn-device-reset[data-pin="${identifier}"]`) || document.querySelector(`button[onclick*="resetDevice('${identifier}'"]`);
-                    if (btn && btn.parentElement) {
-                        btn.outerHTML = `<span style="font-family:'Poppins', sans-serif; font-size:12px; font-weight:600; color:var(--text-muted); margin-right:15px; display:inline-block;">Cihaz Eşleşmemiş</span>`;
-                    }
-
+                    await cyberAlert("✅ BAŞARILI", `${name} isimli personelin cihaz eşleşmesi (device_id) başarıyla NULL yapıldı. Artık yeni telefonundan giriş yapabilir.`);
                     if (typeof fetchStaffList === 'function') fetchStaffList();
                     if (typeof loadStaffList === 'function') loadStaffList();
                 }

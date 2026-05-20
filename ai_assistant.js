@@ -237,6 +237,8 @@ ${query}
                     seenOutside.add(a.name);
                     baseSuggestions.push({ 
                         text: `📢 ${a.name}'ye Uyarı Gönder`, 
+                        isAnomaly: true,
+                        anomalyKey: anomalyKey,
                         action: async (btnDOM) => {
                             this.dismissedAnomalies.add(anomalyKey);
                             const success = await this.sendQuickBroadcast(`${a.name}, lütfen dükkan sınırları içerisinden giriş yapınız.`, a.name, btnDOM);
@@ -248,6 +250,8 @@ ${query}
                     seenOvertime.add(a.name);
                     baseSuggestions.push({ 
                         text: `🏮 ${a.name} İçin Mola Hatırlatması`, 
+                        isAnomaly: true,
+                        anomalyKey: anomalyKey,
                         action: async (btnDOM) => {
                             this.dismissedAnomalies.add(anomalyKey);
                             const success = await this.sendQuickBroadcast(`Dikkat ${a.name}: 10 saati aşan mesai tespit edildi. Lütfen mola veriniz.`, a.name, btnDOM);
@@ -258,18 +262,67 @@ ${query}
             });
 
             baseSuggestions.forEach(s => {
-                const btn = document.createElement('button');
-                btn.className = 'suggestion-btn fade-in';
-                btn.innerText = s.text;
-                btn.onclick = () => {
-                    if (s.action) {
-                        s.action(btn);
-                    } else {
+                if (s.isAnomaly) {
+                    // Anomali uyarıları için özel silinebilir kapsayıcı (Container)
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'anomaly-suggestion-wrapper fade-in';
+                    wrapper.style.display = 'inline-flex';
+                    wrapper.style.alignItems = 'center';
+                    wrapper.style.background = 'rgba(239, 68, 68, 0.15)';
+                    wrapper.style.border = '1px solid #ef4444';
+                    wrapper.style.borderRadius = '8px';
+                    wrapper.style.margin = '4px';
+                    wrapper.style.overflow = 'hidden';
+
+                    const actionBtn = document.createElement('button');
+                    actionBtn.className = 'anomaly-action-btn';
+                    actionBtn.innerText = s.text;
+                    actionBtn.style.background = 'transparent';
+                    actionBtn.style.border = 'none';
+                    actionBtn.style.color = '#fca5a5';
+                    actionBtn.style.padding = '8px 14px';
+                    actionBtn.style.fontFamily = "'Poppins', sans-serif";
+                    actionBtn.style.fontSize = '12px';
+                    actionBtn.style.fontWeight = 'bold';
+                    actionBtn.style.cursor = 'pointer';
+                    actionBtn.onclick = () => s.action(wrapper);
+
+                    const dismissBtn = document.createElement('button');
+                    dismissBtn.className = 'anomaly-dismiss-btn';
+                    dismissBtn.innerHTML = '<i class="fas fa-times"></i>';
+                    dismissBtn.title = 'Bu uyarıyı gizle / sil';
+                    dismissBtn.style.background = 'rgba(239, 68, 68, 0.3)';
+                    dismissBtn.style.border = 'none';
+                    dismissBtn.style.borderLeft = '1px solid rgba(239, 68, 68, 0.4)';
+                    dismissBtn.style.color = '#fff';
+                    dismissBtn.style.padding = '8px 12px';
+                    dismissBtn.style.cursor = 'pointer';
+                    dismissBtn.style.display = 'flex';
+                    dismissBtn.style.alignItems = 'center';
+                    dismissBtn.style.justifyContent = 'center';
+                    dismissBtn.onclick = (e) => {
+                        e.stopPropagation();
+                        this.dismissedAnomalies.add(s.anomalyKey);
+                        wrapper.style.transition = 'all 0.3s ease';
+                        wrapper.style.opacity = '0';
+                        wrapper.style.transform = 'scale(0.8)';
+                        setTimeout(() => wrapper.remove(), 300);
+                        if (typeof showToast === 'function') showToast("UYARI GİZLENDİ", "Yapay zeka uyarısı ekrandan kaldırıldı.", "info");
+                    };
+
+                    wrapper.appendChild(actionBtn);
+                    wrapper.appendChild(dismissBtn);
+                    box.appendChild(wrapper);
+                } else {
+                    const btn = document.createElement('button');
+                    btn.className = 'suggestion-btn fade-in';
+                    btn.innerText = s.text;
+                    btn.onclick = () => {
                         document.getElementById('ai-user-input').value = s.query;
                         this.sendChat();
-                    }
-                };
-                box.appendChild(btn);
+                    };
+                    box.appendChild(btn);
+                }
             });
         },
 

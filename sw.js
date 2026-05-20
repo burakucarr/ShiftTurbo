@@ -1,4 +1,4 @@
-const CACHE_NAME = 'shift-turbo-v8'; // Sürüm yükseltmek zorunlu cache silmeyi tetikler
+const CACHE_NAME = 'shift-turbo-v9'; // Sürüm yükseltmek zorunlu cache silmeyi tetikler
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -79,25 +79,34 @@ self.addEventListener('fetch', (event) => {
 
 // 🔔 PUSH BİLDİRİMLERİ (Web Push Notifications)
 self.addEventListener('push', (event) => {
-  let data = { title: "📢 ShiftTurbo Bildirisi", body: "Yeni bir sistem duyurusu veya operasyon hareketi işlendi.", url: "/yonetici.html" };
-  
+  let data = {
+    title: "📢 ShiftTurbo Bildirisi",
+    body: "Yeni bir sistem hareketi işlendi.",
+    url: "/yonetici.html"
+  };
+
   if (event.data) {
     try {
-      data = event.data.json();
-    } catch(e) {
+      const payload = event.data.json();
+      data.title = payload.title || data.title;
+      data.body = payload.body || data.body;
+      data.url = payload.url || data.url;
+    } catch (e) {
       data.body = event.data.text();
     }
   }
 
   const options = {
     body: data.body,
-    icon: '/logom.png',
-    badge: '/logom.png',
-    vibrate: [200, 100, 200, 100, 200, 100, 200],
+    icon: './logom.png',
+    badge: './logom.png',
+    vibrate: [200, 100, 200],
     data: { url: data.url || '/yonetici.html' },
+    tag: 'shift-turbo-notification',
+    renotify: true,
     actions: [
-      { action: 'open', title: '🚀 TERMİNALİ AÇ' },
-      { action: 'close', title: 'KAPAT' }
+      { action: 'open', title: '🚀 Görüntüle' },
+      { action: 'close', title: 'Kapat' }
     ]
   };
 
@@ -168,35 +177,59 @@ async function checkNewLogsSilently() {
   }
 }
 
-// Basit IndexedDB Helper (Arka planda son log id saklamak için)
-function getIndexedDBValue(key) {
-  return new Promise((resolve) => {
+// Basit IndexedDB Helper (Arka planda son log id saklamak için - Singleton DB Connection)
+let dbInstance = null;
+
+function getDBConnection() {
+  return new Promise((resolve, reject) => {
+    if (dbInstance) {
+      resolve(dbInstance);
+      return;
+    }
     const req = indexedDB.open('ShiftTurboBG', 1);
-    req.onupgradeneeded = (e) => e.target.result.createObjectStore('store');
-    req.onsuccess = (e) => {
+    req.onupgradeneeded = (e) => {
       const db = e.target.result;
+      if (!db.objectStoreNames.contains('store')) {
+        db.createObjectStore('store');
+      }
+    };
+    req.onsuccess = (e) => {
+      dbInstance = e.target.result;
+      resolve(dbInstance);
+    };
+    req.onerror = (e) => {
+      reject(e);
+    };
+  });
+}
+
+async function getIndexedDBValue(key) {
+  try {
+    const db = await getDBConnection();
+    return new Promise((resolve) => {
       const tx = db.transaction('store', 'readonly');
       const store = tx.objectStore('store');
       const getReq = store.get(key);
       getReq.onsuccess = () => resolve(getReq.result);
       getReq.onerror = () => resolve(null);
-    };
-    req.onerror = () => resolve(null);
-  });
+    });
+  } catch (e) {
+    return null;
+  }
 }
 
-function setIndexedDBValue(key, val) {
-  return new Promise((resolve) => {
-    const req = indexedDB.open('ShiftTurboBG', 1);
-    req.onupgradeneeded = (e) => e.target.result.createObjectStore('store');
-    req.onsuccess = (e) => {
-      const db = e.target.result;
+async function setIndexedDBValue(key, val) {
+  try {
+    const db = await getDBConnection();
+    return new Promise((resolve) => {
       const tx = db.transaction('store', 'readwrite');
       const store = tx.objectStore('store');
       const putReq = store.put(val, key);
       putReq.onsuccess = () => resolve(true);
       putReq.onerror = () => resolve(false);
-    };
-    req.onerror = () => resolve(false);
-  });
-}
+    });
+  } catch (e) {
+    return false;
+  }
+}
+
