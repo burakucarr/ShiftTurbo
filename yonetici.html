@@ -934,6 +934,13 @@
             margin-bottom: 40px;
         }
 
+        .staff-add-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr auto;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
         .stat-card {
             background: linear-gradient(145deg, var(--stat-bg-1), var(--stat-bg-2));
             padding: 35px 25px;
@@ -1713,7 +1720,7 @@
                 padding: 15px !important;
             }
 
-            #staff-management div[style*="grid-template-columns: 1fr 1fr 1fr"] {
+            .staff-add-grid {
                 grid-template-columns: 1fr !important;
             }
 
@@ -2198,7 +2205,7 @@
             </div>
 
             <div id="staffManagementBody" style="display: none; margin-top: 25px;">
-                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 15px; margin-bottom: 30px;">
+                <div class="staff-add-grid">
                     <input type="text" id="newStaffName" placeholder="Ad Soyad"
                         style="background: var(--input-bg); border: 1px solid rgba(244, 129, 32, 0.3); color: var(--text-main); padding: 12px 15px; border-radius: 12px; outline: none; transition: all 0.3s ease;">
                     <input type="text" id="newStaffPin" placeholder="PIN Kodu (4 Hane)" maxlength="4"
@@ -2206,31 +2213,35 @@
                     <button class="btn-cyber btn-green" onclick="addStaff()">➕ YENİ PERSONEL EKLE</button>
                 </div>
 
-                <table style="width: 100%; border-collapse: collapse;">
-                    <thead style="background: rgba(255,255,255,0.02);">
-                        <tr>
-                            <th style="padding: 15px; text-align: left; font-size: 11px; font-family: 'Poppins', sans-serif; font-weight: bold; color: var(--primary); letter-spacing: 1px;">AD SOYAD</th>
-                            <th style="padding: 15px; text-align: left; font-size: 11px; font-family: 'Poppins', sans-serif; font-weight: bold; color: var(--primary); letter-spacing: 1px;">PIN KODU</th>
-                            <th style="padding: 15px; text-align: left; font-size: 11px; font-family: 'Poppins', sans-serif; font-weight: bold; color: var(--primary); letter-spacing: 1px;">SAATLİK ÜCRET (TL)</th>
-                            <th style="padding: 15px; text-align: right; font-size: 11px; font-family: 'Poppins', sans-serif; font-weight: bold; color: var(--primary); letter-spacing: 1px;">İŞLEM</th>
-                        </tr>
-                    </thead>
-                    <tbody id="staffListTable"></tbody>
-                </table>
+                <div style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
+                    <table style="width: 100%; border-collapse: collapse; min-width: 550px;">
+                        <thead style="background: rgba(255,255,255,0.02);">
+                            <tr>
+                                <th style="padding: 15px; text-align: left; font-size: 11px; font-family: 'Poppins', sans-serif; font-weight: bold; color: var(--primary); letter-spacing: 1px;">AD SOYAD</th>
+                                <th style="padding: 15px; text-align: left; font-size: 11px; font-family: 'Poppins', sans-serif; font-weight: bold; color: var(--primary); letter-spacing: 1px;">PIN KODU</th>
+                                <th style="padding: 15px; text-align: left; font-size: 11px; font-family: 'Poppins', sans-serif; font-weight: bold; color: var(--primary); letter-spacing: 1px;">SAATLİK ÜCRET (TL)</th>
+                                <th style="padding: 15px; text-align: right; font-size: 11px; font-family: 'Poppins', sans-serif; font-weight: bold; color: var(--primary); letter-spacing: 1px;">İŞLEM</th>
+                            </tr>
+                        </thead>
+                        <tbody id="staffListTable"></tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
-        <table>
-            <thead>
-                <tr>
-                    <th style="font-family: 'Poppins', sans-serif; font-size: 12px; font-weight: bold; letter-spacing: 1px;">PERSONEL</th>
-                    <th style="font-family: 'Poppins', sans-serif; font-size: 12px; font-weight: bold; letter-spacing: 1px;">DURUM</th>
-                    <th style="font-family: 'Poppins', sans-serif; font-size: 12px; font-weight: bold; letter-spacing: 1px;">BÖLGE/NOT</th>
-                    <th style="font-family: 'Poppins', sans-serif; font-size: 12px; font-weight: bold; letter-spacing: 1px;">ZAMAN</th>
-                </tr>
-            </thead>
-            <tbody id="logTable"></tbody>
-        </table>
+        <div style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
+            <table style="min-width: 500px;">
+                <thead>
+                    <tr>
+                        <th style="font-family: 'Poppins', sans-serif; font-size: 12px; font-weight: bold; letter-spacing: 1px;">PERSONEL</th>
+                        <th style="font-family: 'Poppins', sans-serif; font-size: 12px; font-weight: bold; letter-spacing: 1px;">DURUM</th>
+                        <th style="font-family: 'Poppins', sans-serif; font-size: 12px; font-weight: bold; letter-spacing: 1px;">BÖLGE/NOT</th>
+                        <th style="font-family: 'Poppins', sans-serif; font-size: 12px; font-weight: bold; letter-spacing: 1px;">ZAMAN</th>
+                    </tr>
+                </thead>
+                <tbody id="logTable"></tbody>
+            </table>
+        </div>
 
         <div
             style="text-align: center; font-family: 'Orbitron', sans-serif; font-size: 7px; color: rgba(255, 255, 255, 0.15); letter-spacing: 3px; margin-top: 30px; text-transform: uppercase; pointer-events: none; z-index: 5;">
