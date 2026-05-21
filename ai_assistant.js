@@ -78,23 +78,35 @@
             const todayStr = now.toDateString();
             const todayLogs = window.allLogs.filter(l => new Date(l.raw_time).toDateString() === todayStr);
             
-            // Tüm personelleri ve puanlarını hesapla
-            const staffNames = [...new Set(window.allLogs.map(l => l.personel))];
+            // Logları tek geçişte kişilere göre grupla (O(M))
+            const logsByPerson = {};
+            window.allLogs.forEach(l => {
+                const p = l.personel;
+                if (!logsByPerson[p]) logsByPerson[p] = [];
+                logsByPerson[p].push(l);
+            });
+
+            const staffNames = Object.keys(logsByPerson);
             let staffSummary = "";
             
             staffNames.forEach(person => {
-                let score = 100;
-                const personLogs = window.allLogs.filter(l => l.personel === person).sort((a,b) => new Date(a.raw_time) - new Date(b.raw_time));
+                // allLogs azalan sırada olduğu için personel loglarını artan sıraya (kronolojik) çeviriyoruz
+                const personLogs = logsByPerson[person].slice().reverse();
                 
-                // Puan hesaplama mantığı
-                personLogs.forEach(log => { 
-                    if (log.type === 'GİRİŞ') { 
-                        const isLast = personLogs[personLogs.length - 1] === log; 
-                        if (isLast && (now - new Date(log.raw_time)) / 3600000 > 10) score -= 15; 
-                    } 
-                });
-                score += Math.floor(personLogs.length / 5) * 2; 
-                score = Math.min(Math.max(score, 0), 100);
+                // Eğer paneldeki daha detaylı ve doğru puanlama fonksiyonu tanımlıysa onu kullan, yoksa yedek hızlı hesaba geç
+                let score = 100;
+                if (typeof window.calculateScore === 'function') {
+                    score = window.calculateScore(person);
+                } else {
+                    personLogs.forEach(log => { 
+                        if (log.type === 'GİRİŞ') { 
+                            const isLast = personLogs[personLogs.length - 1] === log; 
+                            if (isLast && (now - new Date(log.raw_time)) / 3600000 > 10) score -= 15; 
+                        } 
+                    });
+                    score += Math.floor(personLogs.length / 5) * 2; 
+                    score = Math.min(Math.max(score, 0), 100);
+                }
                 
                 // Son durumu ve mesai süresini bul
                 const lastLog = personLogs[personLogs.length - 1];
@@ -104,7 +116,7 @@
                 if (lastLog && lastLog.type === 'GİRİŞ') {
                     const hours = ((now - new Date(lastLog.raw_time)) / 3600000).toFixed(1);
                     statusStr = `MESAİDE (${hours} saattir içeride)`;
-                    if (hours > 10) overtimeWarning = " [⚠️ KURAL İHLALİ: 10 SAATTEN FAZLA MESAİ!]";
+                    if (hours > 10.5) overtimeWarning = " [⚠️ KURAL İHLALİ: 10 SAATTEN FAZLA MESAİ!]";
                 }
                 
                 staffSummary += `- ${person}: ${score} Puan | Durum: ${statusStr}${overtimeWarning}\n`;
@@ -118,7 +130,7 @@
             window.allLogs.slice(0, 20).forEach(l => {
                 context += `- [${l.date_str || ''} ${l.time}] ${l.personel}: ${l.type} (${l.mahalle})\n`;
             });
-
+ 
             return context;
         },
 

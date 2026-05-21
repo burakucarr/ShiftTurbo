@@ -771,19 +771,19 @@ function runAIAnalysis() {
     if (aiText) aiText.innerHTML = aiMsg;
 }
 
-function calculateRowDuration(currentLog, logs) {
-    const personLogs = logs.filter(l => l.personel === currentLog.personel).sort((a, b) => new Date(a.raw_time) - new Date(b.raw_time));
+function calculateRowDuration(currentLog, logs, preSortedPersonLogs = null) {
+    const personLogs = preSortedPersonLogs || logs.filter(l => l.personel === currentLog.personel).sort((a, b) => new Date(a.raw_time) - new Date(b.raw_time));
     const lastGiris = personLogs.filter(l => new Date(l.raw_time) <= new Date(currentLog.raw_time) && l.type === 'GİRİŞ').pop();
     if (!lastGiris) return "BAŞLANGIÇ YOK";
     const followingCikis = personLogs.filter(l => new Date(l.raw_time) > new Date(lastGiris.raw_time) && l.type === 'ÇIKIŞ')[0];
     let endTime = followingCikis ? new Date(followingCikis.raw_time) : new Date();
     let diff = Math.max(0, endTime - new Date(lastGiris.raw_time));
-    return `${Math.floor(diff / 360000)}s ${Math.floor((diff % 3600000) / 60000)}dk`;
+    return `${Math.floor(diff / 3600000)}s ${Math.floor((diff % 3600000) / 60000)}dk`;
 }
 
-function checkCriticalAlert(log, all) {
+function checkCriticalAlert(log, all, preFilteredPersonLogs = null) {
     if (log.type !== 'GİRİŞ') return false;
-    const personLogs = all.filter(l => l.personel === log.personel);
+    const personLogs = preFilteredPersonLogs || all.filter(l => l.personel === log.personel);
     const lastMainAction = personLogs.find(l => l.type === 'GİRİŞ' || l.type === 'ÇIKIŞ');
     if (lastMainAction && lastMainAction.type === 'ÇIKIŞ') return false;
     const lastGiris = personLogs.find(l => l.type === 'GİRİŞ');
@@ -797,7 +797,19 @@ function checkCriticalAlert(log, all) {
 function updateDashboard() {
     const staffSelect = document.getElementById('staffFilter');
     const currentStaff = staffSelect ? staffSelect.value : 'all';
-    const names = [...new Set(window.allLogs.map(l => l.personel))].sort();
+    
+    // OPTİMİZASYON: Logları tek geçişte personele göre grupla (O(M))
+    const logsByPerson = {};
+    const todayStr = new Date().toDateString();
+    let todayCount = 0;
+    window.allLogs.forEach(l => {
+        const p = l.personel;
+        if (!logsByPerson[p]) logsByPerson[p] = [];
+        logsByPerson[p].push(l);
+        if (new Date(l.raw_time).toDateString() === todayStr) todayCount++;
+    });
+    
+    const names = Object.keys(logsByPerson).sort();
     if (staffSelect) {
         staffSelect.innerHTML = '<option value="all">TÜMÜ</option>' + names.map(n => `<option value="${n}">${n}</option>`).join('');
         if (currentStaff && [...names, 'all'].includes(currentStaff)) {
@@ -808,14 +820,14 @@ function updateDashboard() {
     if (statTotal) statTotal.innerText = window.allLogs.length;
     let realActiveCount = 0;
     names.forEach(name => {
-        const personLogs = window.allLogs.filter(l => l.personel === name);
+        const personLogs = logsByPerson[name];
         const lastMainAction = personLogs.find(l => l.type === 'GİRİŞ' || l.type === 'ÇIKIŞ');
         if (lastMainAction && lastMainAction.type === 'GİRİŞ') realActiveCount++;
     });
     const statStaff = document.getElementById('stat-staff');
     if (statStaff) statStaff.innerText = realActiveCount;
     const statToday = document.getElementById('stat-today');
-    if (statToday) statToday.innerText = window.allLogs.filter(l => new Date(l.raw_time).toDateString() === new Date().toDateString()).length;
+    if (statToday) statToday.innerText = todayCount;
 
     if (isActiveStaffMode) {
         filterActiveStaff(false);
@@ -841,13 +853,35 @@ function applyFilter(fromUser = true) {
 
     const logTableEl = document.getElementById('logTable');
     if (logTableEl) {
+        // OPTİMİZASYON: Logları tek geçişte grupla ve skor önbelleği oluştur
+        const personLogsMap = {};
+        const sortedPersonLogsMap = {};
+        window.allLogs.forEach(l => {
+            const p = l.personel;
+            if (!personLogsMap[p]) personLogsMap[p] = [];
+            personLogsMap[p].push(l);
+        });
+        const scoreCache = {};
+        const getCachedScore = (person) => {
+            if (scoreCache[person] === undefined) {
+                scoreCache[person] = calculateScore(person);
+            }
+            return scoreCache[person];
+        };
+
         logTableEl.innerHTML = filtered.map(log => {
-            const isCrit = checkCriticalAlert(log, window.allLogs);
-            const score = calculateScore(log.personel);
+            const pLogs = personLogsMap[log.personel] || [];
+            if (!sortedPersonLogsMap[log.personel]) {
+                sortedPersonLogsMap[log.personel] = pLogs.slice().reverse();
+            }
+            const pLogsSorted = sortedPersonLogsMap[log.personel];
+
+            const isCrit = checkCriticalAlert(log, window.allLogs, pLogs);
+            const score = getCachedScore(log.personel);
             const isNew = (new Date() - new Date(log.raw_time)) < 30000;
             const isMessage = log.type === 'MESAJ';
             const isUnknown = log.personel.includes("BILINMEYEN") || log.personel.includes("BİLİNMEYEN");
-            const durationText = calculateRowDuration(log, window.allLogs);
+            const durationText = calculateRowDuration(log, window.allLogs, pLogsSorted);
 
             const clickAction = isMessage ? `onclick="showMsg('${log.personel}', '${log.mahalle.replace(/'/g, "\\'")}', '${log.time}')"` : "";
             const badgeStyle = isMessage ? 'background: #9333ea; cursor: pointer; border-color: #a78bfa;' : '';
@@ -951,11 +985,34 @@ function filterTotalRecords() {
 function renderCustomTable(data) {
     const table = document.getElementById('logTable');
     if (!table) return;
+
+    // OPTİMİZASYON: Logları tek geçişte grupla ve skor önbelleği oluştur
+    const personLogsMap = {};
+    const sortedPersonLogsMap = {};
+    allLogs.forEach(l => {
+        const p = l.personel;
+        if (!personLogsMap[p]) personLogsMap[p] = [];
+        personLogsMap[p].push(l);
+    });
+    const scoreCache = {};
+    const getCachedScore = (person) => {
+        if (scoreCache[person] === undefined) {
+            scoreCache[person] = calculateScore(person);
+        }
+        return scoreCache[person];
+    };
+
     table.innerHTML = data.map(log => {
-        const isCrit = checkCriticalAlert(log, allLogs);
-        const score = calculateScore(log.personel);
+        const pLogs = personLogsMap[log.personel] || [];
+        if (!sortedPersonLogsMap[log.personel]) {
+            sortedPersonLogsMap[log.personel] = pLogs.slice().reverse();
+        }
+        const pLogsSorted = sortedPersonLogsMap[log.personel];
+
+        const isCrit = checkCriticalAlert(log, allLogs, pLogs);
+        const score = getCachedScore(log.personel);
         const isMessage = log.type === 'MESAJ';
-        const durationText = calculateRowDuration(log, allLogs);
+        const durationText = calculateRowDuration(log, allLogs, pLogsSorted);
 
         const clickAction = isMessage ? `onclick="showMsg('${log.personel}', '${log.mahalle.replace(/'/g, "\\'")}', '${log.time}')"` : "";
         const badgeStyle = isMessage ? 'background: #9333ea; cursor: pointer; border-color: #a78bfa;' : '';

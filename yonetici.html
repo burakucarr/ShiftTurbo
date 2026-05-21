@@ -3147,8 +3147,8 @@
             }
             window.calculateScore = calculateScore;
 
-            function calculateRowDuration(currentLog, logs) {
-                const personLogs = logs.filter(l => l.personel === currentLog.personel).sort((a, b) => new Date(a.raw_time) - new Date(b.raw_time));
+            function calculateRowDuration(currentLog, logs, preSortedPersonLogs = null) {
+                const personLogs = preSortedPersonLogs || logs.filter(l => l.personel === currentLog.personel).sort((a, b) => new Date(a.raw_time) - new Date(b.raw_time));
                 const lastGiris = personLogs.filter(l => new Date(l.raw_time) <= new Date(currentLog.raw_time) && l.type === 'GİRİŞ').pop();
                 if (!lastGiris) return "BAŞLANGIÇ YOK";
                 const followingCikis = personLogs.filter(l => new Date(l.raw_time) > new Date(lastGiris.raw_time) && l.type === 'ÇIKIŞ')[0];
@@ -3157,9 +3157,9 @@
                 return `${Math.floor(diff / 3600000)}s ${Math.floor((diff % 3600000) / 60000)}dk`;
             }
 
-            function checkCriticalAlert(log, all) {
+            function checkCriticalAlert(log, all, preFilteredPersonLogs = null) {
                 if (log.type !== 'GİRİŞ') return false;
-                const personLogs = all.filter(l => l.personel === log.personel);
+                const personLogs = preFilteredPersonLogs || all.filter(l => l.personel === log.personel);
                 const lastMainAction = personLogs.find(l => l.type === 'GİRİŞ' || l.type === 'ÇIKIŞ');
                 if (lastMainAction && lastMainAction.type === 'ÇIKIŞ') return false;
                 const lastGiris = personLogs.find(l => l.type === 'GİRİŞ');
@@ -3208,14 +3208,40 @@
                     return;
                 }
 
+                // OPTİMİZASYON: Her satırda all.filter ve sıralama (sort) yapmamak için personellerin loglarını önbelleğe alıp grupluyoruz
+                const personLogsMap = {};
+                const sortedPersonLogsMap = {};
+                window.allLogs.forEach(l => {
+                    const p = l.personel;
+                    if (!personLogsMap[p]) personLogsMap[p] = [];
+                    personLogsMap[p].push(l);
+                });
+
+                // Skor hesaplamalarını tekilleştirip önbelleğe alma (Memoization)
+                const scoreCache = {};
+                const getCachedScore = (person) => {
+                    if (scoreCache[person] === undefined) {
+                        scoreCache[person] = calculateScore(person);
+                    }
+                    return scoreCache[person];
+                };
+
                 filtered.forEach((log, idx) => {
                     const tr = document.createElement('tr');
-                    const isCrit = checkCriticalAlert(log, window.allLogs);
-                    const score = calculateScore(log.personel);
+                    const pLogs = personLogsMap[log.personel] || [];
+                    
+                    // calculateRowDuration için kronolojik sıralı listeyi hazırla/önbelleğe al
+                    if (!sortedPersonLogsMap[log.personel]) {
+                        sortedPersonLogsMap[log.personel] = pLogs.slice().reverse();
+                    }
+                    const pLogsSorted = sortedPersonLogsMap[log.personel];
+
+                    const isCrit = checkCriticalAlert(log, window.allLogs, pLogs);
+                    const score = getCachedScore(log.personel);
                     const isNew = (idx === 0 && lastLogCount > 0);
                     const isMessage = log.type === 'MESAJ';
                     const isUnknown = log.personel.includes("BILINMEYEN") || log.personel.includes("BİLİNMEYEN");
-                    const durationText = calculateRowDuration(log, window.allLogs);
+                    const durationText = calculateRowDuration(log, window.allLogs, pLogsSorted);
 
                     if (isCrit) tr.classList.add('critical-alarm');
                     if (isNew) tr.classList.add('new-action-row');
