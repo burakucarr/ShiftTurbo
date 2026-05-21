@@ -2770,7 +2770,7 @@
                 if (btn) { btn.disabled = true; btn.textContent = 'DOĞRULANIYOR...'; }
 
                 // Eğer "admin" yazarsa otomatik maile çevir, mail yazarsa olduğu gibi kullan
-                const emailTarget = user.includes('@') ? user : user + '@shifturbo.com';
+                const emailTarget = user.includes('@') ? user : user + '@gmail.com';
 
                 try {
                     const { data, error } = await _supabase.auth.signInWithPassword({
