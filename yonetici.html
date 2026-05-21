@@ -2631,9 +2631,9 @@
 
         (() => {
             let isAuthenticated = false;
-            // 🛡️ SHIFTURBO — SECURE PROXY CONNECTION
-            const proxyUrl = 'https://shiftturbo-proxy.burakkucar55-5af.workers.dev';
-            const _supabase = supabase.createClient(proxyUrl, 'proxy-authenticated');
+            const supabaseUrl = 'https://tnvjdppcyctmqkirlwmy.supabase.co';
+            const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRudmpkcHBjeWN0bXFraXJsd215Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3MzY0NTIsImV4cCI6MjA4ODMxMjQ1Mn0.Ft4JXQtbcXz1-qO7n06fV1vGtP4DbCVUWDojEAFoALI';
+            const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
             window._supabase = _supabase;
             window.allLogs = [];
             let lastLogCount = 0;
