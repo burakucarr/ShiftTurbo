@@ -21,22 +21,13 @@
 
     <script src="https://unpkg.com/html5-qrcode"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./config.js"></script>
+    <script src="./js/shared.js"></script>
 
     <style>
         /* ============================================
            🎨 SHIFTURBO — SHARED DESIGN SYSTEM (shared.css)
            ============================================ */
-        :root {
-            --primary: #f48120;
-            --bg: #030712;
-            --card: rgba(15, 23, 42, 0.7);
-            --glass: rgba(255, 255, 255, 0.03);
-            --border: rgba(255, 255, 255, 0.1);
-            --success: #10b981;
-            --error: #ef4444;
-            --ai-glow: rgba(139, 92, 246, 0.4);
-        }
-
         :root[data-theme="light"] {
             --primary: #9a3b00;
             --bg: #f1f5f9;
@@ -44,7 +35,23 @@
             --glass: rgba(255, 255, 255, 0.95);
             --border: rgba(15, 23, 42, 0.2);
             --text-main: #0f172a;
+            --text-sub: #334155;
             --text-muted: #475569;
+            --modal-bg: #ffffff;
+        }
+
+        :root {
+            --primary: #f48120;
+            --bg: #030712;
+            --card: rgba(15, 23, 42, 0.7);
+            --glass: rgba(255, 255, 255, 0.03);
+            --border: rgba(255, 255, 255, 0.1);
+            --text-main: #ffffff;
+            --text-sub: #cbd5e1;
+            --success: #10b981;
+            --error: #ef4444;
+            --ai-glow: rgba(139, 92, 246, 0.4);
+            --modal-bg: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
         }
 
         [data-theme="light"] body {
@@ -439,15 +446,16 @@
         }
 
         .about-content {
-            background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%) !important;
+            background: var(--modal-bg) !important;
             padding: 30px !important;
             border-radius: 25px !important;
-            border: 1px solid rgba(244, 129, 32, 0.5) !important;
+            border: 1px solid var(--border) !important;
             width: 85% !important;
             max-width: 320px !important;
             text-align: center !important;
             position: relative !important;
-            box-shadow: 0 0 50px rgba(0, 0, 0, 1);
+            box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
+            color: var(--text-main) !important;
         }
 
         .about-grid {
@@ -475,7 +483,7 @@
         .about-value {
             font-family: 'Poppins';
             font-size: 11px;
-            color: #cbd5e1;
+            color: var(--text-sub);
             font-weight: 500;
         }
 
@@ -1459,7 +1467,7 @@
                 <div class="about-item">
                     <span class="about-label">SİSTEM GELİŞTİRİCİ</span>
                     <span class="about-value"
-                        style="font-family: 'Orbitron'; font-weight: 700; letter-spacing: 1px; color: #fff;">BURAK
+                        style="font-family: 'Orbitron'; font-weight: 700; letter-spacing: 1px;">BURAK
                         UÇAR</span>
                 </div>
                 <div class="about-item">
@@ -1667,14 +1675,14 @@
 
         // 🛡️ SHIFTURBO — SECURE PROXY CONNECTION
         const proxyUrl = 'https://shifturbo-proxy.burakkucar55-5af.workers.dev';
+        const localSupabaseConfig = (typeof SHIFTURBO_CONFIG !== 'undefined' && SHIFTURBO_CONFIG && SHIFTURBO_CONFIG.supabaseUrl && SHIFTURBO_CONFIG.supabaseKey)
+            ? SHIFTURBO_CONFIG
+            : null;
+
         let _supabase = null;
-        try {
-            if (typeof supabase !== 'undefined') {
-                _supabase = supabase.createClient(proxyUrl, 'proxy-authenticated');
-            } else {
-                console.warn("⚠️ Supabase CDN yüklenemedi! Çevrimdışı mod devrede.");
-            }
-        } catch (e) { console.error("Supabase Init Hatası:", e); }
+        let _supabaseClientType = 'proxy';
+
+        // testSupabaseClient ve initSupabaseClient → shared.js'den gelir (window.ShiftTurboShared)
 
         let html5QrCode = null;
         let currentPin = "";
@@ -1692,15 +1700,16 @@
 
         // 📡 Otonom Canlı Ping Kontrolörü (Live Radar Engine)
         function startLiveRadarPing() {
-            setInterval(async () => {
+            const runPing = async () => {
                 const dataPingEl = document.getElementById('live-data-ping');
                 const dataTextEl = document.getElementById('data-status-text');
                 if (!dataPingEl || !dataTextEl) return;
 
-                if (!navigator.onLine) {
+                if (!navigator.onLine || !_supabase) {
                     dataPingEl.classList.add('live-ping-error');
                     dataTextEl.innerText = "ÇEVRİMDİŞI";
                     dataTextEl.style.color = "var(--error)";
+                    setTimeout(runPing, 30000); // 30 sn sonra tekrar dene
                     return;
                 }
 
@@ -1712,26 +1721,34 @@
                     dataTextEl.innerText = "CANLI_VERİ";
                     dataTextEl.style.color = "var(--primary)";
                 } catch (e) {
+                    console.warn("Ping hatası (Sunucu yavaş olabilir):", e);
                     dataPingEl.classList.add('live-ping-error');
                     dataTextEl.innerText = "SUNUCU_YAVAŞ";
                     dataTextEl.style.color = "var(--error)";
                 }
-            }, 10000);
+                setTimeout(runPing, 30000); // 30 saniyede bir otonom denetle (Proxy yükünü azaltmak için)
+            };
+            runPing();
         }
-        window.addEventListener('load', startLiveRadarPing);
+        window.addEventListener('load', async () => {
+            const result = await window.ShiftTurboShared.initSupabaseClient(proxyUrl, localSupabaseConfig);
+            _supabase = result.client;
+            _supabaseClientType = result.type;
+            startLiveRadarPing();
+        });
 
         // 🔄 Çevrimdışı Kuyruk Eşitleyici (Offline Sync Engine - Mutex Locked)
         let isSyncingOffline = false;
         async function syncOfflineQueue() {
             if (!navigator.onLine || isSyncingOffline) return;
-            const offlineQueue = JSON.parse(localStorage.getItem('shiftTurbo_offline_queue') || '[]');
+            const offlineQueue = window.ShiftTurboShared.getObfuscated('shiftTurbo_offline_queue') || [];
             if (offlineQueue.length === 0) return;
 
             isSyncingOffline = true;
             console.log(`🔄 Çevrimdışı kuyrukta ${offlineQueue.length} kayıt bulundu. Supabase'e aktarılıyor...`);
 
             // YARIŞ DURUMUNU ÖNLEMEK İÇİN KUYRUĞU ANINDA BOŞALT!!! (Başka eventler aynı veriyi kapmasın)
-            localStorage.setItem('shiftTurbo_offline_queue', '[]');
+            window.ShiftTurboShared.setObfuscated('shiftTurbo_offline_queue', []);
 
             const failedItems = [];
 
@@ -1759,8 +1776,8 @@
 
             // Eğer başarısız olanlar varsa, güncel localStorage kuyruğu ile birleştirip geri yaz
             if (failedItems.length > 0) {
-                const currentQueue = JSON.parse(localStorage.getItem('shiftTurbo_offline_queue') || '[]');
-                localStorage.setItem('shiftTurbo_offline_queue', JSON.stringify([...failedItems, ...currentQueue]));
+                const currentQueue = window.ShiftTurboShared.getObfuscated('shiftTurbo_offline_queue') || [];
+                window.ShiftTurboShared.setObfuscated('shiftTurbo_offline_queue', [...failedItems, ...currentQueue]);
             } else {
                 console.log("🎉 Tüm çevrimdışı kuyruk başarıyla temizlendi.");
                 // AKTARIM BİTTİĞİ AN EKRANI OTOMATİK YENİLE (Kullanıcının önüne anında MESAİ BİTİR gelsin!!!)
@@ -2004,6 +2021,10 @@
             const fullName = localStorage.getItem('temp_user_name') || "PERSONEL";
             const pin = localStorage.getItem('temp_user_pin');
             const clientUUID = getDeviceUUID();
+
+            // 0. Sesli Karşılama (Hemen çalışmalı, aksi halde await yüzünden tarayıcı ses iznini iptal eder)
+            try { speakGreeting(fullName); } catch (e) { console.warn("Ses uyarısı:", e); }
+
             // 1. Cihaz ID Güncellemesinin veritabanına yazılmasını bekle (Yarış durumunu engellemek için)
             if (pin) {
                 try {
@@ -2022,9 +2043,6 @@
                     }).catch(e => console.warn("Push uyarısı:", e));
                 } catch (e) { console.warn("Push catch:", e); }
             }
-
-            // 3. Sesli Karşılama (Hata verirse bile durmasın)
-            try { speakGreeting(fullName); } catch (e) { console.warn("Ses uyarısı:", e); }
 
             // 🚀 4. ASIL GİRİŞ İŞLEMİ (KESİN VE ANINDA ÇALIŞIR!)
             localStorage.setItem('shiftTurbo_user', fullName);
@@ -2069,10 +2087,7 @@
             if (okBtn) okBtn.disabled = true; // ÇİFT TIKLAMAYI ENGELLE
 
             if (isSyncingOffline) {
-                playSound('error');
-                document.getElementById('status').innerText = "🔄 ÇEVRİMD DIŞI KAYITLAR AKTARILIYOR... (Lütfen Bekleyin)";
-                if (okBtn) okBtn.disabled = false;
-                return;
+                console.log("🔄 Senkronizasyon devam ediyor ama işleme izin veriliyor...");
             }
             window.isExecutingAction = true; // Realtime kanalı sinsi reload atmasın diye bayrak açıldı!
             const type = pendingType;
@@ -2098,7 +2113,7 @@
             }
 
             // HİBRİT KONTROL: Çevrimdışı kuyrukta bu personele ait DAHA YENİ bir işlem var mı?
-            const currentOfflineQueue = JSON.parse(localStorage.getItem('shiftTurbo_offline_queue') || '[]');
+            const currentOfflineQueue = window.ShiftTurboShared.getObfuscated('shiftTurbo_offline_queue') || [];
             const personOfflineLogs = currentOfflineQueue.filter(item => item.personel_name === name);
             if (personOfflineLogs.length > 0) {
                 const lastOfflineItem = personOfflineLogs[personOfflineLogs.length - 1];
@@ -2116,20 +2131,7 @@
                 document.getElementById('status').innerText = "❌ ZATEN ÇIKIŞ YAPILMIŞ!";
 
                 // ANINDA GİZLE Kİ TEKRAR BASAMASIN
-                const mainActions = document.getElementById('main-actions');
-                const confirmBox = document.getElementById('confirm-box');
-                const pinPad = document.getElementById('pin-pad');
-                const gamificationCard = document.getElementById('gamification-card');
-                const actionConfirm = document.getElementById('action-confirm');
-                const scanBtn = document.getElementById('scanBtn');
-                const greetingEl = document.getElementById('greeting');
-                if (mainActions) mainActions.style.display = 'none';
-                if (confirmBox) confirmBox.style.display = 'none';
-                if (pinPad) pinPad.style.display = 'none';
-                if (gamificationCard) gamificationCard.style.display = 'none';
-                if (actionConfirm) actionConfirm.style.display = 'none';
-                if (greetingEl) greetingEl.innerText = "SİSTEM BAĞLANTISI";
-                if (scanBtn) scanBtn.style.display = 'block';
+                resetToScanScreen();
 
                 const errorMsgBody = document.getElementById('error-msg-body');
                 const errorModal = document.getElementById('error-modal');
@@ -2139,11 +2141,7 @@
                 }
                 try { speakAI("Sayın personel, sistemde daha önceden çıkış yaptınız. Çıkış kaydınız zaten mevcuttur."); } catch (e) { }
 
-                localStorage.removeItem('shiftTurbo_user');
-                localStorage.removeItem('auth_active');
-                localStorage.removeItem('isShiftActive');
-                localStorage.removeItem('temp_user_name');
-                localStorage.removeItem('temp_user_pin');
+                clearTerminalSession();
 
                 setTimeout(() => {
                     if (errorModal) errorModal.style.display = 'none';
@@ -2157,16 +2155,7 @@
                 document.getElementById('status').innerText = "❌ ZATEN MESAİDESİNİZ!";
 
                 // ANINDA GİZLE Kİ TEKRAR BASAMASIN
-                const mainActions = document.getElementById('main-actions');
-                const confirmBox = document.getElementById('confirm-box');
-                const pinPad = document.getElementById('pin-pad');
-                const gamificationCard = document.getElementById('gamification-card');
-                const actionConfirm = document.getElementById('action-confirm');
-                if (mainActions) mainActions.style.display = 'none';
-                if (confirmBox) confirmBox.style.display = 'none';
-                if (pinPad) pinPad.style.display = 'none';
-                if (gamificationCard) gamificationCard.style.display = 'none';
-                if (actionConfirm) actionConfirm.style.display = 'none';
+                hideAllTerminalPanels();
 
                 const errorMsgBody = document.getElementById('error-msg-body');
                 const errorModal = document.getElementById('error-modal');
@@ -2190,7 +2179,7 @@
                     console.log("⚠️ İnternet bağlantısı yok! İşlem çevrimdışı kuyruğa alınıyor...");
                     playSound('success');
 
-                    const offlineQueue = JSON.parse(localStorage.getItem('shiftTurbo_offline_queue') || '[]');
+                    const offlineQueue = window.ShiftTurboShared.getObfuscated('shiftTurbo_offline_queue') || [];
                     const offlineRecord = {
                         offline_id: 'off_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now(),
                         personel_name: name,
@@ -2202,7 +2191,7 @@
                         is_offline_sync: true
                     };
                     offlineQueue.push(offlineRecord);
-                    localStorage.setItem('shiftTurbo_offline_queue', JSON.stringify(offlineQueue));
+                    window.ShiftTurboShared.setObfuscated('shiftTurbo_offline_queue', offlineQueue);
                     localStorage.setItem('shiftTurbo_last_status_' + name, type);
 
                     // Çevrimdışı İşlem Başladı Ekranı (Kullanıcının istediği Güvenlik Protokolü ekranını ANINDA veriyoruz)
@@ -2216,24 +2205,8 @@
                         window.isRedirectingNow = true;
                         console.log("🚀 Ses tamamen bitti veya garanti süre doldu, sayfa yönlendiriliyor!");
                         if (type === 'ÇIKIŞ') {
-                            const mainActions = document.getElementById('main-actions');
-                            const confirmBox = document.getElementById('confirm-box');
-                            const pinPad = document.getElementById('pin-pad');
-                            const gamificationCard = document.getElementById('gamification-card');
-                            const scanBtn = document.getElementById('scanBtn');
-                            const greetingEl = document.getElementById('greeting');
-                            if (mainActions) mainActions.style.display = 'none';
-                            if (confirmBox) confirmBox.style.display = 'none';
-                            if (pinPad) pinPad.style.display = 'none';
-                            if (gamificationCard) gamificationCard.style.display = 'none';
-                            if (greetingEl) greetingEl.innerText = "SİSTEM BAĞLANTISI";
-                            if (scanBtn) scanBtn.style.display = 'block';
-
-                            localStorage.removeItem('shiftTurbo_user');
-                            localStorage.removeItem('auth_active');
-                            localStorage.removeItem('isShiftActive');
-                            localStorage.removeItem('temp_user_name');
-                            localStorage.removeItem('temp_user_pin');
+                            resetToScanScreen();
+                            clearTerminalSession();
                             window.location.replace(window.location.pathname + '?reset=' + Date.now());
                         } else {
                             localStorage.setItem('isShiftActive', 'true');
@@ -2282,24 +2255,8 @@
                         window.isRedirectingNow = true;
                         console.log("🚀 Ses tamamen bitti veya garanti süre doldu, sayfa yönlendiriliyor!");
                         if (type === 'ÇIKIŞ') {
-                            const mainActions = document.getElementById('main-actions');
-                            const confirmBox = document.getElementById('confirm-box');
-                            const pinPad = document.getElementById('pin-pad');
-                            const gamificationCard = document.getElementById('gamification-card');
-                            const scanBtn = document.getElementById('scanBtn');
-                            const greetingEl = document.getElementById('greeting');
-                            if (mainActions) mainActions.style.display = 'none';
-                            if (confirmBox) confirmBox.style.display = 'none';
-                            if (pinPad) pinPad.style.display = 'none';
-                            if (gamificationCard) gamificationCard.style.display = 'none';
-                            if (greetingEl) greetingEl.innerText = "SİSTEM BAĞLANTISI";
-                            if (scanBtn) scanBtn.style.display = 'block';
-
-                            localStorage.removeItem('shiftTurbo_user');
-                            localStorage.removeItem('auth_active');
-                            localStorage.removeItem('isShiftActive');
-                            localStorage.removeItem('temp_user_name');
-                            localStorage.removeItem('temp_user_pin');
+                            resetToScanScreen();
+                            clearTerminalSession();
                             window.location.replace(window.location.pathname + '?reset=' + Date.now());
                         } else {
                             localStorage.setItem('isShiftActive', 'true');
@@ -2365,7 +2322,7 @@
                     console.log("⚠️ İnternet yok! Mesaj çevrimdışı kuyruğa alınıyor...");
                     playSound('success');
                     document.getElementById('status').innerText = "⚡ MESAJ ÇEVRİMDİŞI KAYDEDİLDİ";
-                    const offlineQueue = JSON.parse(localStorage.getItem('shiftTurbo_offline_queue') || '[]');
+                    const offlineQueue = window.ShiftTurboShared.getObfuscated('shiftTurbo_offline_queue') || [];
                     offlineQueue.push({
                         offline_id: 'off_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now(),
                         personel_name: user,
@@ -2375,7 +2332,7 @@
                         device_time: new Date().toISOString(),
                         is_offline_sync: true
                     });
-                    localStorage.setItem('shiftTurbo_offline_queue', JSON.stringify(offlineQueue));
+                    window.ShiftTurboShared.setObfuscated('shiftTurbo_offline_queue', offlineQueue);
                     finishMessage();
                     return;
                 }
@@ -2435,14 +2392,14 @@
                     document.getElementById('greeting').innerText = "SYSTEM ACTIVE / " + user.toUpperCase();
                     mainActions.innerHTML = `
                         <button class="btn-out" onclick="requestConfirm('ÇIKIŞ')">MESAİ BİTİR</button>
-                        <button class="btn-out btn-mini" onclick="localStorage.removeItem('shiftTurbo_user'); localStorage.removeItem('auth_active'); localStorage.removeItem('isShiftActive'); localStorage.removeItem('temp_user_name'); localStorage.removeItem('temp_user_pin'); window.location.replace(window.location.pathname + '?reset=' + Date.now());" style="background: #334155; margin-top: 15px; font-family: 'Poppins', sans-serif; font-weight: bold; letter-spacing: 1px;">🔄 ANA EKRANA DÖN</button>
+                        <button class="btn-out btn-mini" onclick="clearTerminalSession(); window.location.replace(window.location.pathname + '?reset=' + Date.now());" style="background: #334155; margin-top: 15px; font-family: 'Poppins', sans-serif; font-weight: bold; letter-spacing: 1px;">🔄 ANA EKRANA DÖN</button>
                     `;
                 } else {
                     document.getElementById('status-bar').style.width = "50%";
                     document.getElementById('greeting').innerText = "SYSTEM READY / " + user.toUpperCase();
                     mainActions.innerHTML = `
                         <button class="btn-in" onclick="requestConfirm('GİRİŞ')">MESAİ BAŞLAT</button>
-                        <button class="btn-out btn-mini" onclick="localStorage.removeItem('shiftTurbo_user'); localStorage.removeItem('auth_active'); localStorage.removeItem('isShiftActive'); localStorage.removeItem('temp_user_name'); localStorage.removeItem('temp_user_pin'); window.location.replace(window.location.pathname + '?reset=' + Date.now());" style="background: #334155; margin-top: 15px; font-family: 'Poppins', sans-serif; font-weight: bold; letter-spacing: 1px;">🔄 ANA EKRANA DÖN</button>
+                        <button class="btn-out btn-mini" onclick="clearTerminalSession(); window.location.replace(window.location.pathname + '?reset=' + Date.now());" style="background: #334155; margin-top: 15px; font-family: 'Poppins', sans-serif; font-weight: bold; letter-spacing: 1px;">🔄 ANA EKRANA DÖN</button>
                     `;
                 }
 
@@ -2454,23 +2411,12 @@
                     if (dbDeviceId && dbDeviceId !== clientUUID) {
                         console.warn("⚠️ GÜVENLİK İHLALİ: Oturum başka bir cihaza taşınmış. Yerel oturum kapatılıyor.");
                         if (typeof playSound === 'function') playSound('error');
-                        localStorage.removeItem('shiftTurbo_user');
-                        localStorage.removeItem('auth_active');
-                        localStorage.removeItem('isShiftActive');
-                        localStorage.removeItem('temp_user_name');
-                        localStorage.removeItem('temp_user_pin');
+                        clearTerminalSession();
 
                         // UI'ı tamamen sıfırla ve kilitle (Yarım oturum durumunu engellemek için)
-                        const confirmBox = document.getElementById('confirm-box');
-                        const pinPad = document.getElementById('pin-pad');
-                        const gamificationCard = document.getElementById('gamification-card');
-                        const actionConfirm = document.getElementById('action-confirm');
-                        const greetingEl = document.getElementById('greeting');
+                        hideAllTerminalPanels();
                         if (mainActions) mainActions.style.display = 'none';
-                        if (confirmBox) confirmBox.style.display = 'none';
-                        if (pinPad) pinPad.style.display = 'none';
-                        if (gamificationCard) gamificationCard.style.display = 'none';
-                        if (actionConfirm) actionConfirm.style.display = 'none';
+                        const greetingEl = document.getElementById('greeting');
                         if (greetingEl) greetingEl.innerText = "SİSTEM BAĞLANTISI";
 
                         const errorMsgBody = document.getElementById('error-msg-body');
@@ -2501,7 +2447,7 @@
                 }
 
                 // HİBRİT KONTROL: Çevrimdışı kuyrukta bu personele ait DAHA YENİ bir işlem var mı?
-                const currentOfflineQueue = JSON.parse(localStorage.getItem('shiftTurbo_offline_queue') || '[]');
+                const currentOfflineQueue = window.ShiftTurboShared.getObfuscated('shiftTurbo_offline_queue') || [];
                 const personOfflineLogs = currentOfflineQueue.filter(item => item.personel_name === user);
                 if (personOfflineLogs.length > 0) {
                     const lastOfflineItem = personOfflineLogs[personOfflineLogs.length - 1];
@@ -2518,20 +2464,20 @@
                     document.getElementById('greeting').innerText = "SYSTEM ACTIVE / " + user.toUpperCase();
                     mainActions.innerHTML = `
                         <button class="btn-out" onclick="requestConfirm('ÇIKIŞ')">MESAİ BİTİR</button>
-                        <button class="btn-out btn-mini" onclick="localStorage.removeItem('shiftTurbo_user'); localStorage.removeItem('auth_active'); localStorage.removeItem('isShiftActive'); localStorage.removeItem('temp_user_name'); localStorage.removeItem('temp_user_pin'); window.location.replace(window.location.pathname + '?reset=' + Date.now());" style="background: #334155; margin-top: 15px; font-family: 'Poppins', sans-serif; font-weight: bold; letter-spacing: 1px;">🔄 ANA EKRANA DÖN</button>
+                        <button class="btn-out btn-mini" onclick="clearTerminalSession(); window.location.replace(window.location.pathname + '?reset=' + Date.now());" style="background: #334155; margin-top: 15px; font-family: 'Poppins', sans-serif; font-weight: bold; letter-spacing: 1px;">🔄 ANA EKRANA DÖN</button>
                     `;
                 } else {
                     document.getElementById('status-bar').style.width = "50%";
                     document.getElementById('greeting').innerText = "SYSTEM READY / " + user.toUpperCase();
                     mainActions.innerHTML = `
                         <button class="btn-in" onclick="requestConfirm('GİRİŞ')">MESAİ BAŞLAT</button>
-                        <button class="btn-out btn-mini" onclick="localStorage.removeItem('shiftTurbo_user'); localStorage.removeItem('auth_active'); localStorage.removeItem('isShiftActive'); localStorage.removeItem('temp_user_name'); localStorage.removeItem('temp_user_pin'); window.location.replace(window.location.pathname + '?reset=' + Date.now());" style="background: #334155; margin-top: 15px; font-family: 'Poppins', sans-serif; font-weight: bold; letter-spacing: 1px;">🔄 ANA EKRANA DÖN</button>
+                        <button class="btn-out btn-mini" onclick="clearTerminalSession(); window.location.replace(window.location.pathname + '?reset=' + Date.now());" style="background: #334155; margin-top: 15px; font-family: 'Poppins', sans-serif; font-weight: bold; letter-spacing: 1px;">🔄 ANA EKRANA DÖN</button>
                     `;
                 }
 
                 // 🎮 OYUNLAŞTIRMA (GAMIFICATION) VE ROZET HESAPLAMA MOTORU
                 try {
-                    const { data: allStoreLogs } = await _supabase.from('logs').select('*');
+                    const allStoreLogs = await window.ShiftTurboShared.syncLogs(_supabase);
                     if (allStoreLogs && allStoreLogs.length > 0) {
                         const staffNames = [...new Set(allStoreLogs.map(l => l.personel_name || l.personel))].filter(Boolean);
                         let bestStaffName = "";
@@ -2540,36 +2486,17 @@
                         let currentUserHasViolation = false;
 
                         staffNames.forEach(pName => {
-                            let pScore = 100;
+                            let pScore = window.calculateScore(pName, allStoreLogs);
                             let pViolation = false;
+                            // Konum ihlali kontrolü (rozet hesabı için)
                             const pLogs = allStoreLogs
-                                .filter(l => ((l.personel_name || l.personel || "").trim().toLocaleUpperCase('tr-TR') === (pName || "").trim().toLocaleUpperCase('tr-TR')))
-                                .sort((a, b) => new Date(a.created_at || a.raw_time) - new Date(b.created_at || b.raw_time));
-
-                            if (pLogs.length > 0) {
-                                for (let i = 0; i < pLogs.length; i++) {
-                                    if (pLogs[i].type === 'GİRİŞ') {
-                                        const girisZamani = new Date(pLogs[i].created_at || pLogs[i].raw_time);
-                                        let cikisLogu = null;
-                                        for (let j = i + 1; j < pLogs.length; j++) {
-                                            if (pLogs[j].type === 'ÇIKIŞ') { cikisLogu = pLogs[j]; break; }
-                                        }
-                                        let bitisZamani = cikisLogu ? new Date(cikisLogu.created_at || cikisLogu.raw_time) : new Date();
-                                        let saatFarki = (bitisZamani - girisZamani) / 3600000;
-                                        if (saatFarki > 10.5) pScore -= 15;
-                                    }
+                                .filter(l => ((l.personel_name || l.personel || "").trim().toLocaleUpperCase('tr-TR') === (pName || "").trim().toLocaleUpperCase('tr-TR')));
+                            pLogs.forEach(l => {
+                                if (l.mahalle && l.mahalle.includes('DOĞRULUK:')) {
+                                    const match = l.mahalle.match(/DOĞRULUK:\s*(\d+)m/);
+                                    if (match && parseInt(match[1]) > 300) { pViolation = true; }
                                 }
-
-                                pLogs.forEach(l => {
-                                    if (l.mahalle && l.mahalle.includes('DOĞRULUK:')) {
-                                        const match = l.mahalle.match(/DOĞRULUK:\s*(\d+)m/);
-                                        if (match && parseInt(match[1]) > 300) { pScore -= 5; pViolation = true; }
-                                    }
-                                });
-
-                                pScore += Math.floor(pLogs.length / 5) * 2;
-                                pScore = Math.min(Math.max(pScore, 10), 100);
-                            }
+                            });
 
                             if (pScore > maxScore) { maxScore = pScore; bestStaffName = pName; }
                             if (pName.toLocaleUpperCase('tr-TR') === user.toLocaleUpperCase('tr-TR')) { currentUserScore = pScore; currentUserHasViolation = pViolation; }
@@ -2636,26 +2563,8 @@
                         if (currentUserForRealtime) localStorage.setItem('shiftTurbo_last_status_' + currentUserForRealtime, 'ÇIKIŞ');
                         if (typeof playSound === 'function') playSound('error');
 
-                        const mainActions = document.getElementById('main-actions');
-                        const confirmBox = document.getElementById('confirm-box');
-                        const pinPad = document.getElementById('pin-pad');
-                        const gamificationCard = document.getElementById('gamification-card');
-                        const scanBtn = document.getElementById('scanBtn');
-                        const greetingEl = document.getElementById('greeting');
-                        const actionConfirm = document.getElementById('action-confirm');
-                        if (mainActions) mainActions.style.display = 'none';
-                        if (confirmBox) confirmBox.style.display = 'none';
-                        if (pinPad) pinPad.style.display = 'none';
-                        if (gamificationCard) gamificationCard.style.display = 'none';
-                        if (actionConfirm) actionConfirm.style.display = 'none';
-                        if (greetingEl) greetingEl.innerText = "SİSTEM BAĞLANTISI";
-                        if (scanBtn) scanBtn.style.display = 'block';
-
-                        localStorage.removeItem('shiftTurbo_user');
-                        localStorage.removeItem('auth_active');
-                        localStorage.removeItem('isShiftActive');
-                        localStorage.removeItem('temp_user_name');
-                        localStorage.removeItem('temp_user_pin');
+                        resetToScanScreen();
+                        clearTerminalSession();
 
                         const errorMsgBody = document.getElementById('error-msg-body');
                         const errorModal = document.getElementById('error-modal');

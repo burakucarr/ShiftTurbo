@@ -13,3 +13,7 @@ config.js
 # OS dosyaları
 .DS_Store
 Thumbs.db
+
+# Wrangler / Build files
+.wrangler/
+

@@ -50,10 +50,13 @@
 ## 🚀 Başlangıç ve Kurulum (Getting Started)
 
 1. **Supabase Kurulumu:** Supabase üzerinde projenizi oluşturun ve gerekli veritabanı tablolarını (`users`, `logs` vb.) tanımlayın.
-2. **Yapılandırma:** `config.example.js` dosyasının adını `config.js` yapın ve Supabase URL ile API anahtarlarınızı girin:
+2. **Yapılandırma:** `config.example.js` dosyasının adını `config.js` yapın ve Supabase URL ile API anahtarlarınızı girin.
+   Bu, proxy hizmetiniz çalışmadığında veya doğrudan testi yapmak istediğinizde otomatik yedekleme sağlar.
    ```javascript
-   const SUPABASE_URL = "PROJE_URL_ADRESINIZ";
-   const SUPABASE_KEY = "PROJE_ANON_ANAHTARINIZ";
+   const SHIFTURBO_CONFIG = {
+       supabaseUrl: 'https://PROJE-ID.supabase.co',
+       supabaseKey: 'eyJ... (Supabase > Settings > API > anon public key)'
+   };
    ```
 3. **Çalıştırma:** Tarayıcınızda doğrudan `index.html` veya `yonetici.html` dosyasını açabilir ya da yerel bir geliştirme sunucusu (örn: Live Server, Wrangler) üzerinden PWA özelliklerini test edebilirsiniz.
 

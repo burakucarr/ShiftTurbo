@@ -1,11 +1,24 @@
 (() => {
     let isAuthenticated = false;
-    const supabaseUrl = 'https://tnvjdppcyctmqkirlwmy.supabase.co';
-    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRudmpkcHBjeWN0bXFraXJsd215Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3MzY0NTIsImV4cCI6MjA4ODMxMjQ1Mn0.Ft4JXQtbcXz1-qO7n06fV1vGtP4DbCVUWDojEAFoALI';
-    const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
-    window._supabase = _supabase;
+    // 🛡️ SHIFTURBO — SECURE PROXY CONNECTION
+    const proxyUrl = 'https://shifturbo-proxy.burakkucar55-5af.workers.dev';
+    const localSupabaseConfig = (typeof SHIFTURBO_CONFIG !== 'undefined' && SHIFTURBO_CONFIG && SHIFTURBO_CONFIG.supabaseUrl && SHIFTURBO_CONFIG.supabaseKey)
+        ? SHIFTURBO_CONFIG
+        : null;
+
+    let _supabase = null;
+    let _supabaseClientType = 'proxy';
     window.allLogs = [];
     let lastLogCount = 0;
+
+    // testSupabaseClient ve initSupabaseClient → shared.js'den gelir (window.ShiftTurboShared)
+
+    window.addEventListener('load', async () => {
+        const _initResult = await window.ShiftTurboShared.initSupabaseClient(proxyUrl, localSupabaseConfig);
+        _supabase = _initResult.client;
+        _supabaseClientType = _initResult.type;
+        window._supabase = _supabase;
+    });
     let isActiveStaffMode = false;
     let autoRefreshInterval = null;
     let realtimeChannel = null;
@@ -19,8 +32,26 @@
         });
     }
 
-    // 🔐 Oturum Kalıcılığı (Session Persistence)
-    window.addEventListener('DOMContentLoaded', async () => {
+    // 🔐 Oturum Kalıcılığı ve Şifre Sıfırlama Kontrolü
+    const checkRecoveryAndAuth = async () => {
+        // Şifre sıfırlama veya Davet linkinden gelip gelmediğimizi kontrol et
+        const isRecovery = (window.location.hash && (window.location.hash.includes('type=recovery') || window.location.hash.includes('type=invite') || window.location.hash.includes('access_token='))) ||
+            (window.location.search && (window.location.search.includes('type=recovery') || window.location.search.includes('type=invite')));
+
+        if (isRecovery) {
+            console.log("🔐 Şifre sıfırlama modu algılandı...");
+            const loginOv = document.getElementById("loginOverlay");
+            const resetOv = document.getElementById("passwordResetOverlay");
+            if (loginOv) loginOv.style.opacity = "0";
+            if (loginOv) setTimeout(() => loginOv.style.display = "none", 300);
+            if (resetOv) {
+                resetOv.style.display = "flex";
+                resetOv.style.opacity = "0";
+                setTimeout(() => resetOv.style.opacity = "1", 100);
+            }
+            return;
+        }
+
         if (localStorage.getItem('shiftTurbo_admin_logged_in') === 'true') {
             isAuthenticated = true;
             showPanel();
@@ -32,7 +63,10 @@
                 showPanel();
             }
         }
-    });
+    };
+
+    window.addEventListener('load', checkRecoveryAndAuth);
+    window.addEventListener('hashchange', checkRecoveryAndAuth);
 
     // 🔐 BRUTE-FORCE KORUMA SİSTEMİ
     const MAX_ATTEMPTS = 5;           // Maksimum hatalı deneme
@@ -118,6 +152,27 @@
             showToast("HESAP KİLİTLİ", `Çok fazla hatalı giriş. Lütfen bekleyin.`, "error");
         }
     });
+
+    async function updatePassword() {
+        const newPass = document.getElementById("newPassword").value;
+        if (!newPass) {
+            showToast("HATA", "Lütfen bir şifre girin.", "error");
+            return;
+        }
+
+        try {
+            const { error } = await _supabase.auth.updateUser({ password: newPass });
+            if (error) throw error;
+            showToast("BAŞARILI", "Şifreniz güncellendi. Giriş yapabilirsiniz.", "success");
+            setTimeout(() => {
+                window.location.hash = "";
+                location.reload();
+            }, 2000);
+        } catch (err) {
+            showToast("HATA", err.message, "error");
+        }
+    }
+    window.updatePassword = updatePassword;
 
     async function nextStep() {
         // 🚫 Kilit kontrolü
@@ -333,7 +388,7 @@ function checkNewNotifications(logs) {
 async function fetchData() {
     if (!isAuthenticated) return;
     // Not: Filtreleri sıfırlamıyoruz ki kullanıcı tarih seçip yenile deyince gitmesin.
-    const { data } = await _supabase.from('logs').select('*').order('created_at', { ascending: false });
+    const data = await window.ShiftTurboShared.syncLogs(_supabase);
 
 
     const cleanData = [];
@@ -633,39 +688,7 @@ function updateTrendGraph() {
     if (document.getElementById('trendPath')) document.getElementById('trendPath').setAttribute('d', pathData);
 }
 
-function calculateScore(personName) {
-    let score = 100;
-    if (!window.allLogs || window.allLogs.length === 0) return score;
-
-    const pLogs = window.allLogs
-        .filter(l => (l.personel || "").trim().toLocaleUpperCase('tr-TR') === (personName || "").trim().toLocaleUpperCase('tr-TR'))
-        .sort((a, b) => new Date(a.raw_time) - new Date(b.raw_time));
-
-    if (pLogs.length === 0) return score;
-
-    for (let i = 0; i < pLogs.length; i++) {
-        if (pLogs[i].type === 'GİRİŞ') {
-            const girisZamani = new Date(pLogs[i].raw_time);
-            let cikisLogu = null;
-            for (let j = i + 1; j < pLogs.length; j++) {
-                if (pLogs[j].type === 'ÇIKIŞ') { cikisLogu = pLogs[j]; break; }
-            }
-            let bitisZamani = cikisLogu ? new Date(cikisLogu.raw_time) : new Date();
-            let saatFarki = (bitisZamani - girisZamani) / 3600000;
-            if (saatFarki > 10.5) score -= 15;
-        }
-    }
-
-    pLogs.forEach(log => {
-        if (log.mahalle && log.mahalle.includes('DOĞRULUK:')) {
-            const match = log.mahalle.match(/DOĞRULUK:\s*(\d+)m/);
-            if (match && parseInt(match[1]) > 300) score -= 5;
-        }
-    });
-
-    score += Math.floor(pLogs.length / 5) * 2;
-    return Math.min(Math.max(score, 10), 100);
-}
+// calculateScore → shared.js'den gelir (window.calculateScore)
 
 function runAIAnalysis() {
     const names = [...new Set(window.allLogs.map(l => l.personel))]
@@ -854,20 +877,7 @@ function applyFilter(fromUser = true) {
     const logTableEl = document.getElementById('logTable');
     if (logTableEl) {
         // OPTİMİZASYON: Logları tek geçişte grupla ve skor önbelleği oluştur
-        const personLogsMap = {};
-        const sortedPersonLogsMap = {};
-        window.allLogs.forEach(l => {
-            const p = l.personel;
-            if (!personLogsMap[p]) personLogsMap[p] = [];
-            personLogsMap[p].push(l);
-        });
-        const scoreCache = {};
-        const getCachedScore = (person) => {
-            if (scoreCache[person] === undefined) {
-                scoreCache[person] = calculateScore(person);
-            }
-            return scoreCache[person];
-        };
+        const { personLogsMap, sortedPersonLogsMap, getCachedScore } = window.buildLogDataCache(window.allLogs);
 
         logTableEl.innerHTML = filtered.map(log => {
             const pLogs = personLogsMap[log.personel] || [];
@@ -987,20 +997,7 @@ function renderCustomTable(data) {
     if (!table) return;
 
     // OPTİMİZASYON: Logları tek geçişte grupla ve skor önbelleği oluştur
-    const personLogsMap = {};
-    const sortedPersonLogsMap = {};
-    allLogs.forEach(l => {
-        const p = l.personel;
-        if (!personLogsMap[p]) personLogsMap[p] = [];
-        personLogsMap[p].push(l);
-    });
-    const scoreCache = {};
-    const getCachedScore = (person) => {
-        if (scoreCache[person] === undefined) {
-            scoreCache[person] = calculateScore(person);
-        }
-        return scoreCache[person];
-    };
+    const { personLogsMap, sortedPersonLogsMap, getCachedScore } = window.buildLogDataCache(allLogs);
 
     table.innerHTML = data.map(log => {
         const pLogs = personLogsMap[log.personel] || [];
@@ -1174,7 +1171,7 @@ async function exportPDF() {
 
     // 2. 💸 OTONOM HAKEDİŞ VE MAAŞ TABLOSU VERİLERİNİ TOPLA
     const financeTableData = [];
-    const rates = JSON.parse(localStorage.getItem('shiftTurbo_hourly_rates') || '{}');
+    const rates = window.ShiftTurboShared.getObfuscated('shiftTurbo_hourly_rates') || {};
     const users = window.allUsers || [];
     let grandTotalPay = 0;
 

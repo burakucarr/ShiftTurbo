@@ -10,6 +10,9 @@
     --card: rgba(15, 23, 42, 0.7);
     --glass: rgba(255, 255, 255, 0.03);
     --border: rgba(255, 255, 255, 0.1);
+    --text-main: #ffffff;
+    --text-muted: #64748b;
+    --text-sub: #cbd5e1;
     --success: #10b981;
     --error: #ef4444;
     --ai-glow: rgba(139, 92, 246, 0.4);
@@ -23,11 +26,12 @@
     --border: rgba(0, 0, 0, 0.15);
     --text-main: #0f172a;
     --text-muted: #64748b;
+    --text-sub: #334155;
 }
 
 /* 🔤 GLOBAL RESET & BASE */
-* { 
-    box-sizing: border-box; 
+* {
+    box-sizing: border-box;
     scrollbar-width: thin;
     scrollbar-color: rgba(16, 185, 129, 0.5) #0f172a;
 }
@@ -39,16 +43,19 @@
     width: 6px;
     height: 6px;
 }
+
 ::-webkit-scrollbar-track {
     background: #0f172a;
     border-radius: 8px;
 }
+
 ::-webkit-scrollbar-thumb {
     background: rgba(16, 185, 129, 0.4);
     border-radius: 8px;
     border: 1px solid rgba(16, 185, 129, 0.2);
     transition: background 0.3s ease;
 }
+
 ::-webkit-scrollbar-thumb:hover {
     background: rgba(16, 185, 129, 0.8);
     box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
@@ -58,62 +65,143 @@ body {
     font-family: 'Poppins', sans-serif;
     margin: 0;
     min-height: 100vh;
-    color: white;
+    color: var(--text-main);
 }
 
 /* 🎬 GLOBAL ANIMATIONS */
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 @keyframes shake {
-    0%, 100% { transform: translateX(0); }
-    25% { transform: translateX(-10px); }
-    75% { transform: translateX(10px); }
+
+    0%,
+    100% {
+        transform: translateX(0);
+    }
+
+    25% {
+        transform: translateX(-10px);
+    }
+
+    75% {
+        transform: translateX(10px);
+    }
 }
 
 @keyframes statusBarPulse {
-    0%, 100% { opacity: 1; filter: brightness(1); }
-    50% { opacity: 0.6; filter: brightness(1.5); }
+
+    0%,
+    100% {
+        opacity: 1;
+        filter: brightness(1);
+    }
+
+    50% {
+        opacity: 0.6;
+        filter: brightness(1.5);
+    }
 }
 
 @keyframes dataStream {
-    0% { transform: translateY(0); }
-    100% { transform: translateY(200%); }
+    0% {
+        transform: translateY(0);
+    }
+
+    100% {
+        transform: translateY(200%);
+    }
 }
 
 @keyframes scannerGlow {
-    0% { box-shadow: 0 0 5px var(--primary); }
-    50% { box-shadow: 0 0 25px var(--primary); }
-    100% { box-shadow: 0 0 5px var(--primary); }
+    0% {
+        box-shadow: 0 0 5px var(--primary);
+    }
+
+    50% {
+        box-shadow: 0 0 25px var(--primary);
+    }
+
+    100% {
+        box-shadow: 0 0 5px var(--primary);
+    }
 }
 
 @keyframes spin {
-    100% { transform: rotate(360deg); }
+    100% {
+        transform: rotate(360deg);
+    }
 }
 
 @keyframes pulse {
-    50% { opacity: 0.5; }
+    50% {
+        opacity: 0.5;
+    }
 }
 
 @keyframes ucrPulse {
-    0% { transform: scale(1); opacity: 1; filter: brightness(1); }
-    50% { transform: scale(1.3); opacity: 0.6; filter: brightness(1.5); }
-    100% { transform: scale(1); opacity: 1; filter: brightness(1); }
+    0% {
+        transform: scale(1);
+        opacity: 1;
+        filter: brightness(1);
+    }
+
+    50% {
+        transform: scale(1.3);
+        opacity: 0.6;
+        filter: brightness(1.5);
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 1;
+        filter: brightness(1);
+    }
 }
 
 @keyframes planeFly {
-    0% { transform: translate(0, 0) scale(1) rotate(0deg); opacity: 1; }
-    20% { transform: translate(-10px, 10px) scale(1.1) rotate(-10deg); }
-    100% { transform: translate(300px, -300px) scale(0) rotate(15deg); opacity: 0; }
+    0% {
+        transform: translate(0, 0) scale(1) rotate(0deg);
+        opacity: 1;
+    }
+
+    20% {
+        transform: translate(-10px, 10px) scale(1.1) rotate(-10deg);
+    }
+
+    100% {
+        transform: translate(300px, -300px) scale(0) rotate(15deg);
+        opacity: 0;
+    }
 }
 
 /* 🎭 UTILITY CLASSES */
-.shake { animation: shake 0.3s ease-in-out; border-color: var(--error) !important; }
-.fade-in { animation: fadeIn 0.4s ease-out forwards; }
-.blink { animation: statusBarPulse 2s infinite; }
-.plane-animation { display: inline-block; font-size: 20px; animation: planeFly 1.5s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
+.shake {
+    animation: shake 0.3s ease-in-out;
+    border-color: var(--error) !important;
+}
+
+.fade-in {
+    animation: fadeIn 0.4s ease-out forwards;
+}
+
+.blink {
+    animation: statusBarPulse 2s infinite;
+}
+
+.plane-animation {
+    display: inline-block;
+    font-size: 20px;
+    animation: planeFly 1.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
 
 /* 📊 STATUS BAR */
 #status-bar {
@@ -169,7 +257,8 @@ body {
 }
 
 /* ⏰ TIME DISPLAY */
-.time-display, .time-display-login {
+.time-display,
+.time-display-login {
     font-family: 'Orbitron', sans-serif;
     font-size: 64px;
     font-weight: 200;
@@ -182,7 +271,8 @@ body {
     margin: 0;
 }
 
-.date-display, .date-display-login {
+.date-display,
+.date-display-login {
     font-family: 'Orbitron', sans-serif;
     font-size: 10px;
     font-weight: 300;
@@ -246,19 +336,44 @@ body {
 .about-value {
     font-family: 'Poppins';
     font-size: 11px;
-    color: #cbd5e1;
+    color: var(--text-sub);
     font-weight: 500;
 }
 
 /* 🏗️ BRAND SIGNATURE (shared elements) */
-.arch-signature { margin-top: 30px; opacity: 0.25; pointer-events: none; transition: opacity 0.5s ease; }
-.arch-label { font-family: 'Orbitron'; font-size: 6px; letter-spacing: 3px; color: var(--primary); display: block; margin-bottom: 2px; }
-.arch-name { font-family: 'Orbitron'; font-size: 9px; font-weight: 400; color: rgba(255, 255, 255, 0.7); letter-spacing: 2px; }
+.arch-signature {
+    margin-top: 30px;
+    opacity: 0.25;
+    pointer-events: none;
+    transition: opacity 0.5s ease;
+}
+
+.arch-label {
+    font-family: 'Orbitron';
+    font-size: 6px;
+    letter-spacing: 3px;
+    color: var(--primary);
+    display: block;
+    margin-bottom: 2px;
+}
+
+.arch-name {
+    font-family: 'Orbitron';
+    font-size: 9px;
+    font-weight: 400;
+    color: rgba(255, 255, 255, 0.7);
+    letter-spacing: 2px;
+}
 
 /* 📡 DUYURU BANNER */
 @keyframes broadcastGlow {
-    0% { background-position: 0% center; }
-    100% { background-position: 200% center; }
+    0% {
+        background-position: 0% center;
+    }
+
+    100% {
+        background-position: 200% center;
+    }
 }
 
 #broadcast-banner {
@@ -282,8 +397,16 @@ body {
 }
 
 /* 🔐 ERROR & STATUS */
-.status-error { color: var(--error) !important; opacity: 1 !important; }
-#status.success-glow { color: var(--success) !important; text-shadow: 0 0 15px var(--success); transition: 0.3s; }
+.status-error {
+    color: var(--error) !important;
+    opacity: 1 !important;
+}
+
+#status.success-glow {
+    color: var(--success) !important;
+    text-shadow: 0 0 15px var(--success);
+    transition: 0.3s;
+}
 
 /* ============================================
    📱 RESPONSIVE — MOBILE FIRST
@@ -297,7 +420,8 @@ body {
         right: 10px !important;
     }
 
-    .time-display, .time-display-login {
+    .time-display,
+    .time-display-login {
         font-size: 48px;
     }
 
@@ -308,12 +432,15 @@ body {
 }
 
 @media (max-width: 480px) {
-    .time-display, .time-display-login {
+
+    .time-display,
+    .time-display-login {
         font-size: 40px;
         letter-spacing: -2px;
     }
 
-    .date-display, .date-display-login {
+    .date-display,
+    .date-display-login {
         font-size: 8px;
         letter-spacing: 3px;
     }

@@ -5,7 +5,14 @@
 
 // 🛡️ SHIFTURBO — SECURE PROXY CONNECTION
 const proxyUrl = 'https://shifturbo-proxy.burakkucar55-5af.workers.dev';
-const _supabase = supabase.createClient(proxyUrl, 'proxy-authenticated');
+const localSupabaseConfig = (typeof SHIFTURBO_CONFIG !== 'undefined' && SHIFTURBO_CONFIG && SHIFTURBO_CONFIG.supabaseUrl && SHIFTURBO_CONFIG.supabaseKey)
+    ? SHIFTURBO_CONFIG
+    : null;
+
+let _supabase = null;
+let _supabaseClientType = 'proxy';
+
+// testSupabaseClient ve initSupabaseClient → shared.js'den gelir (window.ShiftTurboShared)
 
 let html5QrCode = null;
 let currentPin = "";
@@ -21,18 +28,24 @@ if ('serviceWorker' in navigator) {
     });
 }
 
+window.addEventListener('load', async () => {
+    const result = await window.ShiftTurboShared.initSupabaseClient(proxyUrl, localSupabaseConfig);
+    _supabase = result.client;
+    _supabaseClientType = result.type;
+});
+
 // 🔄 Çevrimdışı Kuyruk Eşitleyici (Offline Sync Engine - Mutex Locked)
 let isSyncingOffline = false;
 async function syncOfflineQueue() {
     if (!navigator.onLine || isSyncingOffline) return;
-    const offlineQueue = JSON.parse(localStorage.getItem('shiftTurbo_offline_queue') || '[]');
+    const offlineQueue = window.ShiftTurboShared.getObfuscated('shiftTurbo_offline_queue') || [];
     if (offlineQueue.length === 0) return;
 
     isSyncingOffline = true;
     console.log(`🔄 Çevrimdışı kuyrukta ${offlineQueue.length} kayıt bulundu. Supabase'e aktarılıyor...`);
 
     // YARIŞ DURUMUNU ÖNLEMEK İÇİN KUYRUĞU ANINDA BOŞALT!!! (Başka eventler aynı veriyi kapmasın)
-    localStorage.setItem('shiftTurbo_offline_queue', '[]');
+    window.ShiftTurboShared.setObfuscated('shiftTurbo_offline_queue', []);
 
     const failedItems = [];
 
@@ -60,15 +73,11 @@ async function syncOfflineQueue() {
 
     // Eğer başarısız olanlar varsa, güncel localStorage kuyruğu ile birleştirip geri yaz
     if (failedItems.length > 0) {
-        const currentQueue = JSON.parse(localStorage.getItem('shiftTurbo_offline_queue') || '[]');
-        localStorage.setItem('shiftTurbo_offline_queue', JSON.stringify([...failedItems, ...currentQueue]));
+        const currentQueue = window.ShiftTurboShared.getObfuscated('shiftTurbo_offline_queue') || [];
+        window.ShiftTurboShared.setObfuscated('shiftTurbo_offline_queue', [...failedItems, ...currentQueue]);
     } else {
         console.log("🎉 Tüm çevrimdışı kuyruk başarıyla temizlendi.");
-        // AKTARIM BİTTİĞİ AN EKRANI OTOMATİK YENİLE (Kullanıcının önüne anında MESAİ BİTİR gelsin!!!)
-        if (localStorage.getItem('shiftTurbo_user')) {
-            console.log("🔄 Çevrimdışı aktarım tamamlandı, arayüz güncelleniyor...");
-            setTimeout(() => { location.reload(); }, 1000);
-        }
+        // OTOMATİK YENİLEME KALDIRILDI - Akışı bozmamak için
     }
 
     isSyncingOffline = false;
@@ -178,39 +187,7 @@ function updateTime() {
 }
 setInterval(updateTime, 1000); updateTime();
 
-function acceptKVKK() {
-    localStorage.setItem('shiftTurbo_kvkk', 'true');
-    if (typeof playSound === "function") playSound('success');
-    const overlay = document.getElementById('kvkk-overlay');
-    if (overlay) overlay.style.display = 'none';
-    console.log("🛡️ KVKK Protokolü Onaylandı.");
-    location.reload();
-}
-
-function initKVKK() {
-    const hasAccepted = localStorage.getItem('shiftTurbo_kvkk');
-    const overlay = document.getElementById('kvkk-overlay');
-    const checkbox = document.getElementById('kvkk-check');
-    const btn = document.getElementById('kvkk-btn');
-
-    if (hasAccepted !== 'true') {
-        if (overlay) overlay.style.display = 'flex';
-        if (checkbox && btn) {
-            checkbox.addEventListener('change', function () {
-                if (this.checked) {
-                    btn.style.opacity = "1";
-                    btn.style.pointerEvents = "auto";
-                    if (typeof playSound === "function") playSound('tap');
-                } else {
-                    btn.style.opacity = "0.3";
-                    btn.style.pointerEvents = "none";
-                }
-            });
-        }
-    } else {
-        if (overlay) overlay.style.display = 'none';
-    }
-}
+// acceptKVKK ve initKVKK eski sürümleri kaldırıldı (aktif sürümler dosyanın sonunda: window.acceptKVKK ve checkKVKKStatus)
 
 function createNumPad() {
     const grid = document.getElementById('numpad-grid');
@@ -375,10 +352,7 @@ async function executeAction() {
     if (okBtn) okBtn.disabled = true; // ÇİFT TIKLAMAYI ENGELLE
 
     if (isSyncingOffline) {
-        playSound('error');
-        document.getElementById('status').innerText = "🔄 ÇEVRİMDİŞI KAYITLAR AKTARILIYOR... (Lütfen Bekleyin)";
-        if (okBtn) okBtn.disabled = false;
-        return;
+        console.log("🔄 Arka planda eşitleme sürüyor, ancak işleme devam ediliyor...");
     }
     window.isExecutingAction = true; // Realtime kanalı sinsi reload atmasın diye bayrak açıldı!
     const type = pendingType;
@@ -388,30 +362,24 @@ async function executeAction() {
     let cloudTime = 0;
     if (navigator.onLine) {
         try {
-            const res = await _supabase
+            const { data: myLogs, error: logError } = await _supabase
                 .from('logs')
-                .select('type, personel, personel_name, created_at')
+                .select('type, created_at')
+                .eq('personel_name', name)
                 .in('type', ['GİRİŞ', 'ÇIKIŞ'])
                 .order('created_at', { ascending: false })
-                .limit(500);
-            if (res && res.data) {
-                const myLogs = res.data.filter(l => {
-                    const n1 = (l.personel_name || "").trim().toLocaleUpperCase('tr-TR');
-                    const n2 = (l.personel || "").trim().toLocaleUpperCase('tr-TR');
-                    const me = (name || "").trim().toLocaleUpperCase('tr-TR');
-                    return n1 === me || n2 === me;
-                });
-                if (myLogs.length > 0) {
-                    buluttakiSonDurum = myLogs[0].type;
-                    cloudTime = new Date(myLogs[0].created_at).getTime();
-                    localStorage.setItem('shiftTurbo_last_status_' + name, buluttakiSonDurum);
-                }
+                .limit(1);
+
+            if (!logError && myLogs && myLogs.length > 0) {
+                buluttakiSonDurum = myLogs[0].type;
+                cloudTime = new Date(myLogs[0].created_at).getTime();
+                localStorage.setItem('shiftTurbo_last_status_' + name, buluttakiSonDurum);
             }
         } catch (e) { console.warn("Supabase son durum çekilemedi:", e); }
     }
 
     // HİBRİT KONTROL: Çevrimdışı kuyrukta bu personele ait DAHA YENİ bir işlem var mı?
-    const currentOfflineQueue = JSON.parse(localStorage.getItem('shiftTurbo_offline_queue') || '[]');
+    const currentOfflineQueue = window.ShiftTurboShared.getObfuscated('shiftTurbo_offline_queue') || [];
     const personOfflineLogs = currentOfflineQueue.filter(item => item.personel_name === name);
     if (personOfflineLogs.length > 0) {
         const lastOfflineItem = personOfflineLogs[personOfflineLogs.length - 1];
@@ -429,21 +397,7 @@ async function executeAction() {
         document.getElementById('status').innerText = "❌ ZATEN ÇIKIŞ YAPILMIŞ!";
 
         // ANINDA GİZLE:
-        const mainActions = document.getElementById('main-actions');
-        const confirmBox = document.getElementById('confirm-box');
-        const pinPad = document.getElementById('pin-pad');
-        const gamificationCard = document.getElementById('gamification-card');
-        const actionConfirm = document.getElementById('action-confirm');
-        const scanBtn = document.getElementById('scanBtn');
-        const greetingEl = document.getElementById('greeting');
-
-        if (mainActions) mainActions.style.display = 'none';
-        if (confirmBox) confirmBox.style.display = 'none';
-        if (pinPad) pinPad.style.display = 'none';
-        if (gamificationCard) gamificationCard.style.display = 'none';
-        if (actionConfirm) actionConfirm.style.display = 'none';
-        if (greetingEl) greetingEl.innerText = "SİSTEM BAĞLANTISI";
-        if (scanBtn) scanBtn.style.display = 'block';
+        resetToScanScreen();
 
         const errorMsgBody = document.getElementById('error-msg-body');
         const errorModal = document.getElementById('error-modal');
@@ -453,11 +407,7 @@ async function executeAction() {
         }
         try { speakAI("Sayın personel, sistemde daha önceden çıkış yaptınız. Çıkış kaydınız zaten mevcuttur."); } catch (e) { }
 
-        localStorage.removeItem('shiftTurbo_user');
-        localStorage.removeItem('auth_active');
-        localStorage.removeItem('isShiftActive');
-        localStorage.removeItem('temp_user_name');
-        localStorage.removeItem('temp_user_pin');
+        clearTerminalSession();
 
         setTimeout(() => {
             if (errorModal) errorModal.style.display = 'none';
@@ -471,16 +421,7 @@ async function executeAction() {
         document.getElementById('status').innerText = "❌ ZATEN MESAİDESİNİZ!";
 
         // ANINDA GİZLE
-        const mainActions = document.getElementById('main-actions');
-        const confirmBox = document.getElementById('confirm-box');
-        const pinPad = document.getElementById('pin-pad');
-        const gamificationCard = document.getElementById('gamification-card');
-        const actionConfirm = document.getElementById('action-confirm');
-        if (mainActions) mainActions.style.display = 'none';
-        if (confirmBox) confirmBox.style.display = 'none';
-        if (pinPad) pinPad.style.display = 'none';
-        if (gamificationCard) gamificationCard.style.display = 'none';
-        if (actionConfirm) actionConfirm.style.display = 'none';
+        hideAllTerminalPanels();
 
         const errorMsgBody = document.getElementById('error-msg-body');
         const errorModal = document.getElementById('error-modal');
@@ -507,7 +448,7 @@ async function executeAction() {
             console.log("⚠️ İnternet bağlantısı yok! İşlem çevrimdışı kuyruğa alınıyor...");
             playSound('success');
 
-            const offlineQueue = JSON.parse(localStorage.getItem('shiftTurbo_offline_queue') || '[]');
+            const offlineQueue = window.ShiftTurboShared.getObfuscated('shiftTurbo_offline_queue') || [];
             const offlineRecord = {
                 offline_id: 'off_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now(),
                 personel_name: name,
@@ -519,7 +460,7 @@ async function executeAction() {
                 is_offline_sync: true
             };
             offlineQueue.push(offlineRecord);
-            localStorage.setItem('shiftTurbo_offline_queue', JSON.stringify(offlineQueue));
+            window.ShiftTurboShared.setObfuscated('shiftTurbo_offline_queue', offlineQueue);
             localStorage.setItem('shiftTurbo_last_status_' + name, type);
 
             // Çevrimdışı İşlem Başladı Ekranı (Kullanıcının istediği Güvenlik Protokolü ekranını ANINDA veriyoruz)
@@ -533,26 +474,8 @@ async function executeAction() {
                 window.isRedirectingNow = true;
                 console.log("🚀 Ses tamamen bitti veya garanti süre doldu, sayfa yönlendiriliyor!");
                 if (type === 'ÇIKIŞ') {
-                    const mainActions = document.getElementById('main-actions');
-                    const confirmBox = document.getElementById('confirm-box');
-                    const pinPad = document.getElementById('pin-pad');
-                    const gamificationCard = document.getElementById('gamification-card');
-                    const scanBtn = document.getElementById('scanBtn');
-                    const greetingEl = document.getElementById('greeting');
-                    const actionConfirm = document.getElementById('action-confirm');
-                    if (mainActions) mainActions.style.display = 'none';
-                    if (confirmBox) confirmBox.style.display = 'none';
-                    if (pinPad) pinPad.style.display = 'none';
-                    if (gamificationCard) gamificationCard.style.display = 'none';
-                    if (actionConfirm) actionConfirm.style.display = 'none';
-                    if (greetingEl) greetingEl.innerText = "SİSTEM BAĞLANTISI";
-                    if (scanBtn) scanBtn.style.display = 'block';
-
-                    localStorage.removeItem('shiftTurbo_user');
-                    localStorage.removeItem('auth_active');
-                    localStorage.removeItem('isShiftActive');
-                    localStorage.removeItem('temp_user_name');
-                    localStorage.removeItem('temp_user_pin');
+                    resetToScanScreen();
+                    clearTerminalSession();
                     window.location.replace(window.location.pathname + '?reset=' + Date.now());
                 } else {
                     localStorage.setItem('isShiftActive', 'true');
@@ -601,26 +524,8 @@ async function executeAction() {
                 window.isRedirectingNow = true;
                 console.log("🚀 Ses tamamen bitti veya garanti süre doldu, sayfa yönlendiriliyor!");
                 if (type === 'ÇIKIŞ') {
-                    const mainActions = document.getElementById('main-actions');
-                    const confirmBox = document.getElementById('confirm-box');
-                    const pinPad = document.getElementById('pin-pad');
-                    const gamificationCard = document.getElementById('gamification-card');
-                    const scanBtn = document.getElementById('scanBtn');
-                    const greetingEl = document.getElementById('greeting');
-                    const actionConfirm = document.getElementById('action-confirm');
-                    if (mainActions) mainActions.style.display = 'none';
-                    if (confirmBox) confirmBox.style.display = 'none';
-                    if (pinPad) pinPad.style.display = 'none';
-                    if (gamificationCard) gamificationCard.style.display = 'none';
-                    if (actionConfirm) actionConfirm.style.display = 'none';
-                    if (greetingEl) greetingEl.innerText = "SİSTEM BAĞLANTISI";
-                    if (scanBtn) scanBtn.style.display = 'block';
-
-                    localStorage.removeItem('shiftTurbo_user');
-                    localStorage.removeItem('auth_active');
-                    localStorage.removeItem('isShiftActive');
-                    localStorage.removeItem('temp_user_name');
-                    localStorage.removeItem('temp_user_pin');
+                    resetToScanScreen();
+                    clearTerminalSession();
                     window.location.replace(window.location.pathname + '?reset=' + Date.now());
                 } else {
                     localStorage.setItem('isShiftActive', 'true');
@@ -686,7 +591,7 @@ async function sendMessage() {
             console.log("⚠️ İnternet yok! Mesaj çevrimdışı kuyruğa alınıyor...");
             playSound('success');
             document.getElementById('status').innerText = "⚡ MESAJ ÇEVRİMDİŞI KAYDEDİLDİ";
-            const offlineQueue = JSON.parse(localStorage.getItem('shiftTurbo_offline_queue') || '[]');
+            const offlineQueue = window.ShiftTurboShared.getObfuscated('shiftTurbo_offline_queue') || [];
             offlineQueue.push({
                 offline_id: 'off_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now(),
                 personel_name: user,
@@ -696,7 +601,7 @@ async function sendMessage() {
                 device_time: new Date().toISOString(),
                 is_offline_sync: true
             });
-            localStorage.setItem('shiftTurbo_offline_queue', JSON.stringify(offlineQueue));
+            window.ShiftTurboShared.setObfuscated('shiftTurbo_offline_queue', offlineQueue);
             finishMessage();
             return;
         }
@@ -778,27 +683,24 @@ window.bootSystem = async () => {
         let cloudTime = 0;
         if (navigator.onLine) {
             try {
-                const res = await _supabase
-                    .from('logs').select('type, personel, personel_name, created_at')
-                    .in('type', ['GİRİŞ', 'ÇIKIŞ']).order('created_at', { ascending: false }).limit(500);
-                if (res && res.data) {
-                    const myLogs = res.data.filter(l => {
-                        const n1 = (l.personel_name || "").trim().toLocaleUpperCase('tr-TR');
-                        const n2 = (l.personel || "").trim().toLocaleUpperCase('tr-TR');
-                        const me = (user || "").trim().toLocaleUpperCase('tr-TR');
-                        return n1 === me || n2 === me;
-                    });
-                    if (myLogs.length > 0) {
-                        lastAction = myLogs[0].type;
-                        cloudTime = new Date(myLogs[0].created_at).getTime();
-                        localStorage.setItem('shiftTurbo_last_status_' + user, lastAction);
-                    }
+                const { data: myLogs, error: logError } = await _supabase
+                    .from('logs')
+                    .select('type, created_at')
+                    .eq('personel_name', user)
+                    .in('type', ['GİRİŞ', 'ÇIKIŞ'])
+                    .order('created_at', { ascending: false })
+                    .limit(1);
+
+                if (!logError && myLogs && myLogs.length > 0) {
+                    lastAction = myLogs[0].type;
+                    cloudTime = new Date(myLogs[0].created_at).getTime();
+                    localStorage.setItem('shiftTurbo_last_status_' + user, lastAction);
                 }
             } catch (e) { console.warn("Supabase buton durumu çekilemedi:", e); }
         }
 
         // HİBRİT KONTROL: Çevrimdışı kuyrukta bu personele ait DAHA YENİ bir işlem var mı?
-        const currentOfflineQueue = JSON.parse(localStorage.getItem('shiftTurbo_offline_queue') || '[]');
+        const currentOfflineQueue = window.ShiftTurboShared.getObfuscated('shiftTurbo_offline_queue') || [];
         const personOfflineLogs = currentOfflineQueue.filter(item => item.personel_name === user);
         if (personOfflineLogs.length > 0) {
             const lastOfflineItem = personOfflineLogs[personOfflineLogs.length - 1];
@@ -828,7 +730,7 @@ window.bootSystem = async () => {
 
         // 🎮 OYUNLAŞTIRMA (GAMIFICATION) VE ROZET HESAPLAMA MOTORU
         try {
-            const { data: allStoreLogs } = await _supabase.from('logs').select('*');
+            const allStoreLogs = await window.ShiftTurboShared.syncLogs(_supabase);
             if (allStoreLogs && allStoreLogs.length > 0) {
                 const staffNames = [...new Set(allStoreLogs.map(l => l.personel_name || l.personel))].filter(Boolean);
                 let bestStaffName = "";
@@ -837,36 +739,17 @@ window.bootSystem = async () => {
                 let currentUserHasViolation = false;
 
                 staffNames.forEach(pName => {
-                    let pScore = 100;
+                    let pScore = window.calculateScore(pName, allStoreLogs);
                     let pViolation = false;
+                    // Konum ihlali kontrolü (rozet hesabı için)
                     const pLogs = allStoreLogs
-                        .filter(l => ((l.personel_name || l.personel || "").trim().toLocaleUpperCase('tr-TR') === (pName || "").trim().toLocaleUpperCase('tr-TR')))
-                        .sort((a, b) => new Date(a.created_at || a.raw_time) - new Date(b.created_at || b.raw_time));
-
-                    if (pLogs.length > 0) {
-                        for (let i = 0; i < pLogs.length; i++) {
-                            if (pLogs[i].type === 'GİRİŞ') {
-                                const girisZamani = new Date(pLogs[i].created_at || pLogs[i].raw_time);
-                                let cikisLogu = null;
-                                for (let j = i + 1; j < pLogs.length; j++) {
-                                    if (pLogs[j].type === 'ÇIKIŞ') { cikisLogu = pLogs[j]; break; }
-                                }
-                                let bitisZamani = cikisLogu ? new Date(cikisLogu.created_at || cikisLogu.raw_time) : new Date();
-                                let saatFarki = (bitisZamani - girisZamani) / 3600000;
-                                if (saatFarki > 10.5) pScore -= 15;
-                            }
+                        .filter(l => ((l.personel_name || l.personel || "").trim().toLocaleUpperCase('tr-TR') === (pName || "").trim().toLocaleUpperCase('tr-TR')));
+                    pLogs.forEach(l => {
+                        if (l.mahalle && l.mahalle.includes('DOĞRULUK:')) {
+                            const match = l.mahalle.match(/DOĞRULUK:\s*(\d+)m/);
+                            if (match && parseInt(match[1]) > 300) { pViolation = true; }
                         }
-
-                        pLogs.forEach(l => {
-                            if (l.mahalle && l.mahalle.includes('DOĞRULUK:')) {
-                                const match = l.mahalle.match(/DOĞRULUK:\s*(\d+)m/);
-                                if (match && parseInt(match[1]) > 300) { pScore -= 5; pViolation = true; }
-                            }
-                        });
-
-                        pScore += Math.floor(pLogs.length / 5) * 2;
-                        pScore = Math.min(Math.max(pScore, 10), 100);
-                    }
+                    });
 
                     if (pScore > maxScore) { maxScore = pScore; bestStaffName = pName; }
                     if (pName.toLocaleUpperCase('tr-TR') === user.toLocaleUpperCase('tr-TR')) { currentUserScore = pScore; currentUserHasViolation = pViolation; }
@@ -932,26 +815,8 @@ window.bootSystem = async () => {
                 if (currentUserForRealtime) localStorage.setItem('shiftTurbo_last_status_' + currentUserForRealtime, 'ÇIKIŞ');
                 if (typeof playSound === 'function') playSound('error');
 
-                const mainActions = document.getElementById('main-actions');
-                const confirmBox = document.getElementById('confirm-box');
-                const pinPad = document.getElementById('pin-pad');
-                const gamificationCard = document.getElementById('gamification-card');
-                const scanBtn = document.getElementById('scanBtn');
-                const greetingEl = document.getElementById('greeting');
-                const actionConfirm = document.getElementById('action-confirm');
-                if (mainActions) mainActions.style.display = 'none';
-                if (confirmBox) confirmBox.style.display = 'none';
-                if (pinPad) pinPad.style.display = 'none';
-                if (gamificationCard) gamificationCard.style.display = 'none';
-                if (actionConfirm) actionConfirm.style.display = 'none';
-                if (greetingEl) greetingEl.innerText = "SİSTEM BAĞLANTISI";
-                if (scanBtn) scanBtn.style.display = 'block';
-
-                localStorage.removeItem('shiftTurbo_user');
-                localStorage.removeItem('auth_active');
-                localStorage.removeItem('isShiftActive');
-                localStorage.removeItem('temp_user_name');
-                localStorage.removeItem('temp_user_pin');
+                resetToScanScreen();
+                clearTerminalSession();
 
                 const errorMsgBody = document.getElementById('error-msg-body');
                 const errorModal = document.getElementById('error-modal');

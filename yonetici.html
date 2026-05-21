@@ -12,6 +12,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./config.js"></script>
+    <script src="./js/shared.js"></script>
     <script src="ai_assistant.js?v=2"></script>
     <script>
         // Sayfa yüklenirken göz kırpmasını (flicker) önlemek için hızlı kontrol
@@ -66,7 +68,22 @@
             --modal-bg: #0f172a;
         }
 
-        [data-theme="light"] {
+        :root {
+            --primary: #f48120;
+            --bg: #030712;
+            --card: rgba(15, 23, 42, 0.7);
+            --glass: rgba(255, 255, 255, 0.03);
+            --border: rgba(255, 255, 255, 0.1);
+            --text-main: #ffffff;
+            --text-sub: #cbd5e1;
+            --text-muted: #64748b;
+            --success: #10b981;
+            --error: #ef4444;
+            --ai-glow: rgba(139, 92, 246, 0.4);
+            --modal-bg: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+        }
+
+        :root[data-theme="light"] {
             --primary: #9a3b00;
             --bg: #f1f5f9;
             --card: rgba(255, 255, 255, 0.95);
@@ -327,15 +344,16 @@
         }
 
         .about-content {
-            background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%) !important;
+            background: var(--modal-bg) !important;
             padding: 30px !important;
             border-radius: 25px !important;
-            border: 1px solid rgba(244, 129, 32, 0.5) !important;
+            border: 1px solid var(--border) !important;
             width: 85% !important;
             max-width: 320px !important;
             text-align: center !important;
             position: relative !important;
-            box-shadow: 0 0 50px rgba(0, 0, 0, 1);
+            box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
+            color: var(--text-main) !important;
         }
 
         .about-grid {
@@ -363,7 +381,7 @@
         .about-value {
             font-family: 'Poppins';
             font-size: 11px;
-            color: #cbd5e1;
+            color: var(--text-sub);
             font-weight: 500;
         }
 
@@ -448,6 +466,42 @@
             align-items: center;
             justify-content: center;
             overflow: hidden;
+            transition: background 0.3s ease;
+        }
+
+        [data-theme="light"] #loginOverlay {
+            background: #f1f5f9;
+        }
+
+        [data-theme="light"] .brand-logo-text-login {
+            color: #0f172a;
+        }
+
+        [data-theme="light"] .time-display-login {
+            background: linear-gradient(180deg, #0f172a 40%, rgba(15, 23, 42, 0.8) 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        [data-theme="light"] .date-display-login {
+            color: #475569;
+        }
+
+        [data-theme="light"] .login-card {
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid rgba(154, 59, 0, 0.2);
+            box-shadow: 0 40px 100px rgba(15, 23, 42, 0.1);
+        }
+
+        [data-theme="light"] .login-card input {
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            color: #0f172a;
+        }
+
+        [data-theme="light"] .login-card input::placeholder {
+            color: #94a3b8;
         }
 
         .beams-container {
@@ -973,7 +1027,7 @@
             transform: translateY(-8px);
             border-color: var(--primary);
             box-shadow: 0 0 30px rgba(244, 129, 32, 0.2);
-            background: rgba(15, 23, 42, 0.95);
+            background: var(--stat-bg-1);
         }
 
         .stat-icon {
@@ -1250,7 +1304,7 @@
         #msg-body {
             font-size: 15px;
             line-height: 1.6;
-            color: #cbd5e1;
+            color: var(--text-main);
             margin-bottom: 30px;
             font-weight: 300;
         }
@@ -1258,10 +1312,10 @@
         .msg-footer-time {
             font-family: 'Orbitron';
             font-size: 9px;
-            color: #64748b;
+            color: var(--text-muted);
             letter-spacing: 1px;
             display: block;
-            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            border-top: 1px solid var(--border);
             padding-top: 15px;
             margin-top: 20px;
         }
@@ -1511,15 +1565,16 @@
         }
 
         .confirm-card {
-            background: rgba(15, 23, 42, 0.95);
-            border: 1px solid rgba(244, 129, 32, 0.4);
+            background: var(--modal-bg);
+            border: 1px solid var(--border);
             border-radius: 30px;
             padding: 40px;
             max-width: 450px;
             width: 90%;
             text-align: center;
-            box-shadow: 0 0 50px rgba(0, 0, 0, 0.8), 0 0 20px rgba(244, 129, 32, 0.1);
+            box-shadow: 0 0 50px rgba(0, 0, 0, 0.5), 0 0 20px rgba(244, 129, 32, 0.1);
             animation: modalSlideIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            color: var(--text-main);
         }
 
         @keyframes modalSlideIn {
@@ -1547,7 +1602,7 @@
         .confirm-msg {
             font-family: 'Poppins';
             font-size: 14px;
-            color: #cbd5e1;
+            color: var(--text-sub);
             line-height: 1.6;
             margin-bottom: 35px;
         }
@@ -1954,7 +2009,7 @@
                 <div class="about-item">
                     <span class="about-label">SİSTEM GELİŞTİRİCİ</span>
                     <span class="about-value"
-                        style="font-family: 'Orbitron'; font-weight: 700; letter-spacing: 1px; color: #fff;">BURAK
+                        style="font-family: 'Orbitron'; font-weight: 700; letter-spacing: 1px;">BURAK
                         UÇAR</span>
                 </div>
                 <div class="about-item">
@@ -2003,14 +2058,14 @@
                     style="font-family: 'Orbitron'; font-size: 9px; color: var(--primary); display: block; margin-bottom: 8px;">YENİ
                     ŞİFRE</label>
                 <input type="password" id="new-admin-pass" placeholder="Yeni şifrenizi girin (en az 6 hane)..."
-                    style="width: 100%; background: rgba(0,0,0,0.5); border: 1px solid var(--border); padding: 12px; border-radius: 12px; color: white; font-family: 'Poppins'; outline: none;">
+                    style="width: 100%; background: var(--input-bg); border: 1px solid var(--border); padding: 12px; border-radius: 12px; color: var(--text-main); font-family: 'Poppins'; outline: none;">
             </div>
             <div style="margin-bottom: 25px;">
                 <label
                     style="font-family: 'Orbitron'; font-size: 9px; color: var(--primary); display: block; margin-bottom: 8px;">YENİ
                     ŞİFRE (TEKRAR)</label>
                 <input type="password" id="new-admin-pass-confirm" placeholder="Yeni şifrenizi tekrar girin..."
-                    style="width: 100%; background: rgba(0,0,0,0.5); border: 1px solid var(--border); padding: 12px; border-radius: 12px; color: white; font-family: 'Poppins'; outline: none;">
+                    style="width: 100%; background: var(--input-bg); border: 1px solid var(--border); padding: 12px; border-radius: 12px; color: var(--text-main); font-family: 'Poppins'; outline: none;">
             </div>
             <div style="display: flex; gap: 15px;">
                 <button class="btn-modal btn-cancel"
@@ -2030,7 +2085,7 @@
                     style="font-family: 'Orbitron'; font-size: 11px; color: var(--primary); display: block; margin-bottom: 8px;">PERSONEL
                     ADI</label>
                 <input type="text" id="hourly-rate-input" placeholder="Örn: 250 veya 300.50"
-                    style="width: 100%; background: rgba(0,0,0,0.5); border: 1px solid var(--border); padding: 12px; border-radius: 12px; color: white; font-family: 'Poppins'; outline: none; font-size: 16px; font-weight: bold; text-align: center;">
+                    style="width: 100%; background: var(--input-bg); border: 1px solid var(--border); padding: 12px; border-radius: 12px; color: var(--text-main); font-family: 'Poppins'; outline: none; font-size: 16px; font-weight: bold; text-align: center;">
             </div>
             <div style="display: flex; gap: 15px; margin-top: 25px;">
                 <button class="btn-modal btn-cancel"
@@ -2041,6 +2096,16 @@
     </div>
 
     <!-- 🔐 GİRİŞ EKRANI (LOGIN OVERLAY) -->
+    <div id="passwordResetOverlay"
+        style="display: none; position: fixed; inset: 0; background: var(--bg); z-index: 9999; align-items: center; justify-content: center; flex-direction: column;">
+        <div class="login-card">
+            <h2 style="font-family:'Orbitron'; color:var(--primary); font-size:16px; margin-bottom:20px;">YENİ ŞİFRE
+                BELİRLE</h2>
+            <input type="password" id="newPassword" placeholder="YENİ ERİŞİM ANAHTARI" style="margin-bottom:15px;">
+            <button class="btn-cyber" style="width:100%" onclick="updatePassword()">ŞİFREYİ GÜNCELLE</button>
+        </div>
+    </div>
+
     <div id="loginOverlay" style="display: flex;">
         <div class="beams-container">
             <div class="beam b1"></div>
@@ -2127,8 +2192,6 @@
         </div>
 
         <div id="ai-box">
-            <div class="ai-config-icon" onclick="toggleAIConfig()" title="AI Ayarları">⚙️</div>
-
             <div id="ai-chat-history" class="ai-chat-messages">
                 <div class="ai-msg ai-msg-bot">Merhaba! Ben ShiftTurbo AI. Bugün sana nasıl yardımcı olabilirim?
                     Verileri analiz etmek için aşağıya soru sorabilirsin.</div>
@@ -2143,19 +2206,6 @@
                     placeholder="Yapay zekaya soru sor... (Örn: Bugün en çok kim çalıştı?)"
                     onkeypress="if(event.key==='Enter') sendAIChat()">
                 <button class="ai-btn-small" onclick="sendAIChat()">SOR</button>
-            </div>
-
-            <div id="ai-api-config"
-                style="display:none; padding: 15px; background: rgba(0,0,0,0.4); border-radius: 12px; margin-top: 10px; border: 1px solid var(--primary);">
-                <label
-                    style="font-family:'Orbitron'; font-size: 9px; color: var(--primary); display:block; margin-bottom: 10px;">GEMINI
-                    API ANAHTARI</label>
-                <input type="password" id="ai-api-key" class="ai-input"
-                    style="width:100%; box-sizing:border-box; margin-bottom:10px;"
-                    placeholder="API Keyinizi buraya yapıştırın...">
-                <button class="ai-btn-small" onclick="saveAIConfig()" style="width:100%">KAYDET</button>
-                <p style="font-size:9px; color:#64748b; margin-top:10px;">*API Key tarayıcı hafızasında yerel olarak
-                    (LocalStorage) saklanır.</p>
             </div>
         </div>
 
@@ -2314,6 +2364,11 @@
                 </thead>
                 <tbody id="logTable"></tbody>
             </table>
+            <div id="loadMoreContainer" style="text-align: center; margin-top: 15px; display: none;">
+                <button onclick="window.loadMoreLogs()" class="btn-msg-read"
+                    style="padding: 10px 20px; font-size: 13px; background: rgba(59, 130, 246, 0.1); border-color: #3b82f6; color: #60a5fa; cursor: pointer; border-radius: 8px; font-family: 'Poppins', sans-serif; font-weight: bold;">DAHA
+                    FAZLA YÜKLE ⬇️</button>
+            </div>
         </div>
 
         <div
@@ -2336,12 +2391,13 @@
     <div id="score-modal"
         style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(10px); z-index: 999999; align-items: center; justify-content: center;">
         <div
-            style="background: #0f172a; border: 2px solid #3b82f6; border-radius: 25px; padding: 30px; width: 85%; max-width: 450px; box-shadow: 0 0 50px rgba(59, 130, 246, 0.3); position: relative; text-align: left;">
+            style="background: var(--modal-bg); border: 2px solid var(--primary); border-radius: 25px; padding: 30px; width: 85%; max-width: 450px; box-shadow: 0 0 50px rgba(244, 129, 32, 0.2); position: relative; text-align: left;">
             <h3
-                style="font-family: 'Orbitron'; font-size: 16px; color: #60a5fa; margin: 0 0 20px 0; border-bottom: 1px solid rgba(59,130,246,0.2); padding-bottom: 10px; display: flex; align-items: center; gap: 10px;">
+                style="font-family: 'Orbitron'; font-size: 16px; color: var(--primary); margin: 0 0 20px 0; border-bottom: 1px solid var(--border); padding-bottom: 10px; display: flex; align-items: center; gap: 10px;">
                 ℹ️ DİNAMİK PUANLAMA SİSTEMİ
             </h3>
-            <p style="font-family: 'Poppins'; font-size: 12px; color: #cbd5e1; line-height: 1.6; margin-bottom: 20px;">
+            <p
+                style="font-family: 'Poppins'; font-size: 12px; color: var(--text-sub); line-height: 1.6; margin-bottom: 20px;">
                 ShiftTurbo, personellerin operasyonel disiplinini anlık olarak <b>100 tam puan</b> üzerinden
                 değerlendirir. Puanlama kriterleri aşağıdaki gibidir:
             </p>
@@ -2351,7 +2407,7 @@
                     style="background: rgba(239, 68, 68, 0.1); border-left: 4px solid #ef4444; padding: 12px 15px; border-radius: 0 12px 12px 0;">
                     <b style="color: #ef4444; font-family: 'Orbitron'; font-size: 11px;">⏱️ ÇIKIŞ YAPMAYI UNUTMA CEZASI
                         (-15 PUAN)</b>
-                    <div style="font-size: 11px; color: #cbd5e1; margin-top: 5px; font-family: 'Poppins';">
+                    <div style="font-size: 11px; color: var(--text-sub); margin-top: 5px; font-family: 'Poppins';">
                         Personelin mesaisi 10 saat 30 dakikayı aştığında (akşam çıkış yapmadan gittiğinde) sistem
                         otomatik olarak 15 puan keser.
                     </div>
@@ -2361,7 +2417,7 @@
                     style="background: rgba(245, 158, 11, 0.1); border-left: 4px solid #f59e0b; padding: 12px 15px; border-radius: 0 12px 12px 0;">
                     <b style="color: #f59e0b; font-family: 'Orbitron'; font-size: 11px;">📍 KONUM İHLALİ CEZASI (-5
                         PUAN)</b>
-                    <div style="font-size: 11px; color: #cbd5e1; margin-top: 5px; font-family: 'Poppins';">
+                    <div style="font-size: 11px; color: var(--text-sub); margin-top: 5px; font-family: 'Poppins';">
                         GPS sapmasının 300 metreyi aştığı (dükkan dışından yapılan) her işlem için sistem geçmişi tarar
                         ve işlem başına 5 puan kırar.
                     </div>
@@ -2371,7 +2427,7 @@
                     style="background: rgba(16, 185, 129, 0.1); border-left: 4px solid #10b981; padding: 12px 15px; border-radius: 0 12px 12px 0;">
                     <b style="color: #10b981; font-family: 'Orbitron'; font-size: 11px;">⭐ SADAKAT VE DEVAMLILIK ÖDÜLÜ
                         (+2 PUAN)</b>
-                    <div style="font-size: 11px; color: #cbd5e1; margin-top: 5px; font-family: 'Poppins';">
+                    <div style="font-size: 11px; color: var(--text-sub); margin-top: 5px; font-family: 'Poppins';">
                         Kurallara uygun yapılan her 5 başarılı operasyon hareketi için personele +2 bonus puan eklenir
                         (Maksimum 100 puan).
                     </div>
@@ -2379,7 +2435,7 @@
             </div>
 
             <button class="btn-cyber" onclick="toggleScoreModal(false)"
-                style="background: #3b82f6; color: white; width: 100%; margin-top: 0;">ANLAŞILDI</button>
+                style="background: var(--primary); color: white; width: 100%; margin-top: 0;">ANLAŞILDI</button>
         </div>
     </div>
 
@@ -2387,7 +2443,7 @@
     <div id="finance-modal"
         style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(10px); z-index: 999999; align-items: center; justify-content: center;">
         <div
-            style="background: #0f172a; border: 2px solid #10b981; border-radius: 25px; padding: 30px; width: 90%; max-width: 850px; box-shadow: 0 0 50px rgba(16, 185, 129, 0.3); position: relative; text-align: left; max-height: 90vh; overflow-y: auto;">
+            style="background: var(--modal-bg); border: 2px solid #10b981; border-radius: 25px; padding: 30px; width: 90%; max-width: 850px; box-shadow: 0 0 50px rgba(16, 185, 129, 0.3); position: relative; text-align: left; max-height: 90vh; overflow-y: auto;">
             <div
                 style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(16,185,129,0.2); padding-bottom: 15px; margin-bottom: 20px;">
                 <h3
@@ -2398,7 +2454,7 @@
                     style="background: none; border: none; color: #ef4444; font-size: 20px; cursor: pointer;">✖</button>
             </div>
 
-            <p style="font-family: 'Poppins'; font-size: 12px; color: #cbd5e1; margin-bottom: 20px;">
+            <p style="font-family: 'Poppins'; font-size: 12px; color: var(--text-sub); margin-bottom: 20px;">
                 Bu tablo, personellerin anlık mesai saatlerini, kişisel saatlik ücretlerini ve disiplin puanlarına bağlı
                 ceza kesintilerini baz alarak canlı hakediş hesaplar.
             </p>
@@ -2407,11 +2463,11 @@
                 style="display: flex; gap: 15px; align-items: center; margin-bottom: 20px; background: rgba(16,185,129,0.1); padding: 10px 15px; border-radius: 12px; border: 1px solid rgba(16,185,129,0.2);">
                 <span style="font-family: 'Orbitron'; font-size: 11px; color: #10b981;">🗓️ TARİH ARALIĞI:</span>
                 <input type="date" id="financeStart"
-                    style="background: rgba(2, 6, 23, 0.8); border: 1px solid rgba(16, 185, 129, 0.4); color: white; padding: 5px 10px; border-radius: 8px; font-family: 'Poppins'; font-size: 11px; outline: none;"
+                    style="background: var(--input-bg); border: 1px solid var(--border); color: var(--text-main); padding: 5px 10px; border-radius: 8px; font-family: 'Poppins'; font-size: 11px; outline: none;"
                     onchange="openFinanceModal()">
-                <span style="color: #cbd5e1; font-size: 11px;">-</span>
+                <span style="color: var(--text-main); font-size: 11px;">-</span>
                 <input type="date" id="financeEnd"
-                    style="background: rgba(2, 6, 23, 0.8); border: 1px solid rgba(16, 185, 129, 0.4); color: white; padding: 5px 10px; border-radius: 8px; font-family: 'Poppins'; font-size: 11px; outline: none;"
+                    style="background: var(--input-bg); border: 1px solid var(--border); color: var(--text-main); padding: 5px 10px; border-radius: 8px; font-family: 'Poppins'; font-size: 11px; outline: none;"
                     onchange="openFinanceModal()">
             </div>
 
@@ -2444,9 +2500,9 @@
             </div>
 
             <div
-                style="margin-top: 25px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center;">
+                style="margin-top: 25px; padding-top: 20px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
                 <div
-                    style="font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 14px; color: #cbd5e1; letter-spacing: 0.5px;">
+                    style="font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 14px; color: var(--text-main); letter-spacing: 0.5px;">
                     TOPLAM ÖDEME BÜTÇESİ: <b id="financeGrandTotal"
                         style="color: #10b981; font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 18px; margin-left: 10px;">0
                         TL</b>
@@ -2478,9 +2534,9 @@
                 val = parseFloat(cleanStr);
             }
             if (isNaN(val) || val <= 0) { showToast("UYARI", "Lütfen geçerli bir saatlik ücret girin (Örn: 250 veya 300.50).", "error"); return; }
-            const rates = JSON.parse(localStorage.getItem('shiftTurbo_hourly_rates') || '{}');
+            const rates = window.ShiftTurboShared.getObfuscated('shiftTurbo_hourly_rates') || {};
             rates[pin] = val;
-            localStorage.setItem('shiftTurbo_hourly_rates', JSON.stringify(rates));
+            window.ShiftTurboShared.setObfuscated('shiftTurbo_hourly_rates', rates);
             const el = document.getElementById(`rate-${pin}`);
             if (el) el.value = val;
             showToast("ÜCRET GÜNCELLENDİ", `${name} için saatlik ücret ${val} TL olarak kaydedildi.`, "success");
@@ -2561,7 +2617,7 @@
             const tbody = document.getElementById('financeTableBody');
             if (!modal || !tbody) return;
 
-            const rates = JSON.parse(localStorage.getItem('shiftTurbo_hourly_rates') || '{}');
+            const rates = window.ShiftTurboShared.getObfuscated('shiftTurbo_hourly_rates') || {};
             const users = window.allUsers || [];
 
             // Finans Modalı içindeki tarihleri al (yoksa genel toolbardakileri kullan)
@@ -2602,11 +2658,11 @@
                 grandTotal += netPay;
 
                 html += `
-                <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                <tr style="border-bottom: 1px solid var(--border);">
                     <td style="padding:15px; font-family:'Poppins', sans-serif; font-weight:bold; color:var(--text-main); font-size:14px;">${name}</td>
                     <td style="padding:15px; font-family:'Poppins', sans-serif; color:var(--primary); font-weight:600; font-size:14px;">${rate} TL</td>
-                    <td style="padding:15px; font-family:'Poppins', sans-serif; color:#cbd5e1; font-size:14px; font-weight:500;">${hours.toFixed(1)} Saat</td>
-                    <td style="padding:15px; font-family:'Poppins', sans-serif; color:#94a3b8; font-size:14px; font-weight:500;">${basePay.toLocaleString('tr-TR', { maximumFractionDigits: 2 })} TL</td>
+                    <td style="padding:15px; font-family:'Poppins', sans-serif; color:var(--text-main); font-size:14px; font-weight:500;">${hours.toFixed(1)} Saat</td>
+                    <td style="padding:15px; font-family:'Poppins', sans-serif; color:var(--text-sub); font-size:14px; font-weight:500;">${basePay.toLocaleString('tr-TR', { maximumFractionDigits: 2 })} TL</td>
                     <td style="padding:15px; font-family:'Poppins', sans-serif; color:${score < 100 ? '#ef4444' : '#10b981'}; font-weight:600; font-size:14px;">${score} Puan (-${penaltyAmount.toLocaleString('tr-TR', { maximumFractionDigits: 2 })} TL)</td>
                     <td style="padding:15px; font-family:'Poppins', sans-serif; color:#10b981; font-weight:bold; font-size:15px; text-align:right;">${netPay.toLocaleString('tr-TR', { maximumFractionDigits: 2 })} TL</td>
                 </tr>
@@ -2631,11 +2687,19 @@
 
         (() => {
             let isAuthenticated = false;
-            const supabaseUrl = 'https://tnvjdppcyctmqkirlwmy.supabase.co';
-            const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRudmpkcHBjeWN0bXFraXJsd215Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3MzY0NTIsImV4cCI6MjA4ODMxMjQ1Mn0.Ft4JXQtbcXz1-qO7n06fV1vGtP4DbCVUWDojEAFoALI';
-            const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
-            window._supabase = _supabase;
+            const proxyUrl = 'https://shifturbo-proxy.burakkucar55-5af.workers.dev';
+            const localSupabaseConfig = (typeof SHIFTURBO_CONFIG !== 'undefined' && SHIFTURBO_CONFIG && SHIFTURBO_CONFIG.supabaseUrl && SHIFTURBO_CONFIG.supabaseKey)
+                ? SHIFTURBO_CONFIG
+                : null;
+
+            let _supabase = null;
+            let _supabaseClientType = 'proxy';
+
+            // testSupabaseClient ve initSupabaseClient → shared.js'den gelir (window.ShiftTurboShared)
+
             window.allLogs = [];
+            let currentRenderPage = 1;
+            const ITEMS_PER_PAGE = 50;
             let lastLogCount = 0;
             let isActiveStaffMode = false;
             let autoRefreshInterval = null;
@@ -2643,6 +2707,10 @@
 
             // 🔐 Oturum Kalıcılığı (Session Persistence)
             window.addEventListener('DOMContentLoaded', async () => {
+                const _initResult = await window.ShiftTurboShared.initSupabaseClient(proxyUrl, localSupabaseConfig);
+                _supabase = _initResult.client;
+                _supabaseClientType = _initResult.type;
+                window._supabase = _supabase;
                 const loginOv = document.getElementById("loginOverlay");
                 const adminPn = document.getElementById("adminPanel");
 
@@ -2665,6 +2733,8 @@
                 } else {
                     isAuthenticated = false;
                     localStorage.removeItem('shiftTurbo_admin_logged_in');
+                    localStorage.removeItem('shiftTurbo_raw_logs_cache');
+                    localStorage.removeItem('shiftTurbo_hourly_rates');
                     document.documentElement.classList.remove('admin-logged-in');
                     if (loginOv) loginOv.style.display = "flex";
                     if (adminPn) adminPn.style.display = "none";
@@ -2894,6 +2964,8 @@
             async function logout() {
                 await _supabase.auth.signOut();
                 localStorage.removeItem('shiftTurbo_admin_logged_in');
+                localStorage.removeItem('shiftTurbo_raw_logs_cache');
+                localStorage.removeItem('shiftTurbo_hourly_rates');
                 isAuthenticated = false;
                 if (autoRefreshInterval) clearInterval(autoRefreshInterval);
                 if (realtimeChannel) _supabase.removeChannel(realtimeChannel);
@@ -3052,19 +3124,12 @@
 
             async function fetchData() {
                 if (!isAuthenticated) return;
-                const { data, error } = await _supabase.from('logs').select('*').order('created_at', { ascending: false });
 
-                if (error) {
-                    console.error("Veri çekme hatası (logs):", error);
-                    if (error.message.includes("JWT") || error.message.includes("auth") || error.message.includes("security") || error.message.includes("policy") || error.code === 'PGRST301') {
-                        showToast("OTURUM SÜRESİ DOLDU", "Lütfen tekrar giriş yapın.", "error");
-                        logout();
-                        return;
-                    }
-                }
+                const data = await window.ShiftTurboShared.syncLogs(_supabase);
 
                 const cleanData = [];
                 const seenActions = new Set();
+
 
                 (data || []).forEach(log => {
                     const timeKey = log.type === 'MESAJ' ? `msg-${log.id}` : `${log.personel_name}-${log.created_at}`;
@@ -3189,11 +3254,13 @@
             }
 
             function applyFilter() {
+                currentRenderPage = 1;
                 isActiveStaffMode = false;
                 renderLogs();
             }
 
             function filterActiveStaff() {
+                currentRenderPage = 1;
                 isActiveStaffMode = true;
                 renderLogs();
                 showToast("FİLTRE AKTİF", "Yalnızca şu an mesaide olan personeller listeleniyor.", "success");
@@ -3212,6 +3279,7 @@
                 }
                 if (staffEl) staffEl.value = '';
 
+                currentRenderPage = 1;
                 isActiveStaffMode = false;
                 renderLogs();
                 showToast("GÜNLÜK TRAFİK", "Son 24 saatlik operasyon hareketleri listelendi.", "info");
@@ -3227,6 +3295,7 @@
                 if (eDEl) eDEl.value = '';
                 if (staffEl) staffEl.value = '';
 
+                currentRenderPage = 1;
                 isActiveStaffMode = false;
                 renderLogs();
                 showToast("TOPLAM KAYIT", "Tüm geçmiş operasyon hareketleri listelendi.", "info");
@@ -3238,40 +3307,7 @@
                 if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }
 
-            function calculateScore(personName) {
-                let score = 100;
-                if (!window.allLogs || window.allLogs.length === 0) return score;
-
-                const pLogs = window.allLogs
-                    .filter(l => (l.personel || "").trim().toLocaleUpperCase('tr-TR') === (personName || "").trim().toLocaleUpperCase('tr-TR'))
-                    .sort((a, b) => new Date(a.raw_time) - new Date(b.raw_time));
-
-                if (pLogs.length === 0) return score;
-
-                for (let i = 0; i < pLogs.length; i++) {
-                    if (pLogs[i].type === 'GİRİŞ') {
-                        const girisZamani = new Date(pLogs[i].raw_time);
-                        let cikisLogu = null;
-                        for (let j = i + 1; j < pLogs.length; j++) {
-                            if (pLogs[j].type === 'ÇIKIŞ') { cikisLogu = pLogs[j]; break; }
-                        }
-                        let bitisZamani = cikisLogu ? new Date(cikisLogu.raw_time) : new Date();
-                        let saatFarki = (bitisZamani - girisZamani) / 3600000;
-                        if (saatFarki > 10.5) score -= 15;
-                    }
-                }
-
-                pLogs.forEach(log => {
-                    if (log.mahalle && log.mahalle.includes('DOĞRULUK:')) {
-                        const match = log.mahalle.match(/DOĞRULUK:\s*(\d+)m/);
-                        if (match && parseInt(match[1]) > 300) score -= 5;
-                    }
-                });
-
-                score += Math.floor(pLogs.length / 5) * 2;
-                return Math.min(Math.max(score, 10), 100);
-            }
-            window.calculateScore = calculateScore;
+            // calculateScore → shared.js'den gelir (window.calculateScore)
 
             function calculateRowDuration(currentLog, logs, preSortedPersonLogs = null) {
                 const personLogs = preSortedPersonLogs || logs.filter(l => l.personel === currentLog.personel).sort((a, b) => new Date(a.raw_time) - new Date(b.raw_time));
@@ -3296,9 +3332,9 @@
                 return farkSaat > 10;
             }
 
-            function renderLogs() {
+            function renderLogs(isLoadMore = false) {
                 const tbody = document.getElementById('logTable');
-                tbody.innerHTML = '';
+                if (!isLoadMore) tbody.innerHTML = '';
 
                 const selectedStaff = document.getElementById('staffFilter').value;
                 const startDateInput = document.getElementById('startDate').value;
@@ -3331,28 +3367,19 @@
 
                 if (filtered.length === 0) {
                     tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#64748b; padding:30px 0;">Kayıt bulunamadı.</td></tr>`;
+                    const loadMoreBtn = document.getElementById('loadMoreContainer');
+                    if (loadMoreBtn) loadMoreBtn.style.display = 'none';
                     return;
                 }
 
-                // OPTİMİZASYON: Her satırda all.filter ve sıralama (sort) yapmamak için personellerin loglarını önbelleğe alıp grupluyoruz
-                const personLogsMap = {};
-                const sortedPersonLogsMap = {};
-                window.allLogs.forEach(l => {
-                    const p = l.personel;
-                    if (!personLogsMap[p]) personLogsMap[p] = [];
-                    personLogsMap[p].push(l);
-                });
+                const startIndex = isLoadMore ? (currentRenderPage - 1) * ITEMS_PER_PAGE : 0;
+                const endIndex = currentRenderPage * ITEMS_PER_PAGE;
+                const paginatedLogs = filtered.slice(startIndex, endIndex);
 
-                // Skor hesaplamalarını tekilleştirip önbelleğe alma (Memoization)
-                const scoreCache = {};
-                const getCachedScore = (person) => {
-                    if (scoreCache[person] === undefined) {
-                        scoreCache[person] = calculateScore(person);
-                    }
-                    return scoreCache[person];
-                };
+                // OPTİMİZASYON: Logları tek geçişte grupla ve skor önbelleği oluştur
+                const { personLogsMap, sortedPersonLogsMap, getCachedScore } = window.buildLogDataCache(window.allLogs);
 
-                filtered.forEach((log, idx) => {
+                paginatedLogs.forEach((log, idx) => {
                     const tr = document.createElement('tr');
                     const pLogs = personLogsMap[log.personel] || [];
 
@@ -3364,7 +3391,7 @@
 
                     const isCrit = checkCriticalAlert(log, window.allLogs, pLogs);
                     const score = getCachedScore(log.personel);
-                    const isNew = (idx === 0 && lastLogCount > 0);
+                    const isNew = (!isLoadMore && idx === 0 && lastLogCount > 0);
                     const isMessage = log.type === 'MESAJ';
                     const isUnknown = log.personel.includes("BILINMEYEN") || log.personel.includes("BİLİNMEYEN");
                     const durationText = calculateRowDuration(log, window.allLogs, pLogsSorted);
@@ -3405,7 +3432,17 @@
                     `;
                     tbody.appendChild(tr);
                 });
+
+                const loadMoreBtn = document.getElementById('loadMoreContainer');
+                if (loadMoreBtn) {
+                    loadMoreBtn.style.display = endIndex < filtered.length ? 'block' : 'none';
+                }
             }
+
+            window.loadMoreLogs = function () {
+                currentRenderPage++;
+                renderLogs(true);
+            };
 
             function showMsg(id) {
                 const log = window.allLogs.find(l => l.id === id);
@@ -3499,7 +3536,7 @@
 
                 // 1. 💸 OTONOM HAKEDİŞ VE MAAŞ TABLOSU VERİLERİNİ TOPLA
                 const financeTableData = [];
-                const rates = JSON.parse(localStorage.getItem('shiftTurbo_hourly_rates') || '{}');
+                const rates = window.ShiftTurboShared.getObfuscated('shiftTurbo_hourly_rates') || {};
                 const users = window.allUsers || [];
                 let grandTotalPay = 0;
 
@@ -3817,7 +3854,7 @@
 
                 window.allUsers = data;
                 if (typeof renderLogs === 'function') renderLogs();
-                const rates = JSON.parse(localStorage.getItem('shiftTurbo_hourly_rates') || '{}');
+                const rates = window.ShiftTurboShared.getObfuscated('shiftTurbo_hourly_rates') || {};
 
                 tbody.innerHTML = data.map(u => {
                     const rate = rates[u.pin] || 200;

@@ -6,31 +6,18 @@
 (function(window) {
     const AI = {
         history: [],
-        apiKey: localStorage.getItem('shiftTurbo_gemini_key') || '',
+        apiKey: (window.SHIFTURBO_CONFIG && window.SHIFTURBO_CONFIG.geminiApiKey) || localStorage.getItem('shiftTurbo_gemini_key') || '',
         
         init() {
             console.log("🤖 Shift-AI Assistant Başlatıldı.");
-            this.updateSuggestions();
-            // Eğer key varsa inputa doldur
-            const keyInput = document.getElementById('ai-api-key');
-            if (keyInput) keyInput.value = this.apiKey;
-        },
-
-        toggleConfig() {
-            const config = document.getElementById('ai-api-config');
-            config.style.display = config.style.display === 'none' ? 'block' : 'none';
-        },
-
-        saveConfig() {
-            const key = document.getElementById('ai-api-key').value.trim();
-            if (key) {
-                this.apiKey = key;
-                localStorage.setItem('shiftTurbo_gemini_key', key);
-                alert("✅ API Anahtarı Kaydedildi.");
-                this.toggleConfig();
-            } else {
-                alert("⚠️ Lütfen geçerli bir anahtar girin.");
+            // Eğer config.js içerisinde API anahtarı tanımlıysa, Local Storage'daki eski/güvensiz anahtarı temizleyelim
+            if (window.SHIFTURBO_CONFIG && window.SHIFTURBO_CONFIG.geminiApiKey) {
+                if (localStorage.getItem('shiftTurbo_gemini_key')) {
+                    localStorage.removeItem('shiftTurbo_gemini_key');
+                    console.log("🔒 Eski Gemini API Key tarayıcı hafızasından güvenli bir şekilde silindi.");
+                }
             }
+            this.updateSuggestions();
         },
 
         async sendChat() {
@@ -223,7 +210,6 @@ ${query}
         updateSuggestions(anomalies = []) {
             const box = document.getElementById('ai-suggestion-box');
             if (!box) return;
-            box.innerHTML = '';
 
             // Her zaman gösterilen genel öneriler
             const baseSuggestions = [
@@ -273,6 +259,12 @@ ${query}
                 }
             });
 
+            // Hash/String Karşılaştırması ile Gereksiz DOM Güncellemesini Engelle (Render-Guard)
+            const currentKeys = baseSuggestions.map(s => s.text + '_' + (s.anomalyKey || '')).join('|');
+            if (this.lastSuggestionsStr === currentKeys) return;
+            this.lastSuggestionsStr = currentKeys;
+
+            box.innerHTML = '';
             baseSuggestions.forEach(s => {
                 if (s.isAnomaly) {
                     // Anomali uyarıları için özel silinebilir kapsayıcı (Container)
@@ -378,8 +370,6 @@ ${query}
 
     // Global erişim için window'a bağla
     window.ShiftAI = AI;
-    window.toggleAIConfig = () => AI.toggleConfig();
-    window.saveAIConfig = () => AI.saveConfig();
     window.sendAIChat = () => AI.sendChat();
 
     // Başlat
