@@ -373,6 +373,10 @@ ${query}
     window.sendAIChat = () => AI.sendChat();
 
     // Başlat
-    document.addEventListener('DOMContentLoaded', () => AI.init());
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => AI.init());
+    } else {
+        AI.init();
+    }
 
 })(window);

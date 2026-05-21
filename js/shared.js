@@ -371,3 +371,21 @@ window.ShiftTurboShared = {
     getObfuscated: _sharedGetObfuscated
 };
 
+// ──────────────────────────────────────────────
+// 7. ESKİ/GÜVENSİZ VERİLERİN TEMİZLENMESİ
+// ──────────────────────────────────────────────
+(function() {
+    try {
+        const config = window.SHIFTURBO_CONFIG || (typeof SHIFTURBO_CONFIG !== 'undefined' ? SHIFTURBO_CONFIG : null);
+        if (config && config.geminiApiKey) {
+            if (localStorage.getItem('shiftTurbo_gemini_key')) {
+                localStorage.removeItem('shiftTurbo_gemini_key');
+                console.log("🔒 Eski Gemini API Key tarayıcı hafızasından güvenli bir şekilde silindi.");
+            }
+        }
+    } catch (e) {
+        console.warn("Eski verileri temizlerken hata oluştu:", e);
+    }
+})();
+
+
