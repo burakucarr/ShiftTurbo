@@ -358,7 +358,7 @@ async function executeAction() {
     const type = pendingType;
     const name = localStorage.getItem('shiftTurbo_user');
 
-    let buluttakiSonDurum = localStorage.getItem('shiftTurbo_last_status_' + name) || 'ÇIKIŞ';
+    let buluttakiSonDurum = window.ShiftTurboShared.getStatus(name);
     let cloudTime = 0;
     if (navigator.onLine) {
         try {
@@ -373,7 +373,7 @@ async function executeAction() {
             if (!logError && myLogs && myLogs.length > 0) {
                 buluttakiSonDurum = myLogs[0].type;
                 cloudTime = new Date(myLogs[0].created_at).getTime();
-                localStorage.setItem('shiftTurbo_last_status_' + name, buluttakiSonDurum);
+                window.ShiftTurboShared.setStatus(name, buluttakiSonDurum);
             }
         } catch (e) { console.warn("Supabase son durum çekilemedi:", e); }
     }
@@ -386,13 +386,13 @@ async function executeAction() {
         const offlineTime = new Date(lastOfflineItem.device_time || 0).getTime();
         if (offlineTime > cloudTime) {
             buluttakiSonDurum = lastOfflineItem.type;
-            localStorage.setItem('shiftTurbo_last_status_' + name, buluttakiSonDurum);
+            window.ShiftTurboShared.setStatus(name, buluttakiSonDurum);
             console.log(`⚡ Çevrimdışı kuyruktan daha yeni bir son durum algılandı: ${buluttakiSonDurum}`);
         }
     }
 
     if (type === 'ÇIKIŞ' && buluttakiSonDurum === 'ÇIKIŞ') {
-        localStorage.setItem('shiftTurbo_last_status_' + name, 'ÇIKIŞ');
+        window.ShiftTurboShared.setStatus(name, 'ÇIKIŞ');
         playSound('error');
         document.getElementById('status').innerText = "❌ ZATEN ÇIKIŞ YAPILMIŞ!";
 
@@ -461,7 +461,7 @@ async function executeAction() {
             };
             offlineQueue.push(offlineRecord);
             window.ShiftTurboShared.setObfuscated('shiftTurbo_offline_queue', offlineQueue);
-            localStorage.setItem('shiftTurbo_last_status_' + name, type);
+            window.ShiftTurboShared.setStatus(name, type);
 
             // Çevrimdışı İşlem Başladı Ekranı (Kullanıcının istediği Güvenlik Protokolü ekranını ANINDA veriyoruz)
             statusEl.innerHTML = type === 'ÇIKIŞ' ? `🛑 GÜVENLİK PROTOKOLÜ: MESAİ BİTİRİLDİ (ÇEVRİMDİŞI)` : `<span class="plane-animation">✈️</span> 🛰️ GÜVENLİK PROTOKOLÜ: MESAİ AKTİF (ÇEVRİMDİŞI)`;
@@ -512,7 +512,7 @@ async function executeAction() {
             document.getElementById('error-msg-body').innerText = "Kayıt Başarısız: " + error.message;
             document.getElementById('error-modal').style.display = 'flex';
         } else {
-            localStorage.setItem('shiftTurbo_last_status_' + name, type);
+            window.ShiftTurboShared.setStatus(name, type);
             // Çevrimiçi İşlem Başladı Ekranı (Kullanıcının istediği Güvenlik Protokolü ekranını ANINDA veriyoruz)
             statusEl.innerHTML = type === 'ÇIKIŞ' ? `🛑 GÜVENLİK PROTOKOLÜ: MESAİ BİTİRİLDİ` : `<span class="plane-animation">✈️</span> 🛰️ GÜVENLİK PROTOKOLÜ: MESAİ AKTİF`;
             statusEl.classList.add('success-glow');
@@ -679,7 +679,7 @@ window.bootSystem = async () => {
             }
         }
 
-        let lastAction = localStorage.getItem('shiftTurbo_last_status_' + user) || 'ÇIKIŞ';
+        let lastAction = window.ShiftTurboShared.getStatus(user);
         let cloudTime = 0;
         if (navigator.onLine) {
             try {
@@ -694,7 +694,7 @@ window.bootSystem = async () => {
                 if (!logError && myLogs && myLogs.length > 0) {
                     lastAction = myLogs[0].type;
                     cloudTime = new Date(myLogs[0].created_at).getTime();
-                    localStorage.setItem('shiftTurbo_last_status_' + user, lastAction);
+                    window.ShiftTurboShared.setStatus(user, lastAction);
                 }
             } catch (e) { console.warn("Supabase buton durumu çekilemedi:", e); }
         }
@@ -707,7 +707,7 @@ window.bootSystem = async () => {
             const offlineTime = new Date(lastOfflineItem.device_time || 0).getTime();
             if (offlineTime > cloudTime) {
                 lastAction = lastOfflineItem.type;
-                localStorage.setItem('shiftTurbo_last_status_' + user, lastAction);
+                window.ShiftTurboShared.setStatus(user, lastAction);
                 console.log(`⚡ Çevrimdışı kuyruktan daha yeni bir buton durumu algılandı: ${lastAction}`);
             }
         }
@@ -812,7 +812,7 @@ window.bootSystem = async () => {
 
             if (payload && payload.new && payload.new.type === 'ÇIKIŞ') {
                 console.log("⚠️ Uzaktan YÖNETİCİ tarafından ÇIKIŞ işlemi algılandı! Oturum kapatılıyor...");
-                if (currentUserForRealtime) localStorage.setItem('shiftTurbo_last_status_' + currentUserForRealtime, 'ÇIKIŞ');
+                if (currentUserForRealtime) window.ShiftTurboShared.setStatus(currentUserForRealtime, 'ÇIKIŞ');
                 if (typeof playSound === 'function') playSound('error');
 
                 resetToScanScreen();

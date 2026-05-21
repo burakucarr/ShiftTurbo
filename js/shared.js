@@ -368,7 +368,35 @@ window.ShiftTurboShared = {
     initSupabaseClient: _sharedInitSupabaseClient,
     syncLogs: _sharedSyncLogs,
     setObfuscated: _sharedSetObfuscated,
-    getObfuscated: _sharedGetObfuscated
+    getObfuscated: _sharedGetObfuscated,
+    getStatusKey: function(name) {
+        try {
+            const obfuscatedName = btoa(encodeURIComponent(name || "").replace(/%([0-9A-F]{2})/g, (match, p1) => {
+                return String.fromCharCode(parseInt(p1, 16));
+            }));
+            return 'shiftTurbo_status_' + obfuscatedName;
+        } catch (e) {
+            return 'shiftTurbo_last_status_' + name;
+        }
+    },
+    setStatus: function(name, status) {
+        const key = this.getStatusKey(name);
+        this.setObfuscated(key, status);
+        const oldKey = 'shiftTurbo_last_status_' + name;
+        localStorage.removeItem(oldKey);
+    },
+    getStatus: function(name) {
+        const key = this.getStatusKey(name);
+        let val = this.getObfuscated(key);
+        if (val === null) {
+            const oldKey = 'shiftTurbo_last_status_' + name;
+            val = localStorage.getItem(oldKey);
+            if (val !== null) {
+                this.setStatus(name, val);
+            }
+        }
+        return val || 'ÇIKIŞ';
+    }
 };
 
 // ──────────────────────────────────────────────
@@ -383,6 +411,25 @@ window.ShiftTurboShared = {
                 console.log("🔒 Eski Gemini API Key tarayıcı hafızasından güvenli bir şekilde silindi.");
             }
         }
+
+        // Eski düz metin personel durum anahtarlarını otomatik olarak maskeleyip temizleme
+        const keysToMigrate = [];
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && key.startsWith('shiftTurbo_last_status_')) {
+                keysToMigrate.push(key);
+            }
+        }
+        keysToMigrate.forEach(key => {
+            const name = key.replace('shiftTurbo_last_status_', '');
+            if (name) {
+                const status = localStorage.getItem(key);
+                if (status !== null) {
+                    window.ShiftTurboShared.setStatus(name, status);
+                    console.log(`🔒 Eski durum anahtarı (${name}) otomatik olarak maskelendi ve temizlendi.`);
+                }
+            }
+        });
     } catch (e) {
         console.warn("Eski verileri temizlerken hata oluştu:", e);
     }
