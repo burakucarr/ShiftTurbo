@@ -151,11 +151,8 @@ self.addEventListener('periodicsync', (event) => {
 async function checkNewLogsSilently() {
   // Arka planda Supabase kontrolü yapıp yeni log varsa Push bildirimi basar
   try {
-    const supabaseUrl = 'https://tnvjdppcyctmqkirlwmy.supabase.co';
-    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRudmpkcHBjeWN0bXFraXJsd215Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3MzY0NTIsImV4cCI6MjA4ODMxMjQ1Mn0.Ft4JXQtbcXz1-qO7n06fV1vGtP4DbCVUWDojEAFoALI';
-    const resp = await fetch(`${supabaseUrl}/rest/v1/logs?select=*&order=created_at.desc&limit=1`, {
-      headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` }
-    });
+    const proxyUrl = 'https://shifturbo-proxy.burakkucar55-5af.workers.dev';
+    const resp = await fetch(`${proxyUrl}/rest/v1/logs?select=*&order=created_at.desc&limit=1`);
     const logs = await resp.json();
     if (logs && logs.length > 0) {
       const newest = logs[0];

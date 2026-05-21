@@ -32,6 +32,7 @@
         .admin-logged-in #loginOverlay {
             display: none !important;
         }
+
         .admin-logged-in #adminPanel {
             display: block !important;
         }
@@ -640,16 +641,20 @@
         body::after {
             content: "";
             position: fixed;
-            top: -100%; left: 0; width: 100%; height: 100%;
+            top: -100%;
+            left: 0;
+            width: 100%;
+            height: 100%;
             background: linear-gradient(to bottom, transparent, rgba(244, 129, 32, 0.15), transparent);
             animation: dataStream 6s linear infinite;
-            pointer-events: none; z-index: -1;
+            pointer-events: none;
+            z-index: -1;
             will-change: transform;
         }
 
         [data-theme="light"] body::before {
             background: linear-gradient(rgba(154, 59, 0, 0.15) 1px, transparent 1px),
-                        linear-gradient(90deg, rgba(154, 59, 0, 0.15) 1px, transparent 1px);
+                linear-gradient(90deg, rgba(154, 59, 0, 0.15) 1px, transparent 1px);
             background-size: 25px 25px;
         }
 
@@ -886,7 +891,7 @@
             letter-spacing: 0.5px;
             cursor: pointer;
             transition: all 0.2s ease;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
         }
 
         .suggestion-btn:hover {
@@ -1780,30 +1785,36 @@
             width: 6px;
             height: 6px;
         }
+
         ::-webkit-scrollbar-track {
             background: #0f172a;
             border-radius: 8px;
         }
+
         ::-webkit-scrollbar-thumb {
             background: rgba(16, 185, 129, 0.4);
             border-radius: 8px;
             border: 1px solid rgba(16, 185, 129, 0.2);
             transition: background 0.3s ease;
         }
+
         ::-webkit-scrollbar-thumb:hover {
             background: rgba(16, 185, 129, 0.8);
             box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
         }
+
         @media print {
-            body.finance-modal-open > *:not(#finance-modal) {
+            body.finance-modal-open>*:not(#finance-modal) {
                 display: none !important;
             }
+
             body.finance-modal-open {
                 background: white !important;
                 margin: 0 !important;
                 padding: 0 !important;
                 overflow: visible !important;
             }
+
             body.finance-modal-open #finance-modal {
                 position: static !important;
                 display: block !important;
@@ -1812,7 +1823,8 @@
                 background: white !important;
                 color: black !important;
             }
-            body.finance-modal-open #finance-modal > div {
+
+            body.finance-modal-open #finance-modal>div {
                 border: none !important;
                 box-shadow: none !important;
                 max-width: 100% !important;
@@ -1823,27 +1835,33 @@
                 overflow: visible !important;
                 background: white !important;
             }
+
             body.finance-modal-open #finance-modal * {
                 color: black !important;
                 text-shadow: none !important;
                 background: transparent !important;
             }
+
             body.finance-modal-open table {
                 border-collapse: collapse !important;
                 margin-top: 20px !important;
             }
-            body.finance-modal-open th, body.finance-modal-open td {
+
+            body.finance-modal-open th,
+            body.finance-modal-open td {
                 border: 1px solid #ddd !important;
                 padding: 8px !important;
                 text-align: left !important;
             }
+
             body.finance-modal-open button,
             body.finance-modal-open input[type="date"],
             body.finance-modal-open span[style*="🗓️"] {
                 display: none !important;
             }
+
             /* Hide the date selector container in print */
-            body.finance-modal-open #finance-modal > div > div:nth-child(2) {
+            body.finance-modal-open #finance-modal>div>div:nth-child(2) {
                 display: none !important;
             }
         }
@@ -1852,7 +1870,12 @@
            TYPOGRAPHY & ACCESSIBILITY TWEAKS (Okunabilirlik)
            ---------------------------------------------------- */
         /* Başlıklarda harf aralığını aç (Daha ferah görünüm) */
-        h1, h2, h3, h4, h5, h6 {
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6 {
             letter-spacing: 2.5px !important;
         }
 
@@ -1864,7 +1887,8 @@
         }
 
         /* Tablo içindeki verilerin daha tok ve okunaklı durması için kalınlık artışı */
-        td, th {
+        td,
+        th {
             font-weight: 600 !important;
         }
 
@@ -1882,20 +1906,34 @@
     <div id="toast-container"></div>
 
     <!-- ROTATE DEVICE SUGGESTION -->
-    <div id="rotate-suggestion" style="display: none; position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(15, 23, 42, 0.95); border: 1px solid rgba(244, 129, 32, 0.5); padding: 15px 25px; border-radius: 12px; z-index: 9999; box-shadow: 0 0 20px rgba(244, 129, 32, 0.2); backdrop-filter: blur(10px); flex-direction: row; align-items: center; gap: 15px; width: 90%; max-width: 350px;">
+    <div id="rotate-suggestion"
+        style="display: none; position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(15, 23, 42, 0.95); border: 1px solid rgba(244, 129, 32, 0.5); padding: 15px 25px; border-radius: 12px; z-index: 9999; box-shadow: 0 0 20px rgba(244, 129, 32, 0.2); backdrop-filter: blur(10px); flex-direction: row; align-items: center; gap: 15px; width: 90%; max-width: 350px;">
         <i class="fas fa-mobile-alt" style="color: #f48120; font-size: 24px; animation: spinRotate 3s infinite;"></i>
         <div style="flex: 1; font-family: 'Poppins', sans-serif;">
             <div style="color: #f8fafc; font-size: 13px; font-weight: 600;">Daha İyi Deneyim</div>
             <div style="color: #94a3b8; font-size: 11px;">Tabloları tam görmek için cihazınızı yatay çevirin.</div>
         </div>
-        <button onclick="document.getElementById('rotate-suggestion').style.display='none'" style="background: transparent; border: none; color: #ef4444; font-size: 18px; cursor: pointer;"><i class="fas fa-times"></i></button>
+        <button onclick="document.getElementById('rotate-suggestion').style.display='none'"
+            style="background: transparent; border: none; color: #ef4444; font-size: 18px; cursor: pointer;"><i
+                class="fas fa-times"></i></button>
     </div>
     <style>
         @keyframes spinRotate {
-            0% { transform: rotate(0deg); }
-            20% { transform: rotate(-90deg); }
-            80% { transform: rotate(-90deg); }
-            100% { transform: rotate(0deg); }
+            0% {
+                transform: rotate(0deg);
+            }
+
+            20% {
+                transform: rotate(-90deg);
+            }
+
+            80% {
+                transform: rotate(-90deg);
+            }
+
+            100% {
+                transform: rotate(0deg);
+            }
         }
     </style>
 
@@ -1988,12 +2026,15 @@
         <div class="confirm-card" style="max-width: 400px; text-align: left;">
             <div class="confirm-title" style="margin-bottom: 20px;">✏️ HIZLI SAATLİK ÜCRET GİRİŞİ</div>
             <div style="margin-bottom: 15px;">
-                <label id="hourly-rate-label" style="font-family: 'Orbitron'; font-size: 11px; color: var(--primary); display: block; margin-bottom: 8px;">PERSONEL ADI</label>
+                <label id="hourly-rate-label"
+                    style="font-family: 'Orbitron'; font-size: 11px; color: var(--primary); display: block; margin-bottom: 8px;">PERSONEL
+                    ADI</label>
                 <input type="text" id="hourly-rate-input" placeholder="Örn: 250 veya 300.50"
                     style="width: 100%; background: rgba(0,0,0,0.5); border: 1px solid var(--border); padding: 12px; border-radius: 12px; color: white; font-family: 'Poppins'; outline: none; font-size: 16px; font-weight: bold; text-align: center;">
             </div>
             <div style="display: flex; gap: 15px; margin-top: 25px;">
-                <button class="btn-modal btn-cancel" onclick="document.getElementById('hourly-rate-modal').style.display='none'">İPTAL</button>
+                <button class="btn-modal btn-cancel"
+                    onclick="document.getElementById('hourly-rate-modal').style.display='none'">İPTAL</button>
                 <button class="btn-modal btn-confirm" id="hourly-rate-save-btn">KAYDET</button>
             </div>
         </div>
@@ -2023,9 +2064,11 @@
             <div id="clock_login" class="time-display-login">00:00</div>
             <div id="date_login" class="date-display-login">-- MART 2026</div>
             <div id="step1">
-                <input type="text" id="username" placeholder="YÖNETİCİ KİMLİĞİ" style="margin-bottom:15px;" onkeypress="if(event.key === 'Enter') nextStep()">
+                <input type="text" id="username" placeholder="YÖNETİCİ KİMLİĞİ" style="margin-bottom:15px;"
+                    onkeypress="if(event.key === 'Enter') nextStep()">
                 <div style="position: relative; margin-bottom: 25px;">
-                    <input type="password" id="password" placeholder="ERİŞİM ANAHTARI" onkeypress="if(event.key === 'Enter') nextStep()">
+                    <input type="password" id="password" placeholder="ERİŞİM ANAHTARI"
+                        onkeypress="if(event.key === 'Enter') nextStep()">
                     <i class="fas fa-shield-alt"
                         style="position: absolute; right: 20px; top: 50%; transform: translateY(-50%); font-size: 12px; color: var(--primary); opacity: 0.3; pointer-events: none;"></i>
                 </div>
@@ -2055,9 +2098,10 @@
     <div id="adminPanel" style="display: none;">
         <div class="top-nav">
             <div style="display: flex; align-items: center; gap: 12px;">
-                <img src="logom.png" alt="ShiftTurbo Logo" style="width: 32px; height: 32px; object-fit: contain; filter: drop-shadow(0 0 10px var(--primary)); animation: pulse 3s infinite ease-in-out;">
-                <div style="font-family:'Orbitron'; font-size:22px; font-weight:900; display:flex; align-items:center;">SHIFT<span
-                        style="color:var(--primary)">TURBO</span></div>
+                <img src="logom.png" alt="ShiftTurbo Logo"
+                    style="width: 32px; height: 32px; object-fit: contain; filter: drop-shadow(0 0 10px var(--primary)); animation: pulse 3s infinite ease-in-out;">
+                <div style="font-family:'Orbitron'; font-size:22px; font-weight:900; display:flex; align-items:center;">
+                    SHIFT<span style="color:var(--primary)">TURBO</span></div>
                 <div class="admin-label">Yönetici Ekranı</div>
             </div>
             <div class="live-trend-container">
@@ -2138,9 +2182,15 @@
                     type="date" id="startDate" onchange="applyFilter()"><input type="date" id="endDate"
                     onchange="applyFilter()"></div>
             <div style="display:flex; gap:12px;">
-                <button class="btn-cyber" onclick="openFinanceModal()" style="background: rgba(16, 185, 129, 0.2); color: #10b981; border-color: #10b981; font-size:10px;">💸 FİNANS TABLOSU</button>
-                <button class="btn-cyber" onclick="toggleScoreModal(true)" style="background: rgba(59, 130, 246, 0.2); color: #60a5fa; border-color: #3b82f6; font-size:10px;">ℹ️ PUANLAMA KRİTERLERİ</button>
-                <button class="btn-cyber" id="btn-pwa-push" onclick="initPWAPush()" style="background: rgba(147, 51, 234, 0.2); color: #c084fc; border-color: #9333ea; font-size:10px;">🔔 CANLI MOBİL BİLDİRİMLER</button>
+                <button class="btn-cyber" onclick="openFinanceModal()"
+                    style="background: rgba(16, 185, 129, 0.2); color: #10b981; border-color: #10b981; font-size:10px;">💸
+                    FİNANS TABLOSU</button>
+                <button class="btn-cyber" onclick="toggleScoreModal(true)"
+                    style="background: rgba(59, 130, 246, 0.2); color: #60a5fa; border-color: #3b82f6; font-size:10px;">ℹ️
+                    PUANLAMA KRİTERLERİ</button>
+                <button class="btn-cyber" id="btn-pwa-push" onclick="initPWAPush()"
+                    style="background: rgba(147, 51, 234, 0.2); color: #c084fc; border-color: #9333ea; font-size:10px;">🔔
+                    CANLI MOBİL BİLDİRİMLER</button>
                 <button class="btn-cyber btn-green" onclick="exportPDF()">📄 RAPOR AL</button>
                 <button class="btn-cyber" onclick="fetchData()">🔄 YENİLE</button>
             </div>
@@ -2151,8 +2201,11 @@
             style="background: var(--table-row-bg); border: 1px solid var(--border); border-radius: 20px; padding: 25px; margin-bottom: 15px; display: flex; gap: 20px; align-items: center; transition: all 0.3s ease;">
             <div style="flex: 1;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                    <h4 style="font-family: 'Orbitron'; font-size: 11px; color: var(--primary); margin: 0; letter-spacing: 1px;">📢 PERSONEL DUYURUSU YAYINLA</h4>
-                    <select id="broadcastTarget" style="background: var(--input-bg); border: 1px solid var(--border); color: var(--primary); padding: 6px 12px; border-radius: 8px; font-family: 'Poppins', sans-serif; font-size: 11px; outline: none; cursor: pointer;">
+                    <h4
+                        style="font-family: 'Orbitron'; font-size: 11px; color: var(--primary); margin: 0; letter-spacing: 1px;">
+                        📢 PERSONEL DUYURUSU YAYINLA</h4>
+                    <select id="broadcastTarget"
+                        style="background: var(--input-bg); border: 1px solid var(--border); color: var(--primary); padding: 6px 12px; border-radius: 8px; font-family: 'Poppins', sans-serif; font-size: 11px; outline: none; cursor: pointer;">
                         <option value="ALL">📢 Tüm Personeller (Genel Duyuru)</option>
                     </select>
                 </div>
@@ -2162,7 +2215,8 @@
             <div style="display: flex; flex-direction: column; gap: 5px; margin-top: 15px;">
                 <button class="btn-cyber" onclick="sendBroadcast()" style="height: 40px;">YAYINLA</button>
                 <button class="btn-cyber" onclick="deleteBroadcasts()"
-                    style="height: 30px; background: rgba(239, 68, 68, 0.1); color: #ef4444; border-color: #ef4444; font-size: 8px;">TÜMÜNÜ TEMİZLE</button>
+                    style="height: 30px; background: rgba(239, 68, 68, 0.1); color: #ef4444; border-color: #ef4444; font-size: 8px;">TÜMÜNÜ
+                    TEMİZLE</button>
             </div>
         </div>
 
@@ -2194,11 +2248,14 @@
             style="background: var(--card); border: 1px solid var(--border); border-radius: 25px; padding: 30px; margin-top: 50px; transition: all 0.3s ease;">
             <div onclick="toggleStaffManagement()"
                 style="display: flex; justify-content: space-between; align-items: center; cursor: pointer; padding: 10px; margin-left: -10px; border-radius: 8px; transition: background 0.3s ease;"
-                onmouseover="this.style.background='rgba(255,255,255,0.03)'" onmouseout="this.style.background='transparent'">
+                onmouseover="this.style.background='rgba(255,255,255,0.03)'"
+                onmouseout="this.style.background='transparent'">
                 <h3
                     style="font-family: 'Orbitron'; font-size: 16px; letter-spacing: 3px; margin: 0; color: var(--text-main); border-left: 4px solid var(--primary); padding-left: 15px; display: flex; align-items: center;">
                     PERSONEL YÖNETİM MERKEZİ
-                    <span id="staff-toggle-text" style="color: var(--primary); font-size: 10px; margin-left: 15px; opacity: 0.7; font-family: 'Poppins', sans-serif; letter-spacing: 1px; font-weight: 500;">(TIKLA VE AÇ)</span>
+                    <span id="staff-toggle-text"
+                        style="color: var(--primary); font-size: 10px; margin-left: 15px; opacity: 0.7; font-family: 'Poppins', sans-serif; letter-spacing: 1px; font-weight: 500;">(TIKLA
+                        VE AÇ)</span>
                 </h3>
                 <i id="staffCollapseIcon" class="fas fa-chevron-down"
                     style="transition: transform 0.3s ease; color: var(--primary); font-size: 18px;"></i>
@@ -2217,10 +2274,18 @@
                     <table style="width: 100%; border-collapse: collapse; min-width: 550px;">
                         <thead style="background: rgba(255,255,255,0.02);">
                             <tr>
-                                <th style="padding: 15px; text-align: left; font-size: 11px; font-family: 'Poppins', sans-serif; font-weight: bold; color: var(--primary); letter-spacing: 1px;">AD SOYAD</th>
-                                <th style="padding: 15px; text-align: left; font-size: 11px; font-family: 'Poppins', sans-serif; font-weight: bold; color: var(--primary); letter-spacing: 1px;">PIN KODU</th>
-                                <th style="padding: 15px; text-align: left; font-size: 11px; font-family: 'Poppins', sans-serif; font-weight: bold; color: var(--primary); letter-spacing: 1px;">SAATLİK ÜCRET (TL)</th>
-                                <th style="padding: 15px; text-align: right; font-size: 11px; font-family: 'Poppins', sans-serif; font-weight: bold; color: var(--primary); letter-spacing: 1px;">İŞLEM</th>
+                                <th
+                                    style="padding: 15px; text-align: left; font-size: 11px; font-family: 'Poppins', sans-serif; font-weight: bold; color: var(--primary); letter-spacing: 1px;">
+                                    AD SOYAD</th>
+                                <th
+                                    style="padding: 15px; text-align: left; font-size: 11px; font-family: 'Poppins', sans-serif; font-weight: bold; color: var(--primary); letter-spacing: 1px;">
+                                    PIN KODU</th>
+                                <th
+                                    style="padding: 15px; text-align: left; font-size: 11px; font-family: 'Poppins', sans-serif; font-weight: bold; color: var(--primary); letter-spacing: 1px;">
+                                    SAATLİK ÜCRET (TL)</th>
+                                <th
+                                    style="padding: 15px; text-align: right; font-size: 11px; font-family: 'Poppins', sans-serif; font-weight: bold; color: var(--primary); letter-spacing: 1px;">
+                                    İŞLEM</th>
                             </tr>
                         </thead>
                         <tbody id="staffListTable"></tbody>
@@ -2233,10 +2298,18 @@
             <table style="min-width: 500px;">
                 <thead>
                     <tr>
-                        <th style="font-family: 'Poppins', sans-serif; font-size: 12px; font-weight: bold; letter-spacing: 1px;">PERSONEL</th>
-                        <th style="font-family: 'Poppins', sans-serif; font-size: 12px; font-weight: bold; letter-spacing: 1px;">DURUM</th>
-                        <th style="font-family: 'Poppins', sans-serif; font-size: 12px; font-weight: bold; letter-spacing: 1px;">BÖLGE/NOT</th>
-                        <th style="font-family: 'Poppins', sans-serif; font-size: 12px; font-weight: bold; letter-spacing: 1px;">ZAMAN</th>
+                        <th
+                            style="font-family: 'Poppins', sans-serif; font-size: 12px; font-weight: bold; letter-spacing: 1px;">
+                            PERSONEL</th>
+                        <th
+                            style="font-family: 'Poppins', sans-serif; font-size: 12px; font-weight: bold; letter-spacing: 1px;">
+                            DURUM</th>
+                        <th
+                            style="font-family: 'Poppins', sans-serif; font-size: 12px; font-weight: bold; letter-spacing: 1px;">
+                            BÖLGE/NOT</th>
+                        <th
+                            style="font-family: 'Poppins', sans-serif; font-size: 12px; font-weight: bold; letter-spacing: 1px;">
+                            ZAMAN</th>
                     </tr>
                 </thead>
                 <tbody id="logTable"></tbody>
@@ -2260,84 +2333,126 @@
     </div>
 
     <!-- ℹ️ PUANLAMA KRİTERLERİ MODALI -->
-    <div id="score-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(10px); z-index: 999999; align-items: center; justify-content: center;">
-        <div style="background: #0f172a; border: 2px solid #3b82f6; border-radius: 25px; padding: 30px; width: 85%; max-width: 450px; box-shadow: 0 0 50px rgba(59, 130, 246, 0.3); position: relative; text-align: left;">
-            <h3 style="font-family: 'Orbitron'; font-size: 16px; color: #60a5fa; margin: 0 0 20px 0; border-bottom: 1px solid rgba(59,130,246,0.2); padding-bottom: 10px; display: flex; align-items: center; gap: 10px;">
+    <div id="score-modal"
+        style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(10px); z-index: 999999; align-items: center; justify-content: center;">
+        <div
+            style="background: #0f172a; border: 2px solid #3b82f6; border-radius: 25px; padding: 30px; width: 85%; max-width: 450px; box-shadow: 0 0 50px rgba(59, 130, 246, 0.3); position: relative; text-align: left;">
+            <h3
+                style="font-family: 'Orbitron'; font-size: 16px; color: #60a5fa; margin: 0 0 20px 0; border-bottom: 1px solid rgba(59,130,246,0.2); padding-bottom: 10px; display: flex; align-items: center; gap: 10px;">
                 ℹ️ DİNAMİK PUANLAMA SİSTEMİ
             </h3>
             <p style="font-family: 'Poppins'; font-size: 12px; color: #cbd5e1; line-height: 1.6; margin-bottom: 20px;">
-                ShiftTurbo, personellerin operasyonel disiplinini anlık olarak <b>100 tam puan</b> üzerinden değerlendirir. Puanlama kriterleri aşağıdaki gibidir:
+                ShiftTurbo, personellerin operasyonel disiplinini anlık olarak <b>100 tam puan</b> üzerinden
+                değerlendirir. Puanlama kriterleri aşağıdaki gibidir:
             </p>
 
             <div style="display: flex; flex-direction: column; gap: 15px; margin-bottom: 25px;">
-                <div style="background: rgba(239, 68, 68, 0.1); border-left: 4px solid #ef4444; padding: 12px 15px; border-radius: 0 12px 12px 0;">
-                    <b style="color: #ef4444; font-family: 'Orbitron'; font-size: 11px;">⏱️ ÇIKIŞ YAPMAYI UNUTMA CEZASI (-15 PUAN)</b>
+                <div
+                    style="background: rgba(239, 68, 68, 0.1); border-left: 4px solid #ef4444; padding: 12px 15px; border-radius: 0 12px 12px 0;">
+                    <b style="color: #ef4444; font-family: 'Orbitron'; font-size: 11px;">⏱️ ÇIKIŞ YAPMAYI UNUTMA CEZASI
+                        (-15 PUAN)</b>
                     <div style="font-size: 11px; color: #cbd5e1; margin-top: 5px; font-family: 'Poppins';">
-                        Personelin mesaisi 10 saat 30 dakikayı aştığında (akşam çıkış yapmadan gittiğinde) sistem otomatik olarak 15 puan keser.
+                        Personelin mesaisi 10 saat 30 dakikayı aştığında (akşam çıkış yapmadan gittiğinde) sistem
+                        otomatik olarak 15 puan keser.
                     </div>
                 </div>
 
-                <div style="background: rgba(245, 158, 11, 0.1); border-left: 4px solid #f59e0b; padding: 12px 15px; border-radius: 0 12px 12px 0;">
-                    <b style="color: #f59e0b; font-family: 'Orbitron'; font-size: 11px;">📍 KONUM İHLALİ CEZASI (-5 PUAN)</b>
+                <div
+                    style="background: rgba(245, 158, 11, 0.1); border-left: 4px solid #f59e0b; padding: 12px 15px; border-radius: 0 12px 12px 0;">
+                    <b style="color: #f59e0b; font-family: 'Orbitron'; font-size: 11px;">📍 KONUM İHLALİ CEZASI (-5
+                        PUAN)</b>
                     <div style="font-size: 11px; color: #cbd5e1; margin-top: 5px; font-family: 'Poppins';">
-                        GPS sapmasının 300 metreyi aştığı (dükkan dışından yapılan) her işlem için sistem geçmişi tarar ve işlem başına 5 puan kırar.
+                        GPS sapmasının 300 metreyi aştığı (dükkan dışından yapılan) her işlem için sistem geçmişi tarar
+                        ve işlem başına 5 puan kırar.
                     </div>
                 </div>
 
-                <div style="background: rgba(16, 185, 129, 0.1); border-left: 4px solid #10b981; padding: 12px 15px; border-radius: 0 12px 12px 0;">
-                    <b style="color: #10b981; font-family: 'Orbitron'; font-size: 11px;">⭐ SADAKAT VE DEVAMLILIK ÖDÜLÜ (+2 PUAN)</b>
+                <div
+                    style="background: rgba(16, 185, 129, 0.1); border-left: 4px solid #10b981; padding: 12px 15px; border-radius: 0 12px 12px 0;">
+                    <b style="color: #10b981; font-family: 'Orbitron'; font-size: 11px;">⭐ SADAKAT VE DEVAMLILIK ÖDÜLÜ
+                        (+2 PUAN)</b>
                     <div style="font-size: 11px; color: #cbd5e1; margin-top: 5px; font-family: 'Poppins';">
-                        Kurallara uygun yapılan her 5 başarılı operasyon hareketi için personele +2 bonus puan eklenir (Maksimum 100 puan).
+                        Kurallara uygun yapılan her 5 başarılı operasyon hareketi için personele +2 bonus puan eklenir
+                        (Maksimum 100 puan).
                     </div>
                 </div>
             </div>
 
-            <button class="btn-cyber" onclick="toggleScoreModal(false)" style="background: #3b82f6; color: white; width: 100%; margin-top: 0;">ANLAŞILDI</button>
+            <button class="btn-cyber" onclick="toggleScoreModal(false)"
+                style="background: #3b82f6; color: white; width: 100%; margin-top: 0;">ANLAŞILDI</button>
         </div>
     </div>
 
     <!-- 💸 FİNANS VE HAKEDİŞ MODALI -->
-    <div id="finance-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(10px); z-index: 999999; align-items: center; justify-content: center;">
-        <div style="background: #0f172a; border: 2px solid #10b981; border-radius: 25px; padding: 30px; width: 90%; max-width: 850px; box-shadow: 0 0 50px rgba(16, 185, 129, 0.3); position: relative; text-align: left; max-height: 90vh; overflow-y: auto;">
-            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(16,185,129,0.2); padding-bottom: 15px; margin-bottom: 20px;">
-                <h3 style="font-family: 'Orbitron'; font-size: 18px; color: #10b981; margin: 0; display: flex; align-items: center; gap: 10px;">
+    <div id="finance-modal"
+        style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(10px); z-index: 999999; align-items: center; justify-content: center;">
+        <div
+            style="background: #0f172a; border: 2px solid #10b981; border-radius: 25px; padding: 30px; width: 90%; max-width: 850px; box-shadow: 0 0 50px rgba(16, 185, 129, 0.3); position: relative; text-align: left; max-height: 90vh; overflow-y: auto;">
+            <div
+                style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(16,185,129,0.2); padding-bottom: 15px; margin-bottom: 20px;">
+                <h3
+                    style="font-family: 'Orbitron'; font-size: 18px; color: #10b981; margin: 0; display: flex; align-items: center; gap: 10px;">
                     💸 OTONOM HAKEDİŞ VE MAAŞ TABLOSU
                 </h3>
-                <button onclick="closeFinanceModal()" style="background: none; border: none; color: #ef4444; font-size: 20px; cursor: pointer;">✖</button>
+                <button onclick="closeFinanceModal()"
+                    style="background: none; border: none; color: #ef4444; font-size: 20px; cursor: pointer;">✖</button>
             </div>
-            
+
             <p style="font-family: 'Poppins'; font-size: 12px; color: #cbd5e1; margin-bottom: 20px;">
-                Bu tablo, personellerin anlık mesai saatlerini, kişisel saatlik ücretlerini ve disiplin puanlarına bağlı ceza kesintilerini baz alarak canlı hakediş hesaplar.
+                Bu tablo, personellerin anlık mesai saatlerini, kişisel saatlik ücretlerini ve disiplin puanlarına bağlı
+                ceza kesintilerini baz alarak canlı hakediş hesaplar.
             </p>
 
-            <div style="display: flex; gap: 15px; align-items: center; margin-bottom: 20px; background: rgba(16,185,129,0.1); padding: 10px 15px; border-radius: 12px; border: 1px solid rgba(16,185,129,0.2);">
+            <div
+                style="display: flex; gap: 15px; align-items: center; margin-bottom: 20px; background: rgba(16,185,129,0.1); padding: 10px 15px; border-radius: 12px; border: 1px solid rgba(16,185,129,0.2);">
                 <span style="font-family: 'Orbitron'; font-size: 11px; color: #10b981;">🗓️ TARİH ARALIĞI:</span>
-                <input type="date" id="financeStart" style="background: rgba(2, 6, 23, 0.8); border: 1px solid rgba(16, 185, 129, 0.4); color: white; padding: 5px 10px; border-radius: 8px; font-family: 'Poppins'; font-size: 11px; outline: none;" onchange="openFinanceModal()">
+                <input type="date" id="financeStart"
+                    style="background: rgba(2, 6, 23, 0.8); border: 1px solid rgba(16, 185, 129, 0.4); color: white; padding: 5px 10px; border-radius: 8px; font-family: 'Poppins'; font-size: 11px; outline: none;"
+                    onchange="openFinanceModal()">
                 <span style="color: #cbd5e1; font-size: 11px;">-</span>
-                <input type="date" id="financeEnd" style="background: rgba(2, 6, 23, 0.8); border: 1px solid rgba(16, 185, 129, 0.4); color: white; padding: 5px 10px; border-radius: 8px; font-family: 'Poppins'; font-size: 11px; outline: none;" onchange="openFinanceModal()">
+                <input type="date" id="financeEnd"
+                    style="background: rgba(2, 6, 23, 0.8); border: 1px solid rgba(16, 185, 129, 0.4); color: white; padding: 5px 10px; border-radius: 8px; font-family: 'Poppins'; font-size: 11px; outline: none;"
+                    onchange="openFinanceModal()">
             </div>
 
             <div style="overflow-x: auto;">
                 <table style="width: 100%; border-collapse: collapse; min-width: 650px;">
                     <thead style="background: rgba(255,255,255,0.03); border-bottom: 2px solid rgba(16,185,129,0.3);">
                         <tr>
-                            <th style="padding: 15px; text-align: left; font-size: 11px; color:#10b981; font-family:'Poppins', sans-serif; font-weight:bold; letter-spacing:1px;">PERSONEL</th>
-                            <th style="padding: 15px; text-align: left; font-size: 11px; color:#10b981; font-family:'Poppins', sans-serif; font-weight:bold; letter-spacing:1px;">SAATLİK ÜCRET</th>
-                            <th style="padding: 15px; text-align: left; font-size: 11px; color:#10b981; font-family:'Poppins', sans-serif; font-weight:bold; letter-spacing:1px;">NET MESAİ</th>
-                            <th style="padding: 15px; text-align: left; font-size: 11px; color:#10b981; font-family:'Poppins', sans-serif; font-weight:bold; letter-spacing:1px;">HAM HAKEDİŞ</th>
-                            <th style="padding: 15px; text-align: left; font-size: 11px; color:#10b981; font-family:'Poppins', sans-serif; font-weight:bold; letter-spacing:1px;">DİSİPLİN DURUMU</th>
-                            <th style="padding: 15px; text-align: right; font-size: 11px; color:#10b981; font-family:'Poppins', sans-serif; font-weight:bold; letter-spacing:1px;">NET ÖDENECEK</th>
+                            <th
+                                style="padding: 15px; text-align: left; font-size: 11px; color:#10b981; font-family:'Poppins', sans-serif; font-weight:bold; letter-spacing:1px;">
+                                PERSONEL</th>
+                            <th
+                                style="padding: 15px; text-align: left; font-size: 11px; color:#10b981; font-family:'Poppins', sans-serif; font-weight:bold; letter-spacing:1px;">
+                                SAATLİK ÜCRET</th>
+                            <th
+                                style="padding: 15px; text-align: left; font-size: 11px; color:#10b981; font-family:'Poppins', sans-serif; font-weight:bold; letter-spacing:1px;">
+                                NET MESAİ</th>
+                            <th
+                                style="padding: 15px; text-align: left; font-size: 11px; color:#10b981; font-family:'Poppins', sans-serif; font-weight:bold; letter-spacing:1px;">
+                                HAM HAKEDİŞ</th>
+                            <th
+                                style="padding: 15px; text-align: left; font-size: 11px; color:#10b981; font-family:'Poppins', sans-serif; font-weight:bold; letter-spacing:1px;">
+                                DİSİPLİN DURUMU</th>
+                            <th
+                                style="padding: 15px; text-align: right; font-size: 11px; color:#10b981; font-family:'Poppins', sans-serif; font-weight:bold; letter-spacing:1px;">
+                                NET ÖDENECEK</th>
                         </tr>
                     </thead>
                     <tbody id="financeTableBody"></tbody>
                 </table>
             </div>
 
-            <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center;">
-                <div style="font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 14px; color: #cbd5e1; letter-spacing: 0.5px;">
-                    TOPLAM ÖDEME BÜTÇESİ: <b id="financeGrandTotal" style="color: #10b981; font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 18px; margin-left: 10px;">0 TL</b>
+            <div
+                style="margin-top: 25px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center;">
+                <div
+                    style="font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 14px; color: #cbd5e1; letter-spacing: 0.5px;">
+                    TOPLAM ÖDEME BÜTÇESİ: <b id="financeGrandTotal"
+                        style="color: #10b981; font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 18px; margin-left: 10px;">0
+                        TL</b>
                 </div>
-                <button class="btn-cyber btn-green" onclick="window.print()" style="margin: 0;">🖨️ TABLOYU YAZDIR</button>
+                <button class="btn-cyber btn-green" onclick="window.print()" style="margin: 0;">🖨️ TABLOYU
+                    YAZDIR</button>
             </div>
         </div>
     </div>
@@ -2420,7 +2535,7 @@
 
         function calculateStaffHours(personName, customLogs = null) {
             const logsToUse = customLogs || window.allLogs;
-            const pLogs = logsToUse.filter(l => l.personel === personName).sort((a,b) => new Date(a.raw_time) - new Date(b.raw_time));
+            const pLogs = logsToUse.filter(l => l.personel === personName).sort((a, b) => new Date(a.raw_time) - new Date(b.raw_time));
             let totalHours = 0;
             let lastIn = null;
 
@@ -2448,13 +2563,13 @@
 
             const rates = JSON.parse(localStorage.getItem('shiftTurbo_hourly_rates') || '{}');
             const users = window.allUsers || [];
-            
+
             // Finans Modalı içindeki tarihleri al (yoksa genel toolbardakileri kullan)
             const fStartEl = document.getElementById('financeStart');
             const fEndEl = document.getElementById('financeEnd');
             const mainStartEl = document.getElementById('startDate');
             const mainEndEl = document.getElementById('endDate');
-            
+
             if (fStartEl && !fStartEl.value && mainStartEl && mainStartEl.value) fStartEl.value = mainStartEl.value;
             if (fEndEl && !fEndEl.value && mainEndEl && mainEndEl.value) fEndEl.value = mainEndEl.value;
 
@@ -2464,7 +2579,7 @@
             let filteredLogs = window.allLogs || [];
             if (sD) filteredLogs = filteredLogs.filter(l => new Date(l.raw_time) >= new Date(sD));
             if (eD) filteredLogs = filteredLogs.filter(l => new Date(l.raw_time) <= new Date(eD + "T23:59:59"));
-            
+
             let html = '';
             let grandTotal = 0;
 
@@ -2479,7 +2594,7 @@
                 // EĞER window.calculateScore olarak dışarı aktarılmamışsa hata verir!!!
                 // Gelin bunu garantiye almak için calculateScore fonksiyonunu window.calculateScore olarak da dışarı aktaralım VEYA burada window.calculateScore(name) çağıralım!!!
                 const score = typeof window.calculateScore === 'function' ? window.calculateScore(name) : 100;
-                
+
                 const penaltyPercent = (100 - score) * 0.5;
                 const penaltyAmount = basePay * (penaltyPercent / 100);
                 const netPay = Math.max(0, basePay - penaltyAmount);
@@ -2491,15 +2606,15 @@
                     <td style="padding:15px; font-family:'Poppins', sans-serif; font-weight:bold; color:var(--text-main); font-size:14px;">${name}</td>
                     <td style="padding:15px; font-family:'Poppins', sans-serif; color:var(--primary); font-weight:600; font-size:14px;">${rate} TL</td>
                     <td style="padding:15px; font-family:'Poppins', sans-serif; color:#cbd5e1; font-size:14px; font-weight:500;">${hours.toFixed(1)} Saat</td>
-                    <td style="padding:15px; font-family:'Poppins', sans-serif; color:#94a3b8; font-size:14px; font-weight:500;">${basePay.toLocaleString('tr-TR', {maximumFractionDigits:2})} TL</td>
-                    <td style="padding:15px; font-family:'Poppins', sans-serif; color:${score < 100 ? '#ef4444' : '#10b981'}; font-weight:600; font-size:14px;">${score} Puan (-${penaltyAmount.toLocaleString('tr-TR', {maximumFractionDigits:2})} TL)</td>
-                    <td style="padding:15px; font-family:'Poppins', sans-serif; color:#10b981; font-weight:bold; font-size:15px; text-align:right;">${netPay.toLocaleString('tr-TR', {maximumFractionDigits:2})} TL</td>
+                    <td style="padding:15px; font-family:'Poppins', sans-serif; color:#94a3b8; font-size:14px; font-weight:500;">${basePay.toLocaleString('tr-TR', { maximumFractionDigits: 2 })} TL</td>
+                    <td style="padding:15px; font-family:'Poppins', sans-serif; color:${score < 100 ? '#ef4444' : '#10b981'}; font-weight:600; font-size:14px;">${score} Puan (-${penaltyAmount.toLocaleString('tr-TR', { maximumFractionDigits: 2 })} TL)</td>
+                    <td style="padding:15px; font-family:'Poppins', sans-serif; color:#10b981; font-weight:bold; font-size:15px; text-align:right;">${netPay.toLocaleString('tr-TR', { maximumFractionDigits: 2 })} TL</td>
                 </tr>
                 `;
             });
 
             tbody.innerHTML = html;
-            document.getElementById('financeGrandTotal').innerText = grandTotal.toLocaleString('tr-TR', {maximumFractionDigits:2}) + ' TL';
+            document.getElementById('financeGrandTotal').innerText = grandTotal.toLocaleString('tr-TR', { maximumFractionDigits: 2 }) + ' TL';
             document.body.classList.add('finance-modal-open');
             modal.style.display = 'flex';
         }
@@ -2516,10 +2631,9 @@
 
         (() => {
             let isAuthenticated = false;
-            // 🛡️ UCR TECHNOLOGY — DIRECT SUPABASE CONNECTION
-            const supabaseUrl = 'https://tnvjdppcyctmqkirlwmy.supabase.co';
-            const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRudmpkcHBjeWN0bXFraXJsd215Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3MzY0NTIsImV4cCI6MjA4ODMxMjQ1Mn0.Ft4JXQtbcXz1-qO7n06fV1vGtP4DbCVUWDojEAFoALI';
-            const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
+            // 🛡️ SHIFTURBO — SECURE PROXY CONNECTION
+            const proxyUrl = 'https://shiftturbo-proxy.burakkucar55-5af.workers.dev';
+            const _supabase = supabase.createClient(proxyUrl, 'proxy-authenticated');
             window._supabase = _supabase;
             window.allLogs = [];
             let lastLogCount = 0;
@@ -2531,7 +2645,7 @@
             window.addEventListener('DOMContentLoaded', async () => {
                 const loginOv = document.getElementById("loginOverlay");
                 const adminPn = document.getElementById("adminPanel");
-                
+
                 // localStorage'daki duruma göre ilk başlangıç durumunu eşitleyelim
                 if (localStorage.getItem('shiftTurbo_admin_logged_in') === 'true') {
                     if (loginOv) loginOv.style.display = "none";
@@ -2542,7 +2656,7 @@
                 }
 
                 const { data: { session } } = await _supabase.auth.getSession();
-                
+
                 if (session) {
                     isAuthenticated = true;
                     localStorage.setItem('shiftTurbo_admin_logged_in', 'true');
@@ -2771,7 +2885,7 @@
                         if (sug) {
                             sug.style.display = 'flex';
                             sessionStorage.setItem('rotate_suggested', 'true');
-                            setTimeout(() => { if(sug) sug.style.display = 'none'; }, 8000);
+                            setTimeout(() => { if (sug) sug.style.display = 'none'; }, 8000);
                         }
                     }
                 }
@@ -2939,7 +3053,7 @@
             async function fetchData() {
                 if (!isAuthenticated) return;
                 const { data, error } = await _supabase.from('logs').select('*').order('created_at', { ascending: false });
-                
+
                 if (error) {
                     console.error("Veri çekme hatası (logs):", error);
                     if (error.message.includes("JWT") || error.message.includes("auth") || error.message.includes("security") || error.message.includes("policy") || error.code === 'PGRST301') {
@@ -3241,7 +3355,7 @@
                 filtered.forEach((log, idx) => {
                     const tr = document.createElement('tr');
                     const pLogs = personLogsMap[log.personel] || [];
-                    
+
                     // calculateRowDuration için kronolojik sıralı listeyi hazırla/önbelleğe al
                     if (!sortedPersonLogsMap[log.personel]) {
                         sortedPersonLogsMap[log.personel] = pLogs.slice().reverse();
@@ -3338,7 +3452,7 @@
                 const { jsPDF } = window.jspdf;
                 const doc = new jsPDF('p', 'pt', 'a4');
                 const originalAddPage = doc.addPage;
-                doc.addPage = function() {
+                doc.addPage = function () {
                     originalAddPage.apply(this, arguments);
                     doc.setFillColor(10, 15, 30);
                     doc.rect(0, 0, doc.internal.pageSize.width, doc.internal.pageSize.height, 'F');
@@ -3375,12 +3489,12 @@
                 doc.line(40, 85, doc.internal.pageSize.width - 40, 85);
 
                 doc.setFontSize(10); doc.setTextColor(203, 213, 225);
-                
+
                 const sDEl = document.getElementById('startDate');
                 const eDEl = document.getElementById('endDate');
                 const sD = sDEl ? sDEl.value : '';
                 const eD = eDEl ? eDEl.value : '';
-                
+
                 doc.text(cleanPdfText(`Filtre: ${document.getElementById('staffFilter').value === 'all' ? 'Tüm Personel' : document.getElementById('staffFilter').value} | Tarih: ${sD || 'Başlangıç'} - ${eD || 'Bugün'}`), 40, 110);
 
                 // 1. 💸 OTONOM HAKEDİŞ VE MAAŞ TABLOSU VERİLERİNİ TOPLA
@@ -3388,7 +3502,7 @@
                 const rates = JSON.parse(localStorage.getItem('shiftTurbo_hourly_rates') || '{}');
                 const users = window.allUsers || [];
                 let grandTotalPay = 0;
-                
+
                 let filteredLogs = window.allLogs || [];
                 if (sD) filteredLogs = filteredLogs.filter(l => new Date(l.raw_time) >= new Date(sD));
                 if (eD) filteredLogs = filteredLogs.filter(l => new Date(l.raw_time) <= new Date(eD + "T23:59:59"));
@@ -3408,9 +3522,9 @@
                         cleanPdfText(name),
                         cleanPdfText(`${rate} TL`),
                         cleanPdfText(`${hours.toFixed(1)} Saat`),
-                        cleanPdfText(`${basePay.toLocaleString('tr-TR', {maximumFractionDigits:2})} TL`),
-                        cleanPdfText(`${score} Puan (-${penaltyAmount.toLocaleString('tr-TR', {maximumFractionDigits:2})} TL)`),
-                        cleanPdfText(`${netPay.toLocaleString('tr-TR', {maximumFractionDigits:2})} TL`)
+                        cleanPdfText(`${basePay.toLocaleString('tr-TR', { maximumFractionDigits: 2 })} TL`),
+                        cleanPdfText(`${score} Puan (-${penaltyAmount.toLocaleString('tr-TR', { maximumFractionDigits: 2 })} TL)`),
+                        cleanPdfText(`${netPay.toLocaleString('tr-TR', { maximumFractionDigits: 2 })} TL`)
                     ]);
                 });
 
@@ -3419,7 +3533,7 @@
                 doc.text(cleanPdfText("💸 OTONOM HAKEDIS VE MAAS TABLOSU"), 40, 140);
 
                 doc.setFontSize(10); doc.setTextColor(148, 163, 184); doc.setFont('Roboto', 'normal');
-                doc.text(cleanPdfText(`(Tarih: ${sD || 'Baslangic'} / ${eD || 'Bugun'}) | Net Odeme: ${grandTotalPay.toLocaleString('tr-TR', {maximumFractionDigits:2})} TL`), doc.internal.pageSize.width - 350, 155);
+                doc.text(cleanPdfText(`(Tarih: ${sD || 'Baslangic'} / ${eD || 'Bugun'}) | Net Odeme: ${grandTotalPay.toLocaleString('tr-TR', { maximumFractionDigits: 2 })} TL`), doc.internal.pageSize.width - 350, 155);
 
                 doc.autoTable({
                     startY: 165,
@@ -3431,7 +3545,7 @@
                     columnStyles: { 5: { fontStyle: 'bold', textColor: [16, 185, 129], halign: 'right' } },
                     alternateRowStyles: { fillColor: [8, 12, 25] },
                     margin: { left: 40, right: 40 },
-                    willDrawPage: function(data) {
+                    willDrawPage: function (data) {
                         doc.setFillColor(10, 15, 30);
                         doc.rect(0, 0, doc.internal.pageSize.width, doc.internal.pageSize.height, 'F');
                     }
@@ -3469,7 +3583,7 @@
                     headStyles: { fillColor: [244, 129, 32], textColor: [10, 15, 30], fontStyle: 'bold', fontSize: 10 },
                     alternateRowStyles: { fillColor: [8, 12, 25] },
                     margin: { left: 40, right: 40 },
-                    willDrawPage: function(data) {
+                    willDrawPage: function (data) {
                         doc.setFillColor(10, 15, 30);
                         doc.rect(0, 0, doc.internal.pageSize.width, doc.internal.pageSize.height, 'F');
                     }
@@ -3618,7 +3732,7 @@
 
                         try {
                             await _supabase.from('broadcasts').insert([{ message: '🔕 Arka Plan Bildirimleri Kapatıldı' }]);
-                        } catch(e){}
+                        } catch (e) { }
 
                         showToast("BİLDİRİMLER DEAKTİF", "Arka plan mobil bildirimleri kapatıldı.", "info");
                         const btn = document.getElementById('btn-pwa-push');
@@ -3677,7 +3791,7 @@
 
                     try {
                         await _supabase.from('broadcasts').insert([{ message: '🔔 Arka Plan Bildirimleri Aktif Edildi (Panel Kapalıyken Çalışacak)' }]);
-                    } catch(e){}
+                    } catch (e) { }
 
                     showToast("MOBİL BİLDİRİMLER AKTİF!", "Tarayıcınız kapalı olsa bile arka planda bildirimler cep telefonunuza düşecek!", "success");
                     const btn = document.getElementById('btn-pwa-push');
@@ -3711,7 +3825,7 @@
                     const cleanName = u.ad_soyad ? u.ad_soyad.replace(/["']/g, '').replace(/[\r\n]/g, '').trim() : 'Personel';
                     const cleanPin = u.pin;
 
-                    const deviceBtnHtml = u.device_id 
+                    const deviceBtnHtml = u.device_id
                         ? `<button onclick="resetDevice('${cleanPin}', '${cleanName}')" class="btn-cyber btn-device-reset" style="background:#ef4444; color:#fff; font-size:10px; padding:6px 12px; height:auto; font-family:'Poppins', sans-serif; font-weight:bold; border-radius:8px; margin-right:15px;">🔓 KİLİDİ AÇ</button>`
                         : `<span style="font-family:'Poppins', sans-serif; font-size:12px; font-weight:600; color:var(--text-muted); margin-right:15px; display:inline-block;">🟢 Girişe Hazır</span>`;
 
@@ -3738,7 +3852,7 @@
                 const targetSel = document.getElementById('broadcastTarget');
                 if (targetSel && data) {
                     const currentVal = targetSel.value;
-                    targetSel.innerHTML = '<option value="ALL">📢 Tüm Personeller (Genel Duyuru)</option>' + 
+                    targetSel.innerHTML = '<option value="ALL">📢 Tüm Personeller (Genel Duyuru)</option>' +
                         data.map(u => '<option value="' + u.ad_soyad + '">👤 ' + u.ad_soyad + '</option>').join('');
                     if (currentVal) targetSel.value = currentVal;
                 }
@@ -3795,8 +3909,8 @@
                 } else if (!data || data.length === 0) {
                     showToast("YETKİ HATASI (RLS)", "Supabase RLS politikası silme işlemine izin vermiyor. Lütfen Supabase panelinden 'users' tablosu için DELETE yetkisi (policy) ekleyin.", "error");
                     await cyberAlert("❌ YETKİ HATASI (RLS)", "Supabase panelinde 'users' tablosu için RLS aktif edilmiş ancak silme yetkisi (DELETE policy) tanımlanmamış.\n\nÇözüm: Supabase > Authentication > Policies kısmından 'users' tablosuna DELETE yetkisi verin.");
-                } else { 
-                    showToast("SİLİNDİ", `✅ ${name} silindi.`, "success"); 
+                } else {
+                    showToast("SİLİNDİ", `✅ ${name} silindi.`, "success");
                     await cyberAlert("✅ SİLİNDİ", `${name} isimli personel sistemden başarıyla silindi.`);
                     if (typeof fetchStaffList === 'function') fetchStaffList();
                     if (typeof loadStaffList === 'function') loadStaffList();
@@ -3829,8 +3943,8 @@
                 } else if (!data || data.length === 0) {
                     showToast("YETKİ HATASI (RLS)", "Supabase RLS politikası güncelleme işlemine izin vermiyor. Lütfen Supabase panelinden 'users' tablosu için UPDATE yetkisi (policy) ekleyin.", "error");
                     await cyberAlert("❌ YETKİ HATASI (RLS)", "Supabase panelinde 'users' tablosu için RLS aktif edilmiş ancak güncelleme yetkisi (UPDATE policy) tanımlanmamış.\n\nÇözüm: Supabase > Authentication > Policies kısmından 'users' tablosuna UPDATE yetkisi verin (Örn: `true` veya `auth.role() = 'anon'`).");
-                } else { 
-                    showToast("BAŞARILI", `✅ ${name} cihaz kilidi açıldı. Yeni telefondan giriş yapabilir.`, "success"); 
+                } else {
+                    showToast("BAŞARILI", `✅ ${name} cihaz kilidi açıldı. Yeni telefondan giriş yapabilir.`, "success");
                     await cyberAlert("✅ BAŞARILI", `${name} isimli personelin cihaz eşleşmesi (device_id) başarıyla NULL yapıldı. Artık yeni telefonundan giriş yapabilir.`);
                     if (typeof fetchStaffList === 'function') fetchStaffList();
                     if (typeof loadStaffList === 'function') loadStaffList();
@@ -3865,7 +3979,7 @@
                 const newTheme = currentTheme === 'light' ? 'dark' : 'light';
                 document.documentElement.setAttribute('data-theme', newTheme);
                 localStorage.setItem('shiftTurbo_theme', newTheme);
-                
+
                 const btn = document.getElementById('theme-toggle-btn');
                 if (btn) {
                     btn.innerText = newTheme === 'light' ? '🌙' : '☀️';
@@ -3906,7 +4020,7 @@
             window.toggleTheme = toggleTheme;
 
             // ⌨️ ESC TUŞU İLE AKTİF MODALLARI KAPATMA MOTORU
-            document.addEventListener('keydown', function(e) {
+            document.addEventListener('keydown', function (e) {
                 if (e.key === 'Escape' || e.keyCode === 27) {
                     const aboutM = document.getElementById('about-modal');
                     const financeM = document.getElementById('finance-modal');

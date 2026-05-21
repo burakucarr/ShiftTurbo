@@ -3,10 +3,9 @@
    Personel Terminali İşlevleri ve Supabase Bağlantısı
    ============================================ */
 
-// 🛡️ UCR TECHNOLOGY — DIRECT SUPABASE CONNECTION
-const supabaseUrl = 'https://tnvjdppcyctmqkirlwmy.supabase.co';
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRudmpkcHBjeWN0bXFraXJsd215Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3MzY0NTIsImV4cCI6MjA4ODMxMjQ1Mn0.Ft4JXQtbcXz1-qO7n06fV1vGtP4DbCVUWDojEAFoALI';
-const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
+// 🛡️ SHIFTURBO — SECURE PROXY CONNECTION
+const proxyUrl = 'https://shifturbo-proxy.burakkucar55-5af.workers.dev';
+const _supabase = supabase.createClient(proxyUrl, 'proxy-authenticated');
 
 let html5QrCode = null;
 let currentPin = "";
@@ -31,7 +30,7 @@ async function syncOfflineQueue() {
 
     isSyncingOffline = true;
     console.log(`🔄 Çevrimdışı kuyrukta ${offlineQueue.length} kayıt bulundu. Supabase'e aktarılıyor...`);
-    
+
     // YARIŞ DURUMUNU ÖNLEMEK İÇİN KUYRUĞU ANINDA BOŞALT!!! (Başka eventler aynı veriyi kapmasın)
     localStorage.setItem('shiftTurbo_offline_queue', '[]');
 
@@ -428,7 +427,7 @@ async function executeAction() {
         localStorage.setItem('shiftTurbo_last_status_' + name, 'ÇIKIŞ');
         playSound('error');
         document.getElementById('status').innerText = "❌ ZATEN ÇIKIŞ YAPILMIŞ!";
-        
+
         // ANINDA GİZLE:
         const mainActions = document.getElementById('main-actions');
         const confirmBox = document.getElementById('confirm-box');
@@ -437,7 +436,7 @@ async function executeAction() {
         const actionConfirm = document.getElementById('action-confirm');
         const scanBtn = document.getElementById('scanBtn');
         const greetingEl = document.getElementById('greeting');
-        
+
         if (mainActions) mainActions.style.display = 'none';
         if (confirmBox) confirmBox.style.display = 'none';
         if (pinPad) pinPad.style.display = 'none';
@@ -452,14 +451,14 @@ async function executeAction() {
             errorMsgBody.innerHTML = `<b>⚠️ BİLGİLENDİRME (DAHA ÖNCEDEN ÇIKIŞ YAPILDI):</b><br><br>Sistem kayıtlarında zaten başarılı bir çıkış işleminiz bulunmaktadır.<br><br>Çıkış işleminiz daha önce merkeze iletilmiş ve güvence altına alınmıştır. Tekrar çıkış yapmanıza gerek yoktur.`;
             errorModal.style.display = 'flex';
         }
-        try { speakAI("Sayın personel, sistemde daha önceden çıkış yaptınız. Çıkış kaydınız zaten mevcuttur."); } catch(e) {}
-        
+        try { speakAI("Sayın personel, sistemde daha önceden çıkış yaptınız. Çıkış kaydınız zaten mevcuttur."); } catch (e) { }
+
         localStorage.removeItem('shiftTurbo_user');
         localStorage.removeItem('auth_active');
         localStorage.removeItem('isShiftActive');
         localStorage.removeItem('temp_user_name');
         localStorage.removeItem('temp_user_pin');
-        
+
         setTimeout(() => {
             if (errorModal) errorModal.style.display = 'none';
             if (typeof startQR === 'function') startQR(); // Anında QR okuma ekranına dön
@@ -470,7 +469,7 @@ async function executeAction() {
     if (type === 'GİRİŞ' && buluttakiSonDurum === 'GİRİŞ') {
         playSound('error');
         document.getElementById('status').innerText = "❌ ZATEN MESAİDESİNİZ!";
-        
+
         // ANINDA GİZLE
         const mainActions = document.getElementById('main-actions');
         const confirmBox = document.getElementById('confirm-box');
@@ -482,17 +481,17 @@ async function executeAction() {
         if (pinPad) pinPad.style.display = 'none';
         if (gamificationCard) gamificationCard.style.display = 'none';
         if (actionConfirm) actionConfirm.style.display = 'none';
-        
+
         const errorMsgBody = document.getElementById('error-msg-body');
         const errorModal = document.getElementById('error-modal');
         if (errorMsgBody && errorModal) {
             errorMsgBody.innerHTML = `<b>⚠️ BİLGİLENDİRME (ZATEN MESAİDESİNİZ):</b><br><br>Sistem kayıtlarında zaten aktif bir mesai başlangıcınız bulunmaktadır.<br><br>Giriş işleminiz daha önce merkeze iletilmiştir. İyi çalışmalar dileriz.`;
             errorModal.style.display = 'flex';
         }
-        try { speakAI("Sayın personel, sistemde zaten aktif bir mesai kaydınız bulunmaktadır."); } catch(e) {}
-        setTimeout(() => { 
+        try { speakAI("Sayın personel, sistemde zaten aktif bir mesai kaydınız bulunmaktadır."); } catch (e) { }
+        setTimeout(() => {
             if (errorModal) errorModal.style.display = 'none';
-            location.reload(); 
+            location.reload();
         }, 5000);
         return;
     }
@@ -569,7 +568,7 @@ async function executeAction() {
                     type === 'ÇIKIŞ' ? ["mesai_bitir_cevrimdisi_1.mp3", "mesai_bitir_cevrimdisi_2.mp3"] : ["mesai_baslat_cevrimdisi_1.mp3", "mesai_baslat_cevrimdisi_2.mp3"],
                     performFinalRedirect
                 );
-            } catch(e) { console.warn("TTS Error:", e); }
+            } catch (e) { console.warn("TTS Error:", e); }
 
             // Olası bir tarayıcı onended tetiklenmeme bug'ına karşı 8.5 saniyelik KABAK GİBİ Garanti Timer!
             setTimeout(performFinalRedirect, 8500);
@@ -637,7 +636,7 @@ async function executeAction() {
                     type === 'ÇIKIŞ' ? ["mesai_bitir_1.mp3", "mesai_bitir_2.mp3", "mesai_bitir_3.mp3"] : ["mesai_baslat_1.mp3", "mesai_baslat_2.mp3", "mesai_baslat_3.mp3"],
                     performFinalRedirect
                 );
-            } catch(e) { console.warn("TTS Error:", e); }
+            } catch (e) { console.warn("TTS Error:", e); }
 
             // Olası bir tarayıcı onended tetiklenmeme bug'ına karşı 8.5 saniyelik KABAK GİBİ Garanti Timer!
             setTimeout(performFinalRedirect, 8500);
@@ -906,7 +905,7 @@ window.bootSystem = async () => {
                     gCard.style.display = 'block';
                 }
             }
-        } catch(e) { console.warn("Gamification Error:", e); }
+        } catch (e) { console.warn("Gamification Error:", e); }
     } else {
         if (scanBtn) scanBtn.style.display = 'block';
     }
@@ -917,7 +916,7 @@ window.bootSystem = async () => {
 
     const currentUserForRealtime = localStorage.getItem('shiftTurbo_user');
     if (currentUserForRealtime && auth) {
-        _supabase.channel('db-changes').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'logs' }, payload => { 
+        _supabase.channel('db-changes').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'logs' }, payload => {
             if (payload && payload.new) {
                 const pName1 = (payload.new.personel_name || "").trim().toLocaleUpperCase('tr-TR');
                 const pName2 = (payload.new.personel || "").trim().toLocaleUpperCase('tr-TR');
@@ -927,12 +926,12 @@ window.bootSystem = async () => {
                 return;
             }
             if (window.isExecutingAction) return; // Anons çalıyorsa sinsi reload atma!
-            
+
             if (payload && payload.new && payload.new.type === 'ÇIKIŞ') {
                 console.log("⚠️ Uzaktan YÖNETİCİ tarafından ÇIKIŞ işlemi algılandı! Oturum kapatılıyor...");
                 if (currentUserForRealtime) localStorage.setItem('shiftTurbo_last_status_' + currentUserForRealtime, 'ÇIKIŞ');
                 if (typeof playSound === 'function') playSound('error');
-                
+
                 const mainActions = document.getElementById('main-actions');
                 const confirmBox = document.getElementById('confirm-box');
                 const pinPad = document.getElementById('pin-pad');
@@ -960,8 +959,8 @@ window.bootSystem = async () => {
                     errorMsgBody.innerHTML = `<b>⚠️ BİLGİLENDİRME (MESAİ SONLANDIRILDI):</b><br><br>Mesainiz <b>Yönetici</b> tarafından uzaktan başarıyla sonlandırılmıştır.<br><br>Çıkış kaydınız merkeze iletilmiş ve güvence altına alınmıştır. İyi istirahatler dileriz.`;
                     errorModal.style.display = 'flex';
                 }
-                try { speakAI("Sayın personel, mesainiz yönetici tarafından uzaktan sonlandırılmıştır. İyi istirahatler dileriz."); } catch(e) {}
-                
+                try { speakAI("Sayın personel, mesainiz yönetici tarafından uzaktan sonlandırılmıştır. İyi istirahatler dileriz."); } catch (e) { }
+
                 setTimeout(() => {
                     if (errorModal) errorModal.style.display = 'none';
                     if (typeof window.startQR === 'function') window.startQR(); // QR okuma ekranına dön
@@ -971,7 +970,7 @@ window.bootSystem = async () => {
             }
 
             // Eğer yönetici Giriş yaparsa (nadiren olur)
-            location.reload(); 
+            location.reload();
         }).subscribe();
         _supabase.channel('broadcast-changes').on('postgres_changes', { event: '*', schema: 'public', table: 'broadcasts' }, payload => { fetchLatestBroadcast(); }).subscribe();
 

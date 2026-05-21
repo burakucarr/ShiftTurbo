@@ -94,7 +94,7 @@
             border: 1px solid rgba(15, 23, 42, 0.2);
             color: #0f172a;
             font-weight: 700;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
         }
 
         [data-theme="light"] #greeting {
@@ -1607,12 +1607,16 @@
 
             </div>
 
-            <div id="gamification-card" class="fade-in" style="display:none; background: rgba(255,255,255,0.03); border: 1px solid rgba(244,129,32,0.3); border-radius: 15px; padding: 18px; margin-top: 25px; margin-bottom: 15px; text-align: left; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
-                <div style="font-family: 'Poppins', sans-serif; font-size: 13px; color: var(--primary); letter-spacing: 1px; margin-bottom: 12px; font-weight: bold;">
+            <div id="gamification-card" class="fade-in"
+                style="display:none; background: rgba(255,255,255,0.03); border: 1px solid rgba(244,129,32,0.3); border-radius: 15px; padding: 18px; margin-top: 25px; margin-bottom: 15px; text-align: left; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
+                <div
+                    style="font-family: 'Poppins', sans-serif; font-size: 13px; color: var(--primary); letter-spacing: 1px; margin-bottom: 12px; font-weight: bold;">
                     PERFORMANS & DEĞERLENDİRME
                 </div>
                 <div id="badges-container" style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom: 15px;"></div>
-                <div id="gamification-msg" style="font-family: 'Poppins', sans-serif; font-size: 11px; color: #cbd5e1; line-height: 1.6; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 12px;"></div>
+                <div id="gamification-msg"
+                    style="font-family: 'Poppins', sans-serif; font-size: 11px; color: #cbd5e1; line-height: 1.6; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 12px;">
+                </div>
             </div>
 
             <div id="main-actions"></div>
@@ -1661,17 +1665,16 @@
            Personel Terminali İşlevleri ve Supabase Bağlantısı
            ============================================ */
 
-        // 🛡️ UCR TECHNOLOGY — DIRECT SUPABASE CONNECTION
-        const supabaseUrl = 'https://tnvjdppcyctmqkirlwmy.supabase.co';
-        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRudmpkcHBjeWN0bXFraXJsd215Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3MzY0NTIsImV4cCI6MjA4ODMxMjQ1Mn0.Ft4JXQtbcXz1-qO7n06fV1vGtP4DbCVUWDojEAFoALI';
+        // 🛡️ SHIFTURBO — SECURE PROXY CONNECTION
+        const proxyUrl = 'https://shifturbo-proxy.burakkucar55-5af.workers.dev';
         let _supabase = null;
         try {
             if (typeof supabase !== 'undefined') {
-                _supabase = supabase.createClient(supabaseUrl, supabaseKey);
+                _supabase = supabase.createClient(proxyUrl, 'proxy-authenticated');
             } else {
                 console.warn("⚠️ Supabase CDN yüklenemedi! Çevrimdışı mod devrede.");
             }
-        } catch(e) { console.error("Supabase Init Hatası:", e); }
+        } catch (e) { console.error("Supabase Init Hatası:", e); }
 
         let html5QrCode = null;
         let currentPin = "";
@@ -1726,7 +1729,7 @@
 
             isSyncingOffline = true;
             console.log(`🔄 Çevrimdışı kuyrukta ${offlineQueue.length} kayıt bulundu. Supabase'e aktarılıyor...`);
-            
+
             // YARIŞ DURUMUNU ÖNLEMEK İÇİN KUYRUĞU ANINDA BOŞALT!!! (Başka eventler aynı veriyi kapmasın)
             localStorage.setItem('shiftTurbo_offline_queue', '[]');
 
@@ -2053,9 +2056,9 @@
             else { actionText.innerText = "MESAİ BİTİRİLSİN MI?"; okBtn.className = "btn-out"; }
         }
 
-        function cancelAction() { 
-            document.getElementById('action-confirm').style.display = 'none'; 
-            document.getElementById('main-actions').style.display = 'block'; 
+        function cancelAction() {
+            document.getElementById('action-confirm').style.display = 'none';
+            document.getElementById('main-actions').style.display = 'block';
             const okBtn = document.getElementById('final-ok-btn');
             if (okBtn) okBtn.disabled = false; // İptalde butonu aç
         }
@@ -2111,7 +2114,7 @@
                 localStorage.setItem('shiftTurbo_last_status_' + name, 'ÇIKIŞ');
                 playSound('error');
                 document.getElementById('status').innerText = "❌ ZATEN ÇIKIŞ YAPILMIŞ!";
-                
+
                 // ANINDA GİZLE Kİ TEKRAR BASAMASIN
                 const mainActions = document.getElementById('main-actions');
                 const confirmBox = document.getElementById('confirm-box');
@@ -2134,14 +2137,14 @@
                     errorMsgBody.innerHTML = `<b>⚠️ BİLGİLENDİRME (DAHA ÖNCEDEN ÇIKIŞ YAPILDI):</b><br><br>Sistem kayıtlarında zaten başarılı bir çıkış işleminiz bulunmaktadır.<br><br>Çıkış işleminiz daha önce merkeze iletilmiş ve güvence altına alınmıştır. Tekrar çıkış yapmanıza gerek yoktur.`;
                     errorModal.style.display = 'flex';
                 }
-                try { speakAI("Sayın personel, sistemde daha önceden çıkış yaptınız. Çıkış kaydınız zaten mevcuttur."); } catch(e) {}
-                
+                try { speakAI("Sayın personel, sistemde daha önceden çıkış yaptınız. Çıkış kaydınız zaten mevcuttur."); } catch (e) { }
+
                 localStorage.removeItem('shiftTurbo_user');
                 localStorage.removeItem('auth_active');
                 localStorage.removeItem('isShiftActive');
                 localStorage.removeItem('temp_user_name');
                 localStorage.removeItem('temp_user_pin');
-                
+
                 setTimeout(() => {
                     if (errorModal) errorModal.style.display = 'none';
                     if (typeof startQR === 'function') startQR();
@@ -2152,7 +2155,7 @@
             if (type === 'GİRİŞ' && buluttakiSonDurum === 'GİRİŞ') {
                 playSound('error');
                 document.getElementById('status').innerText = "❌ ZATEN MESAİDESİNİZ!";
-                
+
                 // ANINDA GİZLE Kİ TEKRAR BASAMASIN
                 const mainActions = document.getElementById('main-actions');
                 const confirmBox = document.getElementById('confirm-box');
@@ -2171,7 +2174,7 @@
                     errorMsgBody.innerHTML = `<b>⚠️ BİLGİLENDİRME (ZATEN MESAİDESİNİZ):</b><br><br>Sistem kayıtlarında zaten aktif bir mesai başlangıcınız bulunmaktadır.<br><br>Giriş işleminiz daha önce merkeze iletilmiştir. İyi çalışmalar dileriz.`;
                     errorModal.style.display = 'flex';
                 }
-                try { speakAI("Sayın personel, sistemde zaten aktif bir mesai kaydınız bulunmaktadır."); } catch(e) {}
+                try { speakAI("Sayın personel, sistemde zaten aktif bir mesai kaydınız bulunmaktadır."); } catch (e) { }
                 setTimeout(() => { location.reload(); }, 6000);
                 return;
             }
@@ -2246,7 +2249,7 @@
                             type === 'ÇIKIŞ' ? ["mesai_bitir_cevrimdisi_1.mp3", "mesai_bitir_cevrimdisi_2.mp3"] : ["mesai_baslat_cevrimdisi_1.mp3", "mesai_baslat_cevrimdisi_2.mp3"],
                             performFinalRedirect
                         );
-                    } catch(e) { console.warn("TTS Error:", e); }
+                    } catch (e) { console.warn("TTS Error:", e); }
 
                     // Olası bir tarayıcı onended tetiklenmeme bug'ına karşı 16 saniyelik Garanti Timer (Uzun AI anonsu bitene kadar ASLA kesilmez)
                     setTimeout(performFinalRedirect, 16000);
@@ -2312,7 +2315,7 @@
                             type === 'ÇIKIŞ' ? ["mesai_bitir_1.mp3", "mesai_bitir2.mp3", "mesai_bitir_3.mp3"] : ["mesai_baslat_1.mp3", "mesai_baslat_2.mp3", "mesai_baslat_3.mp3"],
                             performFinalRedirect
                         );
-                    } catch(e) { console.warn("TTS Error:", e); }
+                    } catch (e) { console.warn("TTS Error:", e); }
 
                     // Olası bir tarayıcı onended tetiklenmeme bug'ına karşı 16 saniyelik Garanti Timer (Uzun AI anonsu bitene kadar ASLA kesilmez)
                     setTimeout(performFinalRedirect, 16000);
@@ -2605,7 +2608,7 @@
                             gCard.style.display = 'block';
                         }
                     }
-                } catch(e) { console.warn("Gamification Error:", e); }
+                } catch (e) { console.warn("Gamification Error:", e); }
             } else {
                 if (scanBtn) scanBtn.style.display = 'block';
             }
@@ -2616,7 +2619,7 @@
 
             const currentUserForRealtime = localStorage.getItem('shiftTurbo_user');
             if (currentUserForRealtime && auth) {
-                _supabase.channel('db-changes').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'logs' }, payload => { 
+                _supabase.channel('db-changes').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'logs' }, payload => {
                     if (payload && payload.new) {
                         const pName1 = (payload.new.personel_name || "").trim().toLocaleUpperCase('tr-TR');
                         const pName2 = (payload.new.personel || "").trim().toLocaleUpperCase('tr-TR');
@@ -2627,49 +2630,49 @@
                     }
                     if (window.isExecutingAction) return; // Anons çalıyorsa sinsi reload atma!
                     if (payload && payload.new && payload.new.type === 'MESAJ') return; // Mesaj atınca aniden reload atma!
-                    
-            if (payload && payload.new && payload.new.type === 'ÇIKIŞ') {
-                console.log("⚠️ Uzaktan YÖNETİCİ tarafından ÇIKIŞ işlemi algılandı! Oturum kapatılıyor...");
-                if (currentUserForRealtime) localStorage.setItem('shiftTurbo_last_status_' + currentUserForRealtime, 'ÇIKIŞ');
-                if (typeof playSound === 'function') playSound('error');
-                
-                const mainActions = document.getElementById('main-actions');
-                const confirmBox = document.getElementById('confirm-box');
-                const pinPad = document.getElementById('pin-pad');
-                const gamificationCard = document.getElementById('gamification-card');
-                const scanBtn = document.getElementById('scanBtn');
-                const greetingEl = document.getElementById('greeting');
-                const actionConfirm = document.getElementById('action-confirm');
-                if (mainActions) mainActions.style.display = 'none';
-                if (confirmBox) confirmBox.style.display = 'none';
-                if (pinPad) pinPad.style.display = 'none';
-                if (gamificationCard) gamificationCard.style.display = 'none';
-                if (actionConfirm) actionConfirm.style.display = 'none';
-                if (greetingEl) greetingEl.innerText = "SİSTEM BAĞLANTISI";
-                if (scanBtn) scanBtn.style.display = 'block';
 
-                localStorage.removeItem('shiftTurbo_user');
-                localStorage.removeItem('auth_active');
-                localStorage.removeItem('isShiftActive');
-                localStorage.removeItem('temp_user_name');
-                localStorage.removeItem('temp_user_pin');
+                    if (payload && payload.new && payload.new.type === 'ÇIKIŞ') {
+                        console.log("⚠️ Uzaktan YÖNETİCİ tarafından ÇIKIŞ işlemi algılandı! Oturum kapatılıyor...");
+                        if (currentUserForRealtime) localStorage.setItem('shiftTurbo_last_status_' + currentUserForRealtime, 'ÇIKIŞ');
+                        if (typeof playSound === 'function') playSound('error');
 
-                const errorMsgBody = document.getElementById('error-msg-body');
-                const errorModal = document.getElementById('error-modal');
-                if (errorMsgBody && errorModal) {
-                    errorMsgBody.innerHTML = `<b>⚠️ BİLGİLENDİRME (MESAİ SONLANDIRILDI):</b><br><br>Mesainiz <b>Yönetici</b> tarafından uzaktan başarıyla sonlandırılmıştır.<br><br>Çıkış kaydınız merkeze iletilmiş ve güvence altına alınmıştır. İyi istirahatler dileriz.`;
-                    errorModal.style.display = 'flex';
-                }
-                try { speakAI("Sayın personel, mesainiz yönetici tarafından uzaktan sonlandırılmıştır. İyi istirahatler dileriz."); } catch(e) {}
-                
-                setTimeout(() => {
-                    if (errorModal) errorModal.style.display = 'none';
-                    window.location.replace(window.location.pathname + '?reset=' + Date.now());
-                }, 5000);
-                return;
-            }
+                        const mainActions = document.getElementById('main-actions');
+                        const confirmBox = document.getElementById('confirm-box');
+                        const pinPad = document.getElementById('pin-pad');
+                        const gamificationCard = document.getElementById('gamification-card');
+                        const scanBtn = document.getElementById('scanBtn');
+                        const greetingEl = document.getElementById('greeting');
+                        const actionConfirm = document.getElementById('action-confirm');
+                        if (mainActions) mainActions.style.display = 'none';
+                        if (confirmBox) confirmBox.style.display = 'none';
+                        if (pinPad) pinPad.style.display = 'none';
+                        if (gamificationCard) gamificationCard.style.display = 'none';
+                        if (actionConfirm) actionConfirm.style.display = 'none';
+                        if (greetingEl) greetingEl.innerText = "SİSTEM BAĞLANTISI";
+                        if (scanBtn) scanBtn.style.display = 'block';
 
-                    location.reload(); 
+                        localStorage.removeItem('shiftTurbo_user');
+                        localStorage.removeItem('auth_active');
+                        localStorage.removeItem('isShiftActive');
+                        localStorage.removeItem('temp_user_name');
+                        localStorage.removeItem('temp_user_pin');
+
+                        const errorMsgBody = document.getElementById('error-msg-body');
+                        const errorModal = document.getElementById('error-modal');
+                        if (errorMsgBody && errorModal) {
+                            errorMsgBody.innerHTML = `<b>⚠️ BİLGİLENDİRME (MESAİ SONLANDIRILDI):</b><br><br>Mesainiz <b>Yönetici</b> tarafından uzaktan başarıyla sonlandırılmıştır.<br><br>Çıkış kaydınız merkeze iletilmiş ve güvence altına alınmıştır. İyi istirahatler dileriz.`;
+                            errorModal.style.display = 'flex';
+                        }
+                        try { speakAI("Sayın personel, mesainiz yönetici tarafından uzaktan sonlandırılmıştır. İyi istirahatler dileriz."); } catch (e) { }
+
+                        setTimeout(() => {
+                            if (errorModal) errorModal.style.display = 'none';
+                            window.location.replace(window.location.pathname + '?reset=' + Date.now());
+                        }, 5000);
+                        return;
+                    }
+
+                    location.reload();
                 }).subscribe();
                 _supabase.channel('broadcast-changes').on('postgres_changes', { event: '*', schema: 'public', table: 'broadcasts' }, payload => { fetchLatestBroadcast(); }).subscribe();
 
@@ -2896,7 +2899,7 @@
         });
 
         // ⌨️ ESC TUŞU İLE AKTİF MODALLARI KAPATMA MOTORU (Personel Terminali)
-        document.addEventListener('keydown', function(e) {
+        document.addEventListener('keydown', function (e) {
             if (e.key === 'Escape' || e.keyCode === 27) {
                 const aboutM = document.getElementById('about-modal');
                 const errorM = document.getElementById('error-modal');

@@ -1,9 +1,8 @@
 (() => {
     let isAuthenticated = false;
-    // 🛡️ UCR TECHNOLOGY — DIRECT SUPABASE CONNECTION
-    const supabaseUrl = 'https://tnvjdppcyctmqkirlwmy.supabase.co';
-    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRudmpkcHBjeWN0bXFraXJsd215Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3MzY0NTIsImV4cCI6MjA4ODMxMjQ1Mn0.Ft4JXQtbcXz1-qO7n06fV1vGtP4DbCVUWDojEAFoALI';
-    const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
+    // 🛡️ SHIFTURBO — SECURE PROXY CONNECTION
+    const proxyUrl = 'https://shiftturbo-proxy.burakkucar55-5af.workers.dev';
+    const _supabase = supabase.createClient(proxyUrl, 'proxy-authenticated');
     window._supabase = _supabase;
     window.allLogs = [];
     let lastLogCount = 0;
@@ -798,7 +797,7 @@ function checkCriticalAlert(log, all, preFilteredPersonLogs = null) {
 function updateDashboard() {
     const staffSelect = document.getElementById('staffFilter');
     const currentStaff = staffSelect ? staffSelect.value : 'all';
-    
+
     // OPTİMİZASYON: Logları tek geçişte personele göre grupla (O(M))
     const logsByPerson = {};
     const todayStr = new Date().toDateString();
@@ -809,7 +808,7 @@ function updateDashboard() {
         logsByPerson[p].push(l);
         if (new Date(l.raw_time).toDateString() === todayStr) todayCount++;
     });
-    
+
     const names = Object.keys(logsByPerson).sort();
     if (staffSelect) {
         staffSelect.innerHTML = '<option value="all">TÜMÜ</option>' + names.map(n => `<option value="${n}">${n}</option>`).join('');
