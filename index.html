@@ -2001,11 +2001,14 @@
             const fullName = localStorage.getItem('temp_user_name') || "PERSONEL";
             const pin = localStorage.getItem('temp_user_pin');
             const clientUUID = getDeviceUUID();
-            // 1. Cihaz ID Güncellemesini Arka Planda Yap (Ana akışı asla bloklama!)
+            // 1. Cihaz ID Güncellemesinin veritabanına yazılmasını bekle (Yarış durumunu engellemek için)
             if (pin) {
-                _supabase.from('users').update({ device_id: clientUUID }).eq('pin', pin)
-                    .then(() => console.log("Cihaz kaydı güncellendi."))
-                    .catch(e => console.warn("Cihaz kaydı uyarısı:", e));
+                try {
+                    await _supabase.from('users').update({ device_id: clientUUID }).eq('pin', pin);
+                    console.log("Cihaz kaydı güncellendi.");
+                } catch (e) {
+                    console.warn("Cihaz kaydı uyarısı:", e);
+                }
             }
 
             // 2. Bildirim İzni İsteme (Ana akışı asla bloklama!)
@@ -2078,22 +2081,15 @@
                 try {
                     const res = await _supabase
                         .from('logs')
-                        .select('type, personel, personel_name, created_at')
+                        .select('type, personel_name, created_at')
+                        .eq('personel_name', name)
                         .in('type', ['GİRİŞ', 'ÇIKIŞ'])
                         .order('created_at', { ascending: false })
-                        .limit(500);
-                    if (res && res.data) {
-                        const myLogs = res.data.filter(l => {
-                            const n1 = (l.personel_name || "").trim().toLocaleUpperCase('tr-TR');
-                            const n2 = (l.personel || "").trim().toLocaleUpperCase('tr-TR');
-                            const me = (name || "").trim().toLocaleUpperCase('tr-TR');
-                            return n1 === me || n2 === me;
-                        });
-                        if (myLogs.length > 0) {
-                            buluttakiSonDurum = myLogs[0].type;
-                            cloudTime = new Date(myLogs[0].created_at).getTime();
-                            localStorage.setItem('shiftTurbo_last_status_' + name, buluttakiSonDurum);
-                        }
+                        .limit(1);
+                    if (res && res.data && res.data.length > 0) {
+                        buluttakiSonDurum = res.data[0].type;
+                        cloudTime = new Date(res.data[0].created_at).getTime();
+                        localStorage.setItem('shiftTurbo_last_status_' + name, buluttakiSonDurum);
                     }
                 } catch (e) { console.warn("Supabase son durum çekilemedi:", e); }
             }
@@ -2461,6 +2457,19 @@
                         localStorage.removeItem('temp_user_name');
                         localStorage.removeItem('temp_user_pin');
 
+                        // UI'ı tamamen sıfırla ve kilitle (Yarım oturum durumunu engellemek için)
+                        const confirmBox = document.getElementById('confirm-box');
+                        const pinPad = document.getElementById('pin-pad');
+                        const gamificationCard = document.getElementById('gamification-card');
+                        const actionConfirm = document.getElementById('action-confirm');
+                        const greetingEl = document.getElementById('greeting');
+                        if (mainActions) mainActions.style.display = 'none';
+                        if (confirmBox) confirmBox.style.display = 'none';
+                        if (pinPad) pinPad.style.display = 'none';
+                        if (gamificationCard) gamificationCard.style.display = 'none';
+                        if (actionConfirm) actionConfirm.style.display = 'none';
+                        if (greetingEl) greetingEl.innerText = "SİSTEM BAĞLANTISI";
+
                         const errorMsgBody = document.getElementById('error-msg-body');
                         const errorModal = document.getElementById('error-modal');
                         if (errorMsgBody && errorModal) {
@@ -2477,20 +2486,13 @@
                 if (navigator.onLine) {
                     try {
                         const res = await _supabase
-                            .from('logs').select('type, personel, personel_name, created_at')
-                            .in('type', ['GİRİŞ', 'ÇIKIŞ']).order('created_at', { ascending: false }).limit(500);
-                        if (res && res.data) {
-                            const myLogs = res.data.filter(l => {
-                                const n1 = (l.personel_name || "").trim().toLocaleUpperCase('tr-TR');
-                                const n2 = (l.personel || "").trim().toLocaleUpperCase('tr-TR');
-                                const me = (user || "").trim().toLocaleUpperCase('tr-TR');
-                                return n1 === me || n2 === me;
-                            });
-                            if (myLogs.length > 0) {
-                                lastAction = myLogs[0].type;
-                                cloudTime = new Date(myLogs[0].created_at).getTime();
-                                localStorage.setItem('shiftTurbo_last_status_' + user, lastAction);
-                            }
+                            .from('logs').select('type, personel_name, created_at')
+                            .eq('personel_name', user)
+                            .in('type', ['GİRİŞ', 'ÇIKIŞ']).order('created_at', { ascending: false }).limit(1);
+                        if (res && res.data && res.data.length > 0) {
+                            lastAction = res.data[0].type;
+                            cloudTime = new Date(res.data[0].created_at).getTime();
+                            localStorage.setItem('shiftTurbo_last_status_' + user, lastAction);
                         }
                     } catch (e) { console.warn("Supabase buton durumu çekilemedi:", e); }
                 }

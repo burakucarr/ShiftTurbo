@@ -1,9 +1,8 @@
-const CACHE_NAME = 'shift-turbo-v9'; // Sürüm yükseltmek zorunlu cache silmeyi tetikler
+const CACHE_NAME = 'shift-turbo-v10'; // Sürüm yükseltmek zorunlu cache silmeyi tetikler
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
   './yonetici.html',
-  './yonetici',
   './manifest.json',
   'https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Orbitron:wght@500;700;900&display=swap',
   './audio/kimlik_dogrulandi_1.mp3',
