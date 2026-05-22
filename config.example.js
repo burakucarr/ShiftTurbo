@@ -10,5 +10,7 @@
 
 const SHIFTURBO_CONFIG = {
     supabaseUrl: 'https://PROJE-ID.supabase.co',
-    supabaseKey: 'eyJ... (Supabase > Settings > API > anon public key)'
+    supabaseKey: 'eyJ... (Supabase > Settings > API > anon public key)',
+    geminiApiKey: 'AIzaSy... (Gemini API Key)'
 };
+window.SHIFTURBO_CONFIG = SHIFTURBO_CONFIG;

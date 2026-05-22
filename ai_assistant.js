@@ -6,12 +6,16 @@
 (function(window) {
     const AI = {
         history: [],
-        apiKey: (window.SHIFTURBO_CONFIG && window.SHIFTURBO_CONFIG.geminiApiKey) || localStorage.getItem('shiftTurbo_gemini_key') || '',
+        apiKey: (window.SHIFTURBO_CONFIG && window.SHIFTURBO_CONFIG.geminiApiKey) || 
+                (typeof SHIFTURBO_CONFIG !== 'undefined' && SHIFTURBO_CONFIG.geminiApiKey) || 
+                localStorage.getItem('shiftTurbo_gemini_key') || '',
         
         init() {
             console.log("🤖 Shift-AI Assistant Başlatıldı.");
             // Eğer config.js içerisinde API anahtarı tanımlıysa, Local Storage'daki eski/güvensiz anahtarı temizleyelim
-            if (window.SHIFTURBO_CONFIG && window.SHIFTURBO_CONFIG.geminiApiKey) {
+            const configKey = (window.SHIFTURBO_CONFIG && window.SHIFTURBO_CONFIG.geminiApiKey) || 
+                              (typeof SHIFTURBO_CONFIG !== 'undefined' && SHIFTURBO_CONFIG.geminiApiKey);
+            if (configKey) {
                 if (localStorage.getItem('shiftTurbo_gemini_key')) {
                     localStorage.removeItem('shiftTurbo_gemini_key');
                     console.log("🔒 Eski Gemini API Key tarayıcı hafızasından güvenli bir şekilde silindi.");
