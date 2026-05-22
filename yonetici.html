@@ -2707,6 +2707,9 @@
 
             // 🔐 Oturum Kalıcılığı (Session Persistence)
             window.addEventListener('DOMContentLoaded', async () => {
+                // Supabase bağlantısı kurulana kadar butonu kilitle
+                setLoginUILocked(true, 'BAĞLANTI KURULUYOR...');
+
                 const _initResult = await window.ShiftTurboShared.initSupabaseClient(proxyUrl, localSupabaseConfig);
                 _supabase = _initResult.client;
                 _supabaseClientType = _initResult.type;
@@ -2723,21 +2726,35 @@
                     if (adminPn) adminPn.style.display = "none";
                 }
 
-                const { data: { session } } = await _supabase.auth.getSession();
+                // Bağlantı kurulduğunda kilitli değilse butonu aktif et
+                if (!isLockedOut()) {
+                    setLoginUILocked(false);
+                }
 
-                if (session) {
-                    isAuthenticated = true;
-                    localStorage.setItem('shiftTurbo_admin_logged_in', 'true');
-                    document.documentElement.classList.add('admin-logged-in');
-                    showPanel();
+                if (_supabase) {
+                    const { data: { session } } = await _supabase.auth.getSession();
+
+                    if (session) {
+                        isAuthenticated = true;
+                        localStorage.setItem('shiftTurbo_admin_logged_in', 'true');
+                        document.documentElement.classList.add('admin-logged-in');
+                        showPanel();
+                    } else {
+                        isAuthenticated = false;
+                        localStorage.removeItem('shiftTurbo_admin_logged_in');
+                        localStorage.removeItem('shiftTurbo_raw_logs_cache');
+                        localStorage.removeItem('shiftTurbo_hourly_rates');
+                        document.documentElement.classList.remove('admin-logged-in');
+                        if (loginOv) loginOv.style.display = "flex";
+                        if (adminPn) adminPn.style.display = "none";
+                    }
                 } else {
                     isAuthenticated = false;
                     localStorage.removeItem('shiftTurbo_admin_logged_in');
-                    localStorage.removeItem('shiftTurbo_raw_logs_cache');
-                    localStorage.removeItem('shiftTurbo_hourly_rates');
                     document.documentElement.classList.remove('admin-logged-in');
                     if (loginOv) loginOv.style.display = "flex";
                     if (adminPn) adminPn.style.display = "none";
+                    showToast("BAĞLANTI HATASI", "Supabase bağlantısı kurulamadı. Sayfayı yenileyin veya internet bağlantınızı kontrol edin.", "error");
                 }
             });
 
@@ -2824,6 +2841,11 @@
                 // 🚫 Kilit kontrolü
                 if (isLockedOut()) {
                     showToast("ERİŞİM REDDİ", `Hesap kilitlendi. Kalan süre: ${getRemainingLockout()}`, "error");
+                    return;
+                }
+
+                if (!_supabase) {
+                    showToast("BAĞLANTI KURULUYOR", "Sunucu bağlantısı kuruluyor, lütfen birkaç saniye sonra tekrar deneyin.", "warning");
                     return;
                 }
 
