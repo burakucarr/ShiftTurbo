@@ -35,13 +35,55 @@ async function _sharedInitSupabaseClient(proxyUrl, localConfig) {
         return { client: null, type: 'none' };
     }
 
-    const proxyClient = supabase.createClient(proxyUrl, 'proxy-authenticated');
+    // Supabase Auth Token'ını maskelemek için özel depolama adaptörü
+    const obfuscatedStorage = {
+        getItem: (key) => {
+            const raw = localStorage.getItem(key);
+            if (!raw) return null;
+            try {
+                // Eşleşen maskeli veriyi çöz
+                return decodeURIComponent(atob(raw).split('').map(c => {
+                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                }).join(''));
+            } catch (e) {
+                // Maskelenmemiş eski düz metin veri ise doğrudan döndür (geriye dönük uyumluluk)
+                return raw;
+            }
+        },
+        setItem: (key, value) => {
+            try {
+                const obfuscated = btoa(encodeURIComponent(value).replace(/%([0-9A-F]{2})/g, (match, p1) => {
+                    return String.fromCharCode(parseInt(p1, 16));
+                }));
+                localStorage.setItem(key, obfuscated);
+            } catch (e) {
+                localStorage.setItem(key, value);
+            }
+        },
+        removeItem: (key) => {
+            localStorage.removeItem(key);
+        }
+    };
+
+    const proxyClient = supabase.createClient(proxyUrl, 'proxy-authenticated', {
+        auth: {
+            storage: obfuscatedStorage,
+            persistSession: true,
+            autoRefreshToken: true
+        }
+    });
     if (await _sharedTestSupabaseClient(proxyClient)) {
         return { client: proxyClient, type: 'proxy' };
     }
 
     if (localConfig) {
-        const directClient = supabase.createClient(localConfig.supabaseUrl, localConfig.supabaseKey);
+        const directClient = supabase.createClient(localConfig.supabaseUrl, localConfig.supabaseKey, {
+            auth: {
+                storage: obfuscatedStorage,
+                persistSession: true,
+                autoRefreshToken: true
+            }
+        });
         if (await _sharedTestSupabaseClient(directClient)) {
             console.warn('Proxy bağlantısı başarısız oldu, doğrudan Supabase anahtarı kullanılıyor.');
             return { client: directClient, type: 'direct' };
@@ -430,6 +472,25 @@ window.ShiftTurboShared = {
                 }
             }
         });
+
+        // Supabase Auth Token'ı otomatik olarak maskeleme
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && key.startsWith('sb-') && key.endsWith('-auth-token')) {
+                const rawVal = localStorage.getItem(key);
+                if (rawVal && rawVal.trim().startsWith('{')) {
+                    try {
+                        const obfuscated = btoa(encodeURIComponent(rawVal).replace(/%([0-9A-F]{2})/g, (match, p1) => {
+                            return String.fromCharCode(parseInt(p1, 16));
+                        }));
+                        localStorage.setItem(key, obfuscated);
+                        console.log(`🔒 Supabase Auth Token (${key}) otomatik olarak maskelendi.`);
+                    } catch (err) {
+                        console.warn("Auth token maskeleme hatası:", err);
+                    }
+                }
+            }
+        }
     } catch (e) {
         console.warn("Eski verileri temizlerken hata oluştu:", e);
     }
