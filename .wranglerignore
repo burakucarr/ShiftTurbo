@@ -1,0 +1,8 @@
+# Dağıtılmayacak yerel dosyalar
+.git/
+.gitignore
+.wranglerignore
+README.md
+task.md
+walkthrough.md
+security_analysis.md
