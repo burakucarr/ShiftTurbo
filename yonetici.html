@@ -2687,7 +2687,7 @@
 
         (() => {
             let isAuthenticated = false;
-            const proxyUrl = 'https://shifturbo-proxy.burakkucar55-5af.workers.dev';
+            const proxyUrl = 'https://shiftturbo-proxy.burakkucar55-5af.workers.dev';
             const localSupabaseConfig = (typeof SHIFTURBO_CONFIG !== 'undefined' && SHIFTURBO_CONFIG && SHIFTURBO_CONFIG.supabaseUrl && SHIFTURBO_CONFIG.supabaseKey)
                 ? SHIFTURBO_CONFIG
                 : null;
@@ -3926,14 +3926,14 @@
                 if (!confirmed) return;
 
                 // identifier her zaman PIN'dir. Önce doğrudan eşleştirme deneriz.
-                let { data, error } = await _supabase.from('users').delete().eq('pin', identifier).eq('ad_soyad', name).select();
+                let { data, error } = await _supabase.from('users').delete().eq('pin', identifier).select();
                 console.log("📦 deleteStaff Supabase Yanıtı (İlk Deneme):", { data, error });
 
                 // Eğer data boş döndüyse ve identifier string ise, sayısal pine çevirip tekrar deneriz (Supabase tip uyuşmazlığına karşı)
                 if ((!data || data.length === 0) && !error && typeof identifier === 'string') {
                     const numPin = parseInt(identifier, 10);
                     if (!isNaN(numPin)) {
-                        const res = await _supabase.from('users').delete().eq('pin', numPin).eq('ad_soyad', name).select();
+                        const res = await _supabase.from('users').delete().eq('pin', numPin).select();
                         data = res.data;
                         error = res.error;
                         console.log("📦 deleteStaff Supabase Yanıtı (Sayısal Deneme):", { data, error });

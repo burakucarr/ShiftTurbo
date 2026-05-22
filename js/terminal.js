@@ -4,7 +4,7 @@
    ============================================ */
 
 // 🛡️ SHIFTURBO — SECURE PROXY CONNECTION
-const proxyUrl = 'https://shifturbo-proxy.burakkucar55-5af.workers.dev';
+const proxyUrl = 'https://shiftturbo-proxy.burakkucar55-5af.workers.dev';
 const localSupabaseConfig = (typeof SHIFTURBO_CONFIG !== 'undefined' && SHIFTURBO_CONFIG && SHIFTURBO_CONFIG.supabaseUrl && SHIFTURBO_CONFIG.supabaseKey)
     ? SHIFTURBO_CONFIG
     : null;

@@ -1,7 +1,7 @@
 (() => {
     let isAuthenticated = false;
     // 🛡️ SHIFTURBO — SECURE PROXY CONNECTION
-    const proxyUrl = 'https://shifturbo-proxy.burakkucar55-5af.workers.dev';
+    const proxyUrl = 'https://shiftturbo-proxy.burakkucar55-5af.workers.dev';
     const localSupabaseConfig = (typeof SHIFTURBO_CONFIG !== 'undefined' && SHIFTURBO_CONFIG && SHIFTURBO_CONFIG.supabaseUrl && SHIFTURBO_CONFIG.supabaseKey)
         ? SHIFTURBO_CONFIG
         : null;
@@ -556,19 +556,20 @@ window.toggleHistory = function () {
 }
 
 async function loadStaffList() {
-    const { data, error } = await _supabase.from('users').select('*').order('id', { ascending: false }); // Yeni olanlar en üstte!
+    const { data, error } = await _supabase.from('users').select('*').order('ad_soyad', { ascending: true });
     if (data) {
         const table = document.getElementById('staffListTable');
         if (!table) return;
         table.innerHTML = data.map(u => {
             const deviceBadge = u.device_id ? `<span style="background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid #10b981; padding: 2px 6px; border-radius: 6px; font-size: 8px; margin-left: 8px;">🔒 EŞLEŞTİ</span>` : `<span style="background: rgba(244, 129, 32, 0.15); color: #f48120; border: 1px solid #f48120; padding: 2px 6px; border-radius: 6px; font-size: 8px; margin-left: 8px;">🔓 KİLİTSİZ</span>`;
+            const cleanName = u.ad_soyad ? u.ad_soyad.replace(/["']/g, '').replace(/[\r\n]/g, '').trim() : 'Personel';
             return `
                 <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
                     <td style="padding: 15px; color: #fff; font-weight: 600;">${u.ad_soyad} ${deviceBadge}</td>
                     <td style="padding: 15px; font-family: 'Orbitron'; color: var(--primary);">${u.pin}</td>
                     <td style="padding: 15px; text-align: right;">
-                        <button onclick="resetDevice(${u.id}, '${u.ad_soyad.replace(/'/g, "\\'")}')" style="background: rgba(244, 129, 32, 0.1); border: 1px solid #f48120; color: #f48120; padding: 5px 12px; border-radius: 8px; cursor: pointer; font-size: 10px; margin-right: 5px;">📱 KİLİDİ AÇ</button>
-                        <button onclick="deleteStaff(${u.id})" style="background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; color: #ef4444; padding: 5px 12px; border-radius: 8px; cursor: pointer; font-size: 10px;">SİL</button>
+                        <button onclick="resetDevice('${u.pin}', '${cleanName}')" style="background: rgba(244, 129, 32, 0.1); border: 1px solid #f48120; color: #f48120; padding: 5px 12px; border-radius: 8px; cursor: pointer; font-size: 10px; margin-right: 5px;">📱 KİLİDİ AÇ</button>
+                        <button onclick="deleteStaff('${u.pin}', '${cleanName}')" style="background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; color: #ef4444; padding: 5px 12px; border-radius: 8px; cursor: pointer; font-size: 10px;">SİL</button>
                     </td>
                 </tr>
             `;
@@ -632,14 +633,10 @@ async function addStaff() {
 async function deleteStaff(identifier, name = "Personel") {
     if (!await cyberConfirm("PERSONEL SİLME", `${name} isimli personeli sistemden kalıcı olarak silmek istediğinize emin misiniz?`)) return;
 
-    let queryColumn = 'id';
-    if (typeof identifier === 'string' && identifier.length === 4) {
-        queryColumn = 'pin';
-    } else if (typeof identifier === 'number' && identifier > 999) {
-        queryColumn = 'pin';
-    }
+    let queryColumn = 'pin';
+    // identifier her zaman PIN'dir.
 
-    const { error } = await _supabase.from('users').delete().eq(queryColumn, identifier).eq('ad_soyad', name);
+    const { error } = await _supabase.from('users').delete().eq(queryColumn, identifier);
     if (error) {
         showToast("HATA", "Personel silinemedi: " + error.message, "error");
     } else {
