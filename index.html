@@ -406,11 +406,11 @@
 
         .time-display,
         .time-display-login {
-            font-family: 'Orbitron', sans-serif;
+            font-family: 'Poppins', sans-serif;
             font-size: 64px;
-            font-weight: 200;
+            font-weight: 600;
             line-height: 1;
-            letter-spacing: -3px;
+            letter-spacing: -2px;
             background: linear-gradient(180deg, #fff 40%, rgba(255, 255, 255, 0.3) 100%);
             -webkit-background-clip: text;
             background-clip: text;
@@ -420,11 +420,11 @@
 
         .date-display,
         .date-display-login {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 10px;
-            font-weight: 300;
-            color: rgba(255, 255, 255, 0.4);
-            letter-spacing: 6px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 11px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.6);
+            letter-spacing: 4px;
             text-transform: uppercase;
             margin-top: 5px;
             display: block;
@@ -594,9 +594,9 @@
         }
 
         .brand-logo-text {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 18px;
-            letter-spacing: 8px;
+            font-family: 'Poppins', sans-serif;
+            font-size: clamp(24px, 6vw, 32px);
+            letter-spacing: 4px;
             font-weight: 900;
             color: #fff;
             text-transform: uppercase;
@@ -609,9 +609,9 @@
 
         .brand-slogan {
             font-family: 'Poppins', sans-serif;
-            font-size: 10px;
-            font-weight: 900;
-            letter-spacing: 4px;
+            font-size: clamp(11px, 3vw, 14px);
+            font-weight: 700;
+            letter-spacing: 3px;
             color: var(--primary);
             text-transform: uppercase;
             display: block;
@@ -660,20 +660,20 @@
         .status-icons {
             display: flex;
             justify-content: center;
-            gap: 12px;
-            margin-top: 10px;
-            opacity: 0.4;
+            gap: 15px;
+            margin-top: 15px;
+            opacity: 0.9;
         }
 
         .icon-item {
-            font-size: 8px;
+            font-size: 10px;
             font-family: 'Poppins', sans-serif;
-            font-weight: 600;
+            font-weight: 700;
             letter-spacing: 1px;
             color: var(--primary);
             display: flex;
             align-items: center;
-            gap: 4px;
+            gap: 6px;
         }
 
         button {
@@ -1324,7 +1324,7 @@
 
     <div id="landing-wrapper" style="display: none;">
         <div class="landing-header">
-            <h1 class="landing-title">SHIFT<span>TURBO</span></h1>
+            <h1 class="landing-title">SHİFT<span>TURBO</span></h1>
             <p class="landing-subtitle" id="dynamic-subtitle">Zamanı Durdurma, Onu Yönet</p>
         </div>
 
@@ -1511,14 +1511,14 @@
 
         <div style="display: flex; align-items: center; justify-content: center; gap: 15px;">
 
-            <div class="brand-logo-text">SHIFT<span>TURBO</span></div>
+            <div class="brand-logo-text">SHİFT<span>TURBO</span></div>
 
             <div
                 style="height: 22px; width: 2px; background: var(--primary); box-shadow: 0 0 8px var(--primary); opacity: 0.6;">
             </div>
 
             <div
-                style="font-family: 'Orbitron'; font-size: 9px; color: var(--primary); letter-spacing: 3px; opacity: 0.8;">
+                style="font-family: 'Poppins', sans-serif; font-size: clamp(10px, 2.5vw, 13px); font-weight: 600; color: var(--primary); letter-spacing: 2px; opacity: 0.9;">
                 PERSONEL TERMİNALİ</div>
 
         </div>
@@ -1795,6 +1795,20 @@
         setInterval(syncOfflineQueue, 15000); // 15 saniyede bir otomatik denetle
 
         const playSound = (type) => {
+            try {
+                if (navigator.vibrate) {
+                    if (type === 'success') {
+                        navigator.vibrate([70, 50, 70]);
+                    } else if (type === 'error') {
+                        navigator.vibrate([150, 100, 150]);
+                    } else {
+                        navigator.vibrate(30);
+                    }
+                }
+            } catch (e) {
+                console.warn("Haptic feedback error:", e);
+            }
+
             try {
                 const context = new (window.AudioContext || window.webkitAudioContext)();
                 const osc = context.createOscillator();

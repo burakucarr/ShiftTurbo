@@ -3,18 +3,27 @@
  * Handles Interactive Chat, Predictive Analytics, and Smart Suggestions
  */
 
-(function(window) {
+(function (window) {
     const AI = {
         history: [],
-        apiKey: (window.SHIFTURBO_CONFIG && window.SHIFTURBO_CONFIG.geminiApiKey) || 
-                (typeof SHIFTURBO_CONFIG !== 'undefined' && SHIFTURBO_CONFIG.geminiApiKey) || 
-                localStorage.getItem('shiftTurbo_gemini_key') || '',
-        
+        apiKey: (window.SHIFTURBO_CONFIG && window.SHIFTURBO_CONFIG.geminiApiKey) ||
+            (typeof SHIFTURBO_CONFIG !== 'undefined' && SHIFTURBO_CONFIG.geminiApiKey) ||
+            localStorage.getItem('shiftTurbo_gemini_key') || '',
+
         init() {
             console.log("🤖 Shift-AI Assistant Başlatıldı.");
+
+            // Gizlenen uyarıları Local Storage'dan geri yükle
+            try {
+                const storedDismissed = localStorage.getItem('shiftTurbo_dismissed_anomalies');
+                this.dismissedAnomalies = new Set(storedDismissed ? JSON.parse(storedDismissed) : []);
+            } catch (e) {
+                this.dismissedAnomalies = new Set();
+            }
+
             // Eğer config.js içerisinde API anahtarı tanımlıysa, Local Storage'daki eski/güvensiz anahtarı temizleyelim
-            const configKey = (window.SHIFTURBO_CONFIG && window.SHIFTURBO_CONFIG.geminiApiKey) || 
-                              (typeof SHIFTURBO_CONFIG !== 'undefined' && SHIFTURBO_CONFIG.geminiApiKey);
+            const configKey = (window.SHIFTURBO_CONFIG && window.SHIFTURBO_CONFIG.geminiApiKey) ||
+                (typeof SHIFTURBO_CONFIG !== 'undefined' && SHIFTURBO_CONFIG.geminiApiKey);
             if (configKey) {
                 if (localStorage.getItem('shiftTurbo_gemini_key')) {
                     localStorage.removeItem('shiftTurbo_gemini_key');
@@ -64,11 +73,11 @@
 
         prepareContext() {
             if (!window.allLogs || window.allLogs.length === 0) return "Sistemde henüz veri yok.";
-            
+
             const now = new Date();
             const todayStr = now.toDateString();
             const todayLogs = window.allLogs.filter(l => new Date(l.raw_time).toDateString() === todayStr);
-            
+
             // Logları tek geçişte kişilere göre grupla (O(M))
             const logsByPerson = {};
             window.allLogs.forEach(l => {
@@ -79,49 +88,49 @@
 
             const staffNames = Object.keys(logsByPerson);
             let staffSummary = "";
-            
+
             staffNames.forEach(person => {
                 // allLogs azalan sırada olduğu için personel loglarını artan sıraya (kronolojik) çeviriyoruz
                 const personLogs = logsByPerson[person].slice().reverse();
-                
+
                 // Eğer paneldeki daha detaylı ve doğru puanlama fonksiyonu tanımlıysa onu kullan, yoksa yedek hızlı hesaba geç
                 let score = 100;
                 if (typeof window.calculateScore === 'function') {
                     score = window.calculateScore(person);
                 } else {
-                    personLogs.forEach(log => { 
-                        if (log.type === 'GİRİŞ') { 
-                            const isLast = personLogs[personLogs.length - 1] === log; 
-                            if (isLast && (now - new Date(log.raw_time)) / 3600000 > 10) score -= 15; 
-                        } 
+                    personLogs.forEach(log => {
+                        if (log.type === 'GİRİŞ') {
+                            const isLast = personLogs[personLogs.length - 1] === log;
+                            if (isLast && (now - new Date(log.raw_time)) / 3600000 > 10) score -= 15;
+                        }
                     });
-                    score += Math.floor(personLogs.length / 5) * 2; 
+                    score += Math.floor(personLogs.length / 5) * 2;
                     score = Math.min(Math.max(score, 0), 100);
                 }
-                
+
                 // Son durumu ve mesai süresini bul
                 const lastLog = personLogs[personLogs.length - 1];
                 let statusStr = lastLog ? `${lastLog.type} (${lastLog.time})` : 'Bilinmiyor';
                 let overtimeWarning = "";
-                
+
                 if (lastLog && lastLog.type === 'GİRİŞ') {
                     const hours = ((now - new Date(lastLog.raw_time)) / 3600000).toFixed(1);
                     statusStr = `MESAİDE (${hours} saattir içeride)`;
                     if (hours > 10.5) overtimeWarning = " [⚠️ KURAL İHLALİ: 10 SAATTEN FAZLA MESAİ!]";
                 }
-                
+
                 staffSummary += `- ${person}: ${score} Puan | Durum: ${statusStr}${overtimeWarning}\n`;
             });
-            
+
             let context = `Güncel Tarih ve Saat: ${now.toLocaleString('tr-TR')}\n`;
             context += `Bugünkü toplam işlem sayısı: ${todayLogs.length}\n\n`;
             context += `=== PERSONEL PUAN VE DURUM ÖZETİ ===\n${staffSummary}\n`;
             context += `=== SON 20 İŞLEM HAREKETİ ===\n`;
-            
+
             window.allLogs.slice(0, 20).forEach(l => {
                 context += `- [${l.date_str || ''} ${l.time}] ${l.personel}: ${l.type} (${l.mahalle})\n`;
             });
- 
+
             return context;
         },
 
@@ -237,27 +246,35 @@ ${query}
 
                 if (a.type === 'OUTSIDE' && !seenOutside.has(a.name)) {
                     seenOutside.add(a.name);
-                    baseSuggestions.push({ 
-                        text: `📢 ${a.name}'ye Uyarı Gönder`, 
+                    baseSuggestions.push({
+                        text: `📢 ${a.name}'ye Uyarı Gönder`,
                         isAnomaly: true,
                         anomalyKey: anomalyKey,
                         action: async (btnDOM) => {
                             this.dismissedAnomalies.add(anomalyKey);
+                            localStorage.setItem('shiftTurbo_dismissed_anomalies', JSON.stringify([...this.dismissedAnomalies]));
                             const success = await this.sendQuickBroadcast(`${a.name}, lütfen dükkan sınırları içerisinden giriş yapınız.`, a.name, btnDOM);
-                            if (!success) this.dismissedAnomalies.delete(anomalyKey);
+                            if (!success) {
+                                this.dismissedAnomalies.delete(anomalyKey);
+                                localStorage.setItem('shiftTurbo_dismissed_anomalies', JSON.stringify([...this.dismissedAnomalies]));
+                            }
                         }
                     });
                 }
                 if (a.type === 'OVERTIME' && !seenOvertime.has(a.name)) {
                     seenOvertime.add(a.name);
-                    baseSuggestions.push({ 
-                        text: `🏮 ${a.name} İçin Mola Hatırlatması`, 
+                    baseSuggestions.push({
+                        text: `🏮 ${a.name} İçin Mola Hatırlatması`,
                         isAnomaly: true,
                         anomalyKey: anomalyKey,
                         action: async (btnDOM) => {
                             this.dismissedAnomalies.add(anomalyKey);
+                            localStorage.setItem('shiftTurbo_dismissed_anomalies', JSON.stringify([...this.dismissedAnomalies]));
                             const success = await this.sendQuickBroadcast(`Dikkat ${a.name}: 10 saati aşan mesai tespit edildi. Lütfen mola veriniz.`, a.name, btnDOM);
-                            if (!success) this.dismissedAnomalies.delete(anomalyKey);
+                            if (!success) {
+                                this.dismissedAnomalies.delete(anomalyKey);
+                                localStorage.setItem('shiftTurbo_dismissed_anomalies', JSON.stringify([...this.dismissedAnomalies]));
+                            }
                         }
                     });
                 }
@@ -311,6 +328,7 @@ ${query}
                     dismissBtn.onclick = (e) => {
                         e.stopPropagation();
                         this.dismissedAnomalies.add(s.anomalyKey);
+                        localStorage.setItem('shiftTurbo_dismissed_anomalies', JSON.stringify([...this.dismissedAnomalies]));
                         wrapper.style.transition = 'all 0.3s ease';
                         wrapper.style.opacity = '0';
                         wrapper.style.transform = 'scale(0.8)';

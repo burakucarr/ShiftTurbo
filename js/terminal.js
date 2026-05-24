@@ -89,6 +89,20 @@ setInterval(syncOfflineQueue, 15000); // 15 saniyede bir otomatik denetle
 
 const playSound = (type) => {
     try {
+        if (navigator.vibrate) {
+            if (type === 'success') {
+                navigator.vibrate([70, 50, 70]);
+            } else if (type === 'error') {
+                navigator.vibrate([150, 100, 150]);
+            } else {
+                navigator.vibrate(30);
+            }
+        }
+    } catch (e) {
+        console.warn("Haptic feedback error:", e);
+    }
+
+    try {
         const context = new (window.AudioContext || window.webkitAudioContext)();
         const osc = context.createOscillator();
         const gain = context.createGain();
