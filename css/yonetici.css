@@ -1099,3 +1099,12 @@ body.stealth-mode table {
     transform: translateY(-2px);
     box-shadow: 0 5px 15px rgba(244, 129, 32, 0.4);
 }
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}

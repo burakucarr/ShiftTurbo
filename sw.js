@@ -1,4 +1,4 @@
-const CACHE_NAME = 'shift-turbo-v10'; // Sürüm yükseltmek zorunlu cache silmeyi tetikler
+const CACHE_NAME = 'shift-turbo-v11'; // Sürüm yükseltmek zorunlu cache silmeyi tetikler
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -151,21 +151,54 @@ self.addEventListener('periodicsync', (event) => {
 async function checkNewLogsSilently() {
   // Arka planda Supabase kontrolü yapıp yeni log varsa Push bildirimi basar
   try {
-    const proxyUrl = 'https://shifturbo-proxy.burakkucar55-5af.workers.dev';
-    const resp = await fetch(`${proxyUrl}/rest/v1/logs?select=*&order=created_at.desc&limit=1`);
+    const proxyUrl = 'https://shiftturbo-proxy.burakkucar55-5af.workers.dev';
+    const resp = await fetch(`${proxyUrl}/rest/v1/logs?select=*&order=created_at.desc&limit=20`);
     const logs = await resp.json();
     if (logs && logs.length > 0) {
       const newest = logs[0];
       const lastSeenId = await getIndexedDBValue('last_seen_log_id');
       if (newest.id !== lastSeenId) {
         await setIndexedDBValue('last_seen_log_id', newest.id);
-        await self.registration.showNotification(`ShiftTurbo: ${newest.personel_name}`, {
-          body: `${newest.type} kaydı işlendi. (${newest.mahalle || ''})`,
-          icon: '/logom.png',
-          badge: '/logom.png',
-          vibrate: [200, 100, 200],
-          data: { url: '/yonetici.html' }
-        });
+        
+        let isAnomaly = false;
+        let anomalyMsg = '';
+
+        // 1. Outside (Dışarıdan işlem)
+        if (newest.mahalle && newest.mahalle.includes('DOĞRULUK:')) {
+            const match = newest.mahalle.match(/DOĞRULUK:\s*(\d+)m/);
+            if (match && parseInt(match[1]) > 300) {
+                isAnomaly = true;
+                anomalyMsg = `Güvenli bölge dışında (${match[1]}m) işlem yapıldı!`;
+            }
+        }
+
+        // 2. Mükerrer İşlem (Aynı tip arka arkaya)
+        const personLogs = logs.filter(l => l.personel_name === newest.personel_name);
+        if (!isAnomaly && personLogs.length >= 2 && personLogs[0].type === personLogs[1].type && personLogs[0].type !== 'MESAJ') {
+            const diffMin = (new Date(personLogs[0].created_at) - new Date(personLogs[1].created_at)) / 60000;
+            if (diffMin < 30) {
+                isAnomaly = true;
+                anomalyMsg = `Mükerrer ${newest.type} kaydı oluşturuldu!`;
+            }
+        }
+
+        if (isAnomaly) {
+            await self.registration.showNotification(`⚠️ UYARI: ${newest.personel_name}`, {
+                body: anomalyMsg,
+                icon: './logom.png',
+                badge: './logom.png',
+                vibrate: [300, 100, 300, 100, 300],
+                data: { url: '/yonetici.html' }
+            });
+        } else {
+            await self.registration.showNotification(`ShiftTurbo: ${newest.personel_name}`, {
+                body: `${newest.type} kaydı işlendi. (${newest.mahalle || ''})`,
+                icon: './logom.png',
+                badge: './logom.png',
+                vibrate: [200, 100, 200],
+                data: { url: '/yonetici.html' }
+            });
+        }
       }
     }
   } catch (e) {

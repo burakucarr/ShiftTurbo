@@ -4,13 +4,23 @@
   "description": "ShiftTurbo Akıllı Personel Takip ve Mesai Yönetimi",
   "icons": [
     {
+      "src": "logom_192.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "logom_384.png",
+      "type": "image/png",
+      "sizes": "384x384",
+      "purpose": "any maskable"
+    },
+    {
       "src": "logom.png",
-
       "type": "image/png",
       "sizes": "512x512",
       "purpose": "any maskable"
     }
-
   ],
   "start_url": "/index.html",
   "display": "standalone",

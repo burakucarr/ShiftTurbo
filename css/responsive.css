@@ -6,23 +6,49 @@
 /* === YÖNETİCİ PANELİ RESPONSIVE === */
 
 /* İstatistik Grid — Tablet ve altı */
+@media (max-width: 1250px) {
+    .top-nav {
+        flex-wrap: wrap !important;
+        justify-content: center !important;
+        gap: 20px !important;
+        padding: 20px !important;
+    }
+    .live-trend-container {
+        margin: 5px auto !important;
+        width: auto !important;
+    }
+    .nav-actions-wrapper {
+        justify-content: center !important;
+        width: 100% !important;
+        flex-wrap: wrap !important;
+        gap: 15px !important;
+    }
+}
+
 @media (max-width: 900px) {
     .stats-grid {
         grid-template-columns: 1fr 1fr !important;
         gap: 15px !important;
     }
-}
-
-@media (max-width: 600px) {
-    .stats-grid {
-        grid-template-columns: 1fr !important;
-        gap: 12px !important;
+    .top-nav {
+        flex-direction: column !important;
+        align-items: center !important;
+        padding: 15px !important;
     }
-    .stat-card {
-        padding: 20px 15px !important;
+    .nav-actions-wrapper {
+        justify-content: center !important;
+        flex-wrap: wrap !important;
+        gap: 10px !important;
+        width: 100% !important;
     }
-    .stat-val {
-        font-size: 28px !important;
+    .admin-label {
+        margin-left: 0 !important;
+        padding-left: 0 !important;
+        border-left: none !important;
+        margin-top: 5px;
+    }
+    .live-trend-container {
+        margin: 5px auto !important;
     }
 }
 
@@ -46,10 +72,7 @@
     .toolbar .btn-cyber {
         width: 100% !important;
     }
-}
 
-/* Tablo — Mobilde yatay kaydırma */
-@media (max-width: 768px) {
     #adminPanel > table,
     #staff-management table {
         display: block;
@@ -69,38 +92,52 @@
         font-size: 10px !important;
         padding: 3px 8px !important;
     }
-}
 
-/* Top Nav — Mobilde responsive */
-@media (max-width: 768px) {
-    .top-nav {
-        flex-direction: column !important;
-        gap: 15px !important;
-        text-align: center !important;
+    .ucr-badge {
+        font-size: 10px;
+        padding: 6px 12px;
+        bottom: 10px !important;
+        right: 10px !important;
     }
-    .live-trend-container {
-        margin: 0 auto !important;
+
+    .time-display,
+    .time-display-login {
+        font-size: 48px;
     }
-    .admin-label {
-        margin-left: 0 !important;
-        padding-left: 0 !important;
-        border-left: none !important;
-        margin-top: 5px;
+
+    .about-content {
+        width: 92% !important;
+        padding: 20px !important;
     }
+
     #adminPanel {
         padding: 15px !important;
     }
-}
 
-/* Personel Yönetim Grid — Mobilde alt alta */
-@media (max-width: 768px) {
-    #staff-management div[style*="grid-template-columns: 1fr 1fr 1fr"] {
+    .staff-add-grid {
         grid-template-columns: 1fr !important;
+    }
+
+    #broadcast-panel {
+        flex-direction: column !important;
+    }
+    #broadcast-panel input {
+        width: 100% !important;
     }
 }
 
-/* AI Box — Mobilde düzenleme */
 @media (max-width: 600px) {
+    .stats-grid {
+        grid-template-columns: 1fr !important;
+        gap: 12px !important;
+    }
+    .stat-card {
+        padding: 20px 15px !important;
+    }
+    .stat-val {
+        font-size: 28px !important;
+    }
+
     #ai-box {
         padding: 12px !important;
         border-radius: 15px !important;
@@ -119,14 +156,30 @@
         font-size: 8px !important;
         padding: 4px 8px !important;
     }
+
+    .nav-actions-wrapper {
+        gap: 8px !important;
+    }
+    .nav-actions-wrapper button, 
+    .nav-actions-wrapper .btn-cyber, 
+    .nav-actions-wrapper .btn-logout {
+        padding: 8px 10px !important;
+        font-size: 10px !important;
+    }
+    .nav-actions-wrapper div {
+        padding: 6px 10px !important;
+    }
 }
 
-/* Duyuru Paneli — Mobilde */
-@media (max-width: 768px) {
-    #broadcast-panel {
-        flex-direction: column !important;
+/* Toast — Mobilde tam genişlik */
+@media (max-width: 500px) {
+    #toast-container {
+        left: 10px !important;
+        right: 10px !important;
     }
-    #broadcast-panel input {
+    .cyber-toast {
+        min-width: unset !important;
+        max-width: unset !important;
         width: 100% !important;
     }
 }
@@ -143,19 +196,6 @@
     }
     .time-display-login {
         font-size: 48px !important;
-    }
-}
-
-/* Toast — Mobilde tam genişlik */
-@media (max-width: 500px) {
-    #toast-container {
-        left: 10px !important;
-        right: 10px !important;
-    }
-    .cyber-toast {
-        min-width: unset !important;
-        max-width: unset !important;
-        width: 100% !important;
     }
 }
 

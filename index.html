@@ -59,6 +59,13 @@
             background: var(--bg);
         }
 
+        /* 🌙 YUMUŞAK TEMA GEÇİŞİ SİSTEMİ ☀️ */
+        body, .card, .l-card, .login-card, .btn-cyber, input, .brand-logo-text, .time-display, .time-display-login, .date-display, .toast, #toast-container > div {
+            transition-property: background-color, background, color, border-color, box-shadow !important;
+            transition-duration: 0.4s !important;
+            transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1) !important;
+        }
+
         [data-theme="light"] .card {
             background: rgba(255, 255, 255, 0.95) !important;
             border: 1px solid rgba(154, 59, 0, 0.3) !important;
@@ -142,10 +149,64 @@
             box-shadow: 0 5px 15px rgba(154, 59, 0, 0.15), 0 0 30px rgba(0, 0, 0, 0.1);
         }
 
+        /* Footer copyright renkleri */
+        .footer-copyright {
+            color: rgba(255, 255, 255, 0.2);
+        }
+
+        [data-theme="light"] .footer-copyright {
+            color: rgba(15, 23, 42, 0.45);
+        }
+
         [data-theme="light"] body::before {
-            background: linear-gradient(rgba(154, 59, 0, 0.15) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(154, 59, 0, 0.15) 1px, transparent 1px);
-            background-size: 25px 25px;
+            background: radial-gradient(circle at 50% -20%, rgba(244, 129, 32, 0.1) 0%, transparent 60%),
+                        radial-gradient(circle at -20% 120%, rgba(16, 185, 129, 0.05) 0%, transparent 50%);
+            background-size: cover;
+        }
+
+        /* KVKK Light Mode Styles */
+        [data-theme="light"] #kvkk-overlay {
+            background: rgba(241, 245, 249, 0.98) !important;
+        }
+        [data-theme="light"] #kvkk-overlay .card {
+            background: #ffffff !important;
+            border-color: var(--primary) !important;
+            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08) !important;
+        }
+        [data-theme="light"] #kvkk-text {
+            color: #475569 !important;
+            border-color: rgba(15, 23, 42, 0.1) !important;
+        }
+        [data-theme="light"] #kvkk-overlay label {
+            color: #0f172a !important;
+        }
+        [data-theme="light"] #kvkk-modal .terminal-box {
+            background: #ffffff !important;
+            border-color: var(--primary) !important;
+            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.1) !important;
+        }
+        [data-theme="light"] #kvkk-modal .terminal-header {
+            background: rgba(154, 59, 0, 0.05) !important;
+        }
+        [data-theme="light"] #kvkk-modal .terminal-title {
+            color: var(--primary) !important;
+        }
+        [data-theme="light"] #kvkk-modal .kvkk-modal-body {
+            color: #334155 !important;
+        }
+        [data-theme="light"] #kvkk-modal .kvkk-section-box {
+            background: rgba(15, 23, 42, 0.04) !important;
+        }
+        [data-theme="light"] #kvkk-modal .kvkk-section-box:first-of-type {
+            border-left: 3px solid var(--primary) !important;
+        }
+        [data-theme="light"] #kvkk-modal .kvkk-section-box:first-of-type h4,
+        [data-theme="light"] #kvkk-modal .kvkk-section-box:first-of-type button {
+            color: var(--primary) !important;
+            border-color: var(--primary) !important;
+        }
+        [data-theme="light"] #kvkk-modal .kvkk-modal-footer {
+            border-top: 1px solid rgba(15, 23, 42, 0.1) !important;
         }
 
         * {
@@ -156,15 +217,22 @@
             font-family: 'Poppins', sans-serif;
             margin: 0;
             min-height: 100vh;
+            min-height: 100dvh;
             color: white;
             background: var(--bg);
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            overflow: hidden;
-            position: fixed;
+            overflow-x: hidden;
+            overflow-y: auto;
             width: 100%;
+            max-width: 100vw;
+            overscroll-behavior-y: none;
+            padding: 40px 15px;
+            padding-left: max(15px, env(safe-area-inset-left));
+            padding-right: max(15px, env(safe-area-inset-right));
+            padding-bottom: max(20px, env(safe-area-inset-bottom));
         }
 
         @keyframes fadeIn {
@@ -180,19 +248,36 @@
         }
 
         @keyframes shake {
+            0% { transform: translateX(0); }
+            10% { transform: translateX(-12px); }
+            20% { transform: translateX(12px); }
+            30% { transform: translateX(-10px); }
+            40% { transform: translateX(10px); }
+            50% { transform: translateX(-6px); }
+            60% { transform: translateX(6px); }
+            70% { transform: translateX(-3px); }
+            80% { transform: translateX(3px); }
+            90% { transform: translateX(-1px); }
+            100% { transform: translateX(0); }
+        }
 
-            0%,
-            100% {
-                transform: translateX(0);
-            }
+        @keyframes pinErrorFlash {
+            0% { border-color: var(--primary); background: rgba(0, 0, 0, 0.4); color: var(--primary); }
+            20% { border-color: #ff3b3b; background: rgba(255, 59, 59, 0.15); color: #ff6b6b; }
+            40% { border-color: #ff1a1a; background: rgba(255, 26, 26, 0.2); color: #ff4d4d; }
+            70% { border-color: #ff3b3b; background: rgba(255, 59, 59, 0.1); color: #ff6b6b; }
+            100% { border-color: var(--primary); background: rgba(0, 0, 0, 0.4); color: var(--primary); }
+        }
 
-            25% {
-                transform: translateX(-10px);
-            }
+        @keyframes gpsRadarPing {
+            0% { transform: scale(0.3); opacity: 1; border-color: rgba(56, 189, 248, 0.8); }
+            50% { opacity: 0.5; }
+            100% { transform: scale(2.5); opacity: 0; border-color: rgba(56, 189, 248, 0); }
+        }
 
-            75% {
-                transform: translateX(10px);
-            }
+        @keyframes gpsDotPulse {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 6px rgba(56, 189, 248, 0.6); }
+            50% { transform: scale(1.3); box-shadow: 0 0 18px rgba(56, 189, 248, 0.9); }
         }
 
         @keyframes statusBarPulse {
@@ -282,8 +367,87 @@
         }
 
         .shake {
-            animation: shake 0.3s ease-in-out;
+            animation: shake 0.6s ease-in-out;
             border-color: var(--error) !important;
+        }
+
+        .pin-error-flash {
+            animation: pinErrorFlash 0.8s ease-in-out;
+        }
+
+        .gps-tracker-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            padding: 18px 0;
+        }
+
+        .gps-radar {
+            position: relative;
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .gps-radar-dot {
+            width: 12px;
+            height: 12px;
+            background: #38bdf8;
+            border-radius: 50%;
+            animation: gpsDotPulse 1.5s infinite ease-in-out;
+            z-index: 2;
+        }
+
+        .gps-radar-ring {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border: 2px solid rgba(56, 189, 248, 0.6);
+            border-radius: 50%;
+            animation: gpsRadarPing 2s infinite ease-out;
+        }
+
+        .gps-radar-ring:nth-child(2) {
+            animation-delay: 0.6s;
+        }
+
+        .gps-radar-ring:nth-child(3) {
+            animation-delay: 1.2s;
+        }
+
+        .gps-status-text {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 9px;
+            letter-spacing: 2px;
+            color: #38bdf8;
+            text-align: center;
+        }
+
+        .gps-timer-text {
+            font-family: 'Poppins', sans-serif;
+            font-size: 10px;
+            color: #94a3b8;
+            text-align: center;
+        }
+
+        .gps-progress-bar {
+            width: 80%;
+            max-width: 200px;
+            height: 3px;
+            background: rgba(255,255,255,0.08);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .gps-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #38bdf8, #06b6d4);
+            border-radius: 3px;
+            width: 0%;
+            transition: width 0.5s ease;
         }
 
         .fade-in {
@@ -302,20 +466,15 @@
 
         @keyframes liveRadarPing {
             0% {
-                transform: scale(0.8);
-                opacity: 1;
-                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
-            }
-
-            70% {
-                transform: scale(1.5);
-                opacity: 0;
-                box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
+                transform: scale(0.9);
+                opacity: 0.8;
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.6);
             }
 
             100% {
-                transform: scale(0.8);
+                transform: scale(2.2);
                 opacity: 0;
+                box-shadow: 0 0 0 15px rgba(16, 185, 129, 0);
             }
         }
 
@@ -366,7 +525,7 @@
 
         .ucr-badge {
             position: fixed !important;
-            bottom: 18px !important;
+            bottom: max(18px, env(safe-area-inset-bottom, 18px)) !important;
             right: 20px !important;
             display: flex !important;
             align-items: center !important;
@@ -424,10 +583,13 @@
             font-size: 11px;
             font-weight: 600;
             color: rgba(255, 255, 255, 0.6);
-            letter-spacing: 4px;
+            letter-spacing: clamp(1px, 1vw, 4px);
             text-transform: uppercase;
             margin-top: 5px;
             display: block;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         #about-modal {
@@ -562,11 +724,31 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: linear-gradient(rgba(244, 129, 32, 0.18) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(244, 129, 32, 0.18) 1px, transparent 1px);
-            background-size: 25px 25px;
+            background: radial-gradient(ellipse at 20% 80%, rgba(244, 129, 32, 0.12) 0%, transparent 50%),
+                        radial-gradient(ellipse at 80% 20%, rgba(16, 185, 129, 0.07) 0%, transparent 45%),
+                        radial-gradient(ellipse at 50% -10%, rgba(244, 129, 32, 0.18) 0%, transparent 55%),
+                        radial-gradient(ellipse at -10% 50%, rgba(59, 130, 246, 0.06) 0%, transparent 40%),
+                        radial-gradient(ellipse at 110% 60%, rgba(139, 92, 246, 0.05) 0%, transparent 45%);
             pointer-events: none;
             z-index: -1;
+            animation: meshFloat 12s ease-in-out infinite alternate;
+        }
+
+        @keyframes meshFloat {
+            0% {
+                background: radial-gradient(ellipse at 20% 80%, rgba(244, 129, 32, 0.12) 0%, transparent 50%),
+                            radial-gradient(ellipse at 80% 20%, rgba(16, 185, 129, 0.07) 0%, transparent 45%),
+                            radial-gradient(ellipse at 50% -10%, rgba(244, 129, 32, 0.18) 0%, transparent 55%),
+                            radial-gradient(ellipse at -10% 50%, rgba(59, 130, 246, 0.06) 0%, transparent 40%),
+                            radial-gradient(ellipse at 110% 60%, rgba(139, 92, 246, 0.05) 0%, transparent 45%);
+            }
+            100% {
+                background: radial-gradient(ellipse at 30% 70%, rgba(244, 129, 32, 0.15) 0%, transparent 55%),
+                            radial-gradient(ellipse at 70% 30%, rgba(16, 185, 129, 0.09) 0%, transparent 50%),
+                            radial-gradient(ellipse at 60% 10%, rgba(244, 129, 32, 0.12) 0%, transparent 50%),
+                            radial-gradient(ellipse at 10% 40%, rgba(59, 130, 246, 0.08) 0%, transparent 45%),
+                            radial-gradient(ellipse at 90% 70%, rgba(139, 92, 246, 0.07) 0%, transparent 50%);
+            }
         }
 
         body::after {
@@ -590,6 +772,10 @@
             margin-bottom: 25px;
             text-align: center;
             width: 100%;
+            max-width: 100%;
+            overflow: hidden;
+            box-sizing: border-box;
+            padding: 0 10px;
             z-index: 10;
         }
 
@@ -609,12 +795,22 @@
 
         .brand-slogan {
             font-family: 'Poppins', sans-serif;
-            font-size: clamp(11px, 3vw, 14px);
+            font-size: clamp(10px, 2.8vw, 14px);
             font-weight: 700;
-            letter-spacing: 3px;
+            letter-spacing: clamp(1px, 0.5vw, 3px);
             color: var(--primary);
             text-transform: uppercase;
-            display: block;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            min-height: 50px;
+            padding: 0 10px;
+            box-sizing: border-box;
+            word-break: break-word;
+            overflow-wrap: break-word;
+            transition: opacity 0.5s ease;
+            will-change: opacity;
         }
 
         .card {
@@ -626,7 +822,7 @@
             width: 90%;
             backdrop-filter: blur(30px);
             -webkit-backdrop-filter: blur(30px);
-            box-shadow: 0 30px 70px rgba(0, 0, 0, 0.8), 0 0 30px rgba(244, 129, 32, 0.15);
+            box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.15), 0 30px 70px rgba(0, 0, 0, 0.8), 0 0 30px rgba(244, 129, 32, 0.15);
             border: 1px solid rgba(244, 129, 32, 0.3);
             position: relative;
             margin-top: 20px;
@@ -660,20 +856,26 @@
         .status-icons {
             display: flex;
             justify-content: center;
-            gap: 15px;
+            flex-wrap: wrap;
+            gap: 8px 12px;
             margin-top: 15px;
             opacity: 0.9;
+            width: 100%;
+            box-sizing: border-box;
+            padding: 0 5px;
+            overflow: hidden;
         }
 
         .icon-item {
-            font-size: 10px;
+            font-size: clamp(8px, 2vw, 10px);
             font-family: 'Poppins', sans-serif;
             font-weight: 700;
-            letter-spacing: 1px;
+            letter-spacing: 0.5px;
             color: var(--primary);
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 5px;
+            white-space: nowrap;
         }
 
         button {
@@ -696,8 +898,8 @@
             display: none;
             background: linear-gradient(135deg, var(--primary), #d96d00);
             animation: scannerGlow 2.5s infinite ease-in-out;
-            font-size: 12px !important;
-            letter-spacing: 2.5px !important;
+            font-size: clamp(10px, 3vw, 12px) !important;
+            letter-spacing: clamp(1px, 0.5vw, 2.5px) !important;
             padding: 22px !important;
             border: 1px solid rgba(255, 255, 255, 0.15) !important;
             box-shadow: 0 15px 45px rgba(244, 129, 32, 0.4) !important;
@@ -707,7 +909,19 @@
 
         .btn-scan:hover {
             transform: scale(1.02);
-            box-shadow: 0 20px 60px rgba(244, 129, 32, 0.6) !important;
+            box-shadow: 0 0 20px rgba(244, 129, 32, 0.4), 0 0 40px rgba(244, 129, 32, 0.2), 0 0 60px rgba(244, 129, 32, 0.1) !important;
+        }
+
+        @keyframes action-pulse {
+            0% { box-shadow: 0 0 0 0 rgba(244, 129, 32, 0.6); }
+            70% { box-shadow: 0 0 0 15px rgba(244, 129, 32, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(244, 129, 32, 0); }
+        }
+
+        .btn-scan:active, button:active {
+            transform: scale(0.95) translateY(2px);
+            box-shadow: inset 0 5px 15px rgba(0,0,0,0.5), 0 0 10px rgba(244, 129, 32, 0.4) !important;
+            animation: action-pulse 0.4s ease-out;
         }
 
         .btn-in {
@@ -896,8 +1110,8 @@
         .num-btn:active {
             background: var(--primary);
             color: black;
-            box-shadow: 0 0 20px var(--primary);
-            transform: scale(0.95);
+            box-shadow: inset 0 4px 10px rgba(0,0,0,0.4), 0 0 5px rgba(244, 129, 32, 0.5);
+            transform: scale(0.92) translateY(2px);
         }
 
         #action-confirm {
@@ -936,7 +1150,7 @@
             font-size: 9px;
             font-family: 'Poppins', sans-serif;
             font-weight: 600;
-            letter-spacing: 2px;
+            letter-spacing: clamp(0.5px, 0.5vw, 2px);
             color: rgba(255, 255, 255, 0.3) !important;
             cursor: pointer;
             transition: all 0.4s ease;
@@ -1010,27 +1224,91 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            transition: opacity 0.5s ease;
+            transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+        }
+
+        #cyber-splash::before {
+            content: '';
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(244, 129, 32, 0.15) 0%, transparent 70%);
+            animation: splashOrb 4s ease-in-out infinite alternate;
+            pointer-events: none;
+        }
+
+        @keyframes splashOrb {
+            0% { transform: translate(-30px, 30px) scale(1); opacity: 0.6; }
+            100% { transform: translate(30px, -30px) scale(1.3); opacity: 1; }
+        }
+
+        .splash-logo {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 24px;
+            animation: splashLogoReveal 1.2s cubic-bezier(0.34, 1.56, 0.64, 1) forwards,
+                       splashLogoGlow 2.5s ease-in-out infinite 1.2s;
+            opacity: 0;
+            transform: scale(0.5);
+            filter: drop-shadow(0 0 20px rgba(244, 129, 32, 0.4));
+            z-index: 1;
+        }
+
+        @keyframes splashLogoReveal {
+            0% { opacity: 0; transform: scale(0.5) rotate(-10deg); }
+            100% { opacity: 1; transform: scale(1) rotate(0deg); }
+        }
+
+        @keyframes splashLogoGlow {
+            0%, 100% { filter: drop-shadow(0 0 15px rgba(244, 129, 32, 0.3)); }
+            50% { filter: drop-shadow(0 0 30px rgba(244, 129, 32, 0.6)); }
+        }
+
+        .splash-brand {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 18px;
+            font-weight: 900;
+            letter-spacing: 6px;
+            color: #fff;
+            margin-bottom: 8px;
+            opacity: 0;
+            animation: splashTextReveal 0.8s ease forwards 0.4s;
+            z-index: 1;
+        }
+
+        .splash-brand span {
+            color: var(--primary);
+        }
+
+        @keyframes splashTextReveal {
+            0% { opacity: 0; transform: translateY(15px); letter-spacing: 12px; }
+            100% { opacity: 1; transform: translateY(0); letter-spacing: 6px; }
         }
 
         .cyber-spinner {
-            width: 50px;
-            height: 50px;
-            border: 3px solid transparent;
+            width: 40px;
+            height: 40px;
+            border: 2px solid rgba(244, 129, 32, 0.15);
             border-top-color: var(--primary);
+            border-right-color: var(--primary);
             border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-bottom: 20px;
+            animation: spin 0.8s linear infinite;
+            margin-bottom: 16px;
+            margin-top: 24px;
+            z-index: 1;
         }
 
         .cyber-text {
             font-family: 'Orbitron';
-            font-size: 10px;
-            color: var(--primary);
-            letter-spacing: 4px;
+            font-size: 9px;
+            color: rgba(244, 129, 32, 0.7);
+            letter-spacing: 3px;
             animation: pulse 1.5s infinite;
             text-align: center;
             margin: 0 20px;
+            z-index: 1;
         }
 
         #landing-wrapper {
@@ -1039,9 +1317,9 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(3, 7, 18, 0.85);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
+            background: rgba(3, 7, 18, 0.92);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
             z-index: 50000;
             display: flex;
             flex-direction: column;
@@ -1052,6 +1330,42 @@
             transition: opacity 0.8s ease, transform 0.8s ease;
         }
 
+        #landing-wrapper::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background:
+                radial-gradient(ellipse at 25% 15%, rgba(244, 129, 32, 0.12) 0%, transparent 50%),
+                radial-gradient(ellipse at 75% 85%, rgba(16, 185, 129, 0.06) 0%, transparent 45%),
+                radial-gradient(ellipse at 50% 50%, rgba(139, 92, 246, 0.04) 0%, transparent 60%);
+            pointer-events: none;
+            z-index: 0;
+            animation: landingMesh 10s ease-in-out infinite alternate;
+        }
+
+        @keyframes landingMesh {
+            0% {
+                background:
+                    radial-gradient(ellipse at 25% 15%, rgba(244, 129, 32, 0.12) 0%, transparent 50%),
+                    radial-gradient(ellipse at 75% 85%, rgba(16, 185, 129, 0.06) 0%, transparent 45%),
+                    radial-gradient(ellipse at 50% 50%, rgba(139, 92, 246, 0.04) 0%, transparent 60%);
+            }
+            100% {
+                background:
+                    radial-gradient(ellipse at 35% 25%, rgba(244, 129, 32, 0.16) 0%, transparent 55%),
+                    radial-gradient(ellipse at 65% 75%, rgba(16, 185, 129, 0.08) 0%, transparent 50%),
+                    radial-gradient(ellipse at 40% 60%, rgba(139, 92, 246, 0.06) 0%, transparent 55%);
+            }
+        }
+
+        #landing-wrapper > * {
+            position: relative;
+            z-index: 1;
+        }
+
         .landing-header {
             text-align: center;
             margin-bottom: 5px;
@@ -1060,10 +1374,11 @@
 
         .landing-title {
             font-family: 'Orbitron';
-            font-size: 32px;
+            font-size: clamp(22px, 7vw, 32px);
             font-weight: 900;
-            letter-spacing: 8px;
+            letter-spacing: clamp(3px, 2vw, 8px);
             margin: 0;
+            word-break: break-word;
         }
 
         .landing-title span {
@@ -1096,6 +1411,23 @@
             text-align: left;
             position: relative;
             overflow: hidden;
+            transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+                        box-shadow 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+                        border-color 0.35s ease,
+                        background 0.35s ease;
+            cursor: default;
+        }
+
+        .l-card:hover {
+            transform: translateY(-4px) scale(1.01);
+            box-shadow: 0 12px 30px rgba(244, 129, 32, 0.12), 0 4px 12px rgba(0, 0, 0, 0.3);
+            border-color: rgba(244, 129, 32, 0.4);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .l-card:active {
+            transform: translateY(-1px) scale(0.99);
+            transition-duration: 0.1s;
         }
 
         .l-card::before {
@@ -1106,6 +1438,12 @@
             height: 100%;
             width: 3px;
             background: var(--primary);
+            transition: width 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .l-card:hover::before {
+            width: 4px;
+            box-shadow: 0 0 12px rgba(244, 129, 32, 0.5);
         }
 
         .l-card h3 {
@@ -1152,7 +1490,12 @@
 
         .btn-enter-terminal:hover {
             transform: translateY(-3px) scale(1.02);
-            box-shadow: 0 15px 40px rgba(244, 129, 32, 0.5);
+            box-shadow: 0 0 15px rgba(244, 129, 32, 0.5), 0 0 30px rgba(244, 129, 32, 0.3), 0 0 45px rgba(244, 129, 32, 0.1);
+        }
+
+        .btn-enter-terminal:active {
+            transform: scale(0.95) translateY(2px);
+            box-shadow: inset 0 5px 15px rgba(0,0,0,0.6), 0 0 10px rgba(244, 129, 32, 0.3);
         }
 
         #bio-scanner {
@@ -1309,6 +1652,73 @@
                 letter-spacing: 8px !important;
             }
         }
+
+        /* ============================================
+           🌀 SHIFTURBO — WATERMARK & BOTTOM WAVES SYSTEM
+           ============================================ */
+        :root {
+            --wave-color-2: #ff9d42;
+        }
+        :root[data-theme="light"] {
+            --wave-color-2: #d96d00;
+        }
+
+
+
+        /* Animated Siberpunk Glowing Bottom Waves */
+        .bottom-waves {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 60px;
+            overflow: hidden;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .wave-svg {
+            position: absolute;
+            bottom: -5px; /* Sits exactly on the bottom border */
+            left: 0;
+            width: 2400px;
+            height: 100%;
+            opacity: 0.15;
+            transition: opacity 0.5s ease;
+        }
+
+        [data-theme="light"] .wave-svg {
+            opacity: 0.08; /* Softer wave color on light mode */
+        }
+
+        .wave-path {
+            fill: none;
+            stroke-linecap: round;
+        }
+
+        .wave-path-1 {
+            stroke: var(--primary);
+            stroke-width: 1.5px;
+            filter: drop-shadow(0 0 6px var(--primary));
+            animation: waveMove1 18s linear infinite;
+        }
+
+        .wave-path-2 {
+            stroke: var(--wave-color-2);
+            stroke-width: 1px;
+            filter: drop-shadow(0 0 4px var(--wave-color-2));
+            animation: waveMove2 12s linear infinite;
+        }
+
+        @keyframes waveMove1 {
+            0% { transform: translate3d(0, 0, 0); }
+            100% { transform: translate3d(-300px, 0, 0); }
+        }
+
+        @keyframes waveMove2 {
+            0% { transform: translate3d(-300px, 0, 0); }
+            100% { transform: translate3d(0, 0, 0); }
+        }
     </style>
 </head>
 
@@ -1318,12 +1728,15 @@
             class="far fa-lightbulb"></i></button>
     <!-- SPLASH & LANDING PAGE EKLENTİSİ -->
     <div id="cyber-splash">
+        <img src="logom.png" alt="ShiftTurbo" class="splash-logo">
+        <div class="splash-brand">SHİFT<span>TURBO</span></div>
         <div class="cyber-spinner"></div>
         <div class="cyber-text" id="splash-text">AĞ BAĞLANTISI KURULUYOR...</div>
     </div>
 
     <div id="landing-wrapper" style="display: none;">
         <div class="landing-header">
+            <img src="logom.png" alt="ShiftTurbo" style="width: 56px; height: 56px; margin-bottom: 12px; filter: drop-shadow(0 0 15px rgba(244, 129, 32, 0.3)); animation: splashLogoGlow 3s ease-in-out infinite;">
             <h1 class="landing-title">SHİFT<span>TURBO</span></h1>
             <p class="landing-subtitle" id="dynamic-subtitle">Zamanı Durdurma, Onu Yönet</p>
         </div>
@@ -1353,6 +1766,11 @@
 
         <div class="landing-action fade-in" style="animation-delay: 0.5s;">
             <button class="btn-enter-terminal" onclick="showBioScan()">SİSTEME GİRİŞ YAP</button>
+            <div style="margin-top: 12px; display: flex; align-items: center; justify-content: center; gap: 8px; opacity: 0.4;">
+                <div style="width: 5px; height: 5px; border-radius: 50%; background: var(--primary); box-shadow: 0 0 6px var(--primary);"></div>
+                <span style="font-family: 'Orbitron'; font-size: 8px; letter-spacing: 2px; color: var(--primary);">UCR TECHNOLOGY</span>
+                <span style="font-family: 'Poppins'; font-size: 8px; color: rgba(255,255,255,0.35);">v2.0</span>
+            </div>
         </div>
 
         <div style="text-align: center; opacity: 0.3; margin-bottom: 20px;">
@@ -1417,6 +1835,33 @@
 
         </div>
 
+    </div>
+
+    <!-- KVKK Modal -->
+    <div id="kvkk-modal" class="modal-overlay" style="display:none; z-index: 10001; backdrop-filter: blur(10px); position: fixed; top:0; left:0; right:0; bottom:0; align-items: center; justify-content: center;">
+        <div class="terminal-box" style="max-width: 450px; width: 90%; background: rgba(15, 23, 42, 0.95); border-color: #3b82f6; box-sizing: border-box;">
+            <div class="terminal-header" style="background: rgba(59, 130, 246, 0.1);">
+                <div class="terminal-title">🛡️ KVKK & GİZLİLİK YÖNETİMİ</div>
+            </div>
+            <div class="kvkk-modal-body" style="padding: 20px; font-size: 13px; color: #cbd5e1; line-height: 1.6;">
+                <p style="margin-bottom: 15px;">6698 sayılı Kişisel Verilerin Korunması Kanunu (KVKK) kapsamında, sistemde kayıtlı kişisel verileriniz üzerinde tam denetime sahipsiniz.</p>
+                
+                <div class="kvkk-section-box" style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 8px; margin-bottom: 15px; border-left: 3px solid #3b82f6;">
+                    <h4 style="color: #60a5fa; margin-top: 0; margin-bottom: 8px;">📥 Veri Taşınabilirliği</h4>
+                    <p style="margin-bottom: 10px; font-size: 11px;">Sistemde size ait tüm mesai ve konum loglarını JSON formatında indirebilirsiniz.</p>
+                    <button class="btn-out btn-mini" onclick="exportMyData()" style="width: 100%; border-color: #3b82f6; color: #60a5fa;">VERİLERİMİ İNDİR</button>
+                </div>
+
+                <div class="kvkk-section-box" style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 8px; border-left: 3px solid #ef4444;">
+                    <h4 style="color: #f87171; margin-top: 0; margin-bottom: 8px;">🗑️ Veri Silme Hakkı</h4>
+                    <p style="margin-bottom: 10px; font-size: 11px;">Kişisel tanımlayıcı bilgilerinizi sistemden tamamen siler. Mesai kayıtlarınız bordro sebebiyle kalıcı olarak anonimleştirilir.</p>
+                    <button class="btn-out btn-mini" onclick="anonymizeMyAccount()" style="width: 100%; border-color: #ef4444; color: #f87171;">HESABIMI ANONİMLEŞTİR VE SİL</button>
+                </div>
+            </div>
+            <div class="kvkk-modal-footer" style="padding: 15px; border-top: 1px solid rgba(255,255,255,0.1); text-align: center;">
+                <button class="btn-out btn-mini" onclick="toggleKvkkModal(false)" style="margin: 0; width: auto; padding: 10px 30px;">KAPAT</button>
+            </div>
+        </div>
     </div>
 
     <div id="message-modal">
@@ -1523,7 +1968,7 @@
 
         </div>
 
-        <span class="brand-slogan">Emeğin, Dijital Güvencemiz Altında</span>
+        <span class="brand-slogan" id="dynamic-brand-slogan">Emeğin, Dijital Güvencemiz Altında</span>
 
     </div>
 
@@ -1649,8 +2094,9 @@
 
 
     <div
-        style="text-align: center; font-family: 'Orbitron', sans-serif; font-size: 7px; color: rgba(255, 255, 255, 0.15); letter-spacing: 3px; margin-top: 15px; text-transform: uppercase; z-index: 5;">
-        <span style="pointer-events: none;">© 2026 ShiftTurbo | Tüm Hakları Saklıdır</span><br>
+        class="footer-copyright"
+        style="text-align: center; font-family: 'Orbitron', sans-serif; font-size: 7px; letter-spacing: 3px; margin-top: 15px; text-transform: uppercase; z-index: 5;">
+        <span style="pointer-events: none;">© 2026 ShiftTurbo | v3.0 (24.05.2026) | Tüm Hakları Saklıdır</span><br>
         <span onclick="showKVKKOnly()"
             style="color: var(--primary); pointer-events: auto; cursor: pointer; text-decoration: underline; display: inline-block; margin-top: 5px;">Gizlilik
             ve KVKK Politikası</span>
@@ -1662,6 +2108,9 @@
         <span class="ucr-dot"></span>
 
         UCR Technology
+
+        <span class="ucr-dot" style="margin: 0 10px;"></span>
+        <span onclick="toggleKvkkModal(true)" style="cursor: pointer; text-decoration: underline;">KVKK & Gizlilik</span>
 
     </div>
 
@@ -1934,13 +2383,13 @@
         function createNumPad() {
             const grid = document.getElementById('numpad-grid');
             if (!grid) return;
-            const nums = [1, 2, 3, 4, 5, 6, 7, 8, 9, "C", 0, "OK"];
+            const nums = [1, 2, 3, 4, 5, 6, 7, 8, 9, "⌫", 0, "OK"];
             grid.innerHTML = nums.map(n => `<button class="num-btn" onclick="pressNum('${n}')">${n}</button>`).join('');
         }
 
         function pressNum(n) {
             playSound('tap');
-            if (n === "C") { currentPin = ""; }
+            if (n === "⌫" || n === "C") { currentPin = currentPin.slice(0, -1); }
             else if (n === "OK") { checkPin(); return; }
             else { if (currentPin.length < 4) currentPin += n; }
 
@@ -1991,63 +2440,168 @@
 
         async function checkPin() {
             const pin = currentPin.trim();
-            const { data, error } = await _supabase.from('users').select('*').eq('pin', pin);
+            const clientUUID = getDeviceUUID();
 
-            if (data && data.length > 0) {
-                const userObj = data[0];
-                const fullName = userObj.ad_soyad;
-                const clientUUID = getDeviceUUID();
+            // Önce RPC ile dene, yoksa direkt tablodan doğrula
+            let rpcData = null;
+            let rpcError = null;
 
-                // 🔍 CİHAZ EŞLEŞME KONTROLÜ (DEVICE BINDING)
-                if (userObj.device_id !== undefined) {
-                    const dbDeviceId = userObj.device_id;
-                    if (dbDeviceId && dbDeviceId !== clientUUID) {
-                        playSound('error');
-                        document.getElementById('main-card').classList.add('shake');
-                        setTimeout(() => document.getElementById('main-card').classList.remove('shake'), 300);
-                        currentPin = ""; document.getElementById('pin-display').innerText = "****";
+            try {
+                const result = await _supabase.rpc('verify_pin', { 
+                    input_pin: pin, 
+                    client_device_id: clientUUID 
+                });
+                rpcData = result.data;
+                rpcError = result.error;
+            } catch(e) {
+                rpcError = e;
+            }
 
-                        document.getElementById('error-msg-body').innerHTML = `<b>⚠️ GÜVENLİK KİLİDİ (CİHAZ EŞLEŞME HATASI):</b><br><br>Bu PIN kodu daha önce başka bir telefon veya tarayıcı ile eşleştirilmiş!<br><br>💡 <b>Aynı telefonu kullanıyor olsanız bile</b>, tarayıcı geçmişini/önbelleğini temizlediğinizde veya uygulamayı silip yüklediğinizde cihaz kimliğiniz değişir.<br><br>🛠️ <b>ÇÖZÜM:</b> Lütfen yöneticinizden <b>Yönetici Paneli -> Personel Yönetimi</b> sekmesinden isminizin yanındaki <b>'🔓 KİLİDİ AÇ'</b> butonuna basmasını talep ediniz. Ardından tekrar PIN girerek bu cihazı yeni telefonunuz olarak tanımlayabilirsiniz.`;
-                        document.getElementById('error-modal').style.display = 'flex';
-                        return;
-                    }
-                } else {
-                    console.warn("⚠️ Supabase 'users' tablosunda 'device_id' sütunu bulunamadı.");
+            // RPC fonksiyonu yoksa (404) direkt tabloya bak
+            if (rpcError && (rpcError.code === 'PGRST202' || rpcError.message?.includes('404') || rpcError.status === 404 || String(rpcError).includes('404') || rpcError.code === '42883')) {
+                console.warn("verify_pin RPC bulunamadı, fallback modu aktif.");
+                const { data: users, error: usersError } = await _supabase.from('users').select('ad_soyad, pin, device_id');
+
+                if (usersError || !users || users.length === 0) {
+                    // Eğer anonim erişim de yoksa proxy üzerinden dene
+                    try {
+                        const proxyRes = await fetch(proxyUrl + '/users?select=ad_soyad,pin,device_id');
+                        const proxyUsers = proxyRes.ok ? await proxyRes.json() : [];
+                        if (proxyUsers.length > 0) {
+                            return await _checkPinFallback(pin, clientUUID, proxyUsers);
+                        }
+                    } catch(pe) {}
+                    playSound('error');
+                    showToast("SİSTEM HATASI", "Veritabanına erişilemiyor. İnternet bağlantınızı kontrol edin.", "error");
+                    return;
                 }
+                return await _checkPinFallback(pin, clientUUID, users);
+            }
 
+            if (rpcError) {
+                console.error("PIN doğrulama hatası:", rpcError);
+                playSound('error');
+                showToast("SİSTEM HATASI", "Sunucu ile bağlantı kurulamadı. Lütfen tekrar deneyin.", "error");
+                return;
+            }
+
+            _handlePinResult(rpcData);
+        }
+
+        async function _checkPinFallback(pin, clientUUID, users) {
+            // bcryptjs ile client-side PIN doğrulama
+            // Önce bcryptjs yükle (CDN)
+            if (!window.dcodeIO && !window.bcrypt) {
+                try {
+                    await new Promise((resolve, reject) => {
+                        const s = document.createElement('script');
+                        s.src = 'https://cdnjs.cloudflare.com/ajax/libs/bcryptjs/2.4.3/bcrypt.min.js';
+                        s.onload = resolve;
+                        s.onerror = reject;
+                        document.head.appendChild(s);
+                    });
+                } catch(e) {
+                    // bcryptjs yüklenemedi - düz eşleştirme dene (geçici)
+                    console.warn("bcryptjs yüklenemedi, PIN doğrulaması yapılamıyor.");
+                    playSound('error');
+                    showToast("SİSTEM HATASI", "Veritabanı fonksiyonlarını kurmak için yöneticiye başvurun.", "error");
+                    return;
+                }
+            }
+
+            const bcrypt = window.dcodeIO?.bcrypt || window.bcrypt;
+            let matchedUser = null;
+
+            for (const u of users) {
+                if (!u.pin) continue;
+                let isMatch = false;
+                try {
+                    isMatch = await bcrypt.compare(pin, u.pin);
+                } catch(e) {
+                    // Karma değil, düz metin PIN (eski format)
+                    isMatch = (pin === u.pin);
+                }
+                if (isMatch) { matchedUser = u; break; }
+            }
+
+            if (!matchedUser) {
+                playSound('error');
+                // Haptic feedback (titreşim)
+                if (navigator.vibrate) navigator.vibrate([100, 50, 150]);
+                // Gelişmiş shake animasyonu
+                document.getElementById('main-card').classList.add('shake');
+                setTimeout(() => document.getElementById('main-card').classList.remove('shake'), 600);
+                // PIN input kırmızı flash efekti
+                const pinDisp = document.getElementById('pin-display');
+                pinDisp.classList.add('pin-error-flash');
+                setTimeout(() => pinDisp.classList.remove('pin-error-flash'), 800);
+                currentPin = ""; 
+                pinDisp.innerText = "****";
+                showToast("HATALI PIN", "Girdiğiniz PIN kodu geçersizdir.", "error");
+                return;
+            }
+
+            // Cihaz eşleşme kontrolü
+            if (matchedUser.device_id && matchedUser.device_id !== clientUUID) {
+                document.getElementById('error-msg-body').innerHTML = `<b>📱 CİHAZ EŞLEŞME HATASI:</b><br><br>Bu PIN kodu başka bir telefon/cihaz ile eşleştirilmiş. Yöneticinizden 'Cihaz Kilidini Açmasını' talep edin.`;
+                document.getElementById('error-modal').style.display = 'flex';
+                return;
+            }
+
+            // Cihaz kaydı yoksa ata
+            if (!matchedUser.device_id) {
+                await _supabase.from('users').update({ device_id: clientUUID }).eq('ad_soyad', matchedUser.ad_soyad);
+            }
+
+            _handlePinResult({ success: true, user_name: matchedUser.ad_soyad });
+        }
+
+        function _handlePinResult(data) {
+            if (data && data.success) {
+                const fullName = data.user_name;
                 playSound('success');
                 localStorage.setItem('temp_user_name', fullName);
-                localStorage.setItem('temp_user_pin', pin);
-
+                localStorage.setItem('temp_user_pin', currentPin.trim());
                 document.getElementById('pin-pad').style.display = 'none';
                 document.getElementById('user-check-text').innerText = `MERHABA ${fullName.split(' ')[0].toUpperCase()}, GİRİŞ YAPAN SEN MİSİN?`;
                 document.getElementById('confirm-box').style.display = 'block';
-
             } else {
                 playSound('error');
+                // Haptic feedback (titreşim)
+                if (navigator.vibrate) navigator.vibrate([100, 50, 150]);
+                // Gelişmiş shake animasyonu
                 document.getElementById('main-card').classList.add('shake');
-                setTimeout(() => document.getElementById('main-card').classList.remove('shake'), 300);
-                currentPin = ""; document.getElementById('pin-display').innerText = "****";
+                setTimeout(() => document.getElementById('main-card').classList.remove('shake'), 600);
+                // PIN input kırmızı flash efekti
+                const pinDisp2 = document.getElementById('pin-display');
+                pinDisp2.classList.add('pin-error-flash');
+                setTimeout(() => pinDisp2.classList.remove('pin-error-flash'), 800);
+                currentPin = ""; 
+                pinDisp2.innerText = "****";
+                if (data && data.lockout) {
+                    if (navigator.vibrate) navigator.vibrate([200, 100, 200, 100, 300]);
+                    const sec = data.remaining_seconds || 900;
+                    document.getElementById('error-msg-body').innerHTML = `<b>⚠️ GÜVENLİK KİLİDİ:</b><br><br>Çok fazla hatalı deneme. <b>${Math.ceil(sec / 60)} dakika</b> bekleyin.`;
+                    document.getElementById('error-modal').style.display = 'flex';
+                } else if (data && data.error_type === 'device_mismatch') {
+                    document.getElementById('error-msg-body').innerHTML = `<b>📱 CİHAZ EŞLEŞME HATASI:</b><br><br>Bu PIN kodu başka bir telefon ile eşleştirilmiş. Yöneticinizden 'Cihaz Kilidini Açmasını' talep edin.`;
+                    document.getElementById('error-modal').style.display = 'flex';
+                } else {
+                    showToast("HATALI PIN", (data && data.message) || "Girdiğiniz PIN kodu geçersizdir.", "error");
+                }
             }
         }
 
+
         async function verifySuccess() {
             const fullName = localStorage.getItem('temp_user_name') || "PERSONEL";
-            const pin = localStorage.getItem('temp_user_pin');
             const clientUUID = getDeviceUUID();
 
             // 0. Sesli Karşılama (Hemen çalışmalı, aksi halde await yüzünden tarayıcı ses iznini iptal eder)
             try { speakGreeting(fullName); } catch (e) { console.warn("Ses uyarısı:", e); }
 
-            // 1. Cihaz ID Güncellemesinin veritabanına yazılmasını bekle (Yarış durumunu engellemek için)
-            if (pin) {
-                try {
-                    await _supabase.from('users').update({ device_id: clientUUID }).eq('pin', pin);
-                    console.log("Cihaz kaydı güncellendi.");
-                } catch (e) {
-                    console.warn("Cihaz kaydı uyarısı:", e);
-                }
-            }
+            // 1. Cihaz ID Güncellemesi ( verify_pin RPC fonksiyonu içinde halledildi)
+            console.log("Cihaz doğrulaması güvenli arka plan üzerinden yapıldı.");
 
             // 2. Bildirim İzni İsteme (Ana akışı asla bloklama!)
             if ('Notification' in window && 'serviceWorker' in navigator) {
@@ -2084,8 +2638,8 @@
             const actionText = document.getElementById('action-text');
             const okBtn = document.getElementById('final-ok-btn');
 
-            if (type === 'GİRİŞ') { actionText.innerText = "MESAİ BAŞLATILSIN MI?"; okBtn.className = "btn-in"; }
-            else { actionText.innerText = "MESAİ BİTİRİLSİN MI?"; okBtn.className = "btn-out"; }
+            if (type === 'GİRİŞ') { actionText.innerHTML = "<span style='font-size:16px;'>⬆</span> MESAİ BAŞLATILSIN MI?"; okBtn.className = "btn-in"; okBtn.innerHTML = "<span style='font-size:14px;'>⬆</span> EVET, BAŞLAT"; }
+            else { actionText.innerHTML = "<span style='font-size:16px;'>⬇</span> MESAİ BİTİRİLSİN MI?"; okBtn.className = "btn-out"; okBtn.innerHTML = "<span style='font-size:14px;'>⬇</span> EVET, BİTİR"; }
         }
 
         function cancelAction() {
@@ -2159,7 +2713,7 @@
 
                 setTimeout(() => {
                     if (errorModal) errorModal.style.display = 'none';
-                    if (typeof startQR === 'function') startQR();
+                    if (typeof resetToScanScreen === 'function') resetToScanScreen();
                 }, 5000);
                 return;
             }
@@ -2184,9 +2738,45 @@
 
             document.getElementById('action-confirm').style.display = 'none';
             const statusEl = document.getElementById('status');
-            statusEl.innerText = "🛰️ KONUM İŞLENİYOR...";
+
+            // GPS Takip Animasyonu: Radar + Progress Bar + Geri Sayım
+            const gpsMaxTime = 10; // Tahmini maksimum GPS süresi (saniye)
+            let gpsElapsed = 0;
+            let gpsTimerInterval = null;
+            const showGpsTracker = () => {
+                statusEl.innerHTML = `
+                    <div class="gps-tracker-container">
+                        <div class="gps-radar">
+                            <div class="gps-radar-ring"></div>
+                            <div class="gps-radar-ring"></div>
+                            <div class="gps-radar-ring"></div>
+                            <div class="gps-radar-dot"></div>
+                        </div>
+                        <div class="gps-status-text" id="gps-anim-status">🛰️ UYDU BAĞLANTISI KURUYORUM...</div>
+                        <div class="gps-progress-bar"><div class="gps-progress-fill" id="gps-progress"></div></div>
+                        <div class="gps-timer-text" id="gps-timer">Tahmini süre: ~${gpsMaxTime} sn</div>
+                    </div>`;
+                gpsTimerInterval = setInterval(() => {
+                    gpsElapsed++;
+                    const pct = Math.min((gpsElapsed / gpsMaxTime) * 100, 95);
+                    const progEl = document.getElementById('gps-progress');
+                    const timerEl = document.getElementById('gps-timer');
+                    const statusTextEl = document.getElementById('gps-anim-status');
+                    if (progEl) progEl.style.width = pct + '%';
+                    const remaining = Math.max(gpsMaxTime - gpsElapsed, 1);
+                    if (timerEl) timerEl.innerText = `Tahmini süre: ~${remaining} sn`;
+                    if (statusTextEl && gpsElapsed >= 3 && gpsElapsed < 6) statusTextEl.innerText = '📡 SİNYAL ARANIYOR...';
+                    if (statusTextEl && gpsElapsed >= 6) statusTextEl.innerText = '🔍 HASSAS KONUM BELİRLENİYOR...';
+                }, 1000);
+            };
+            const hideGpsTracker = () => {
+                if (gpsTimerInterval) clearInterval(gpsTimerInterval);
+                const progEl = document.getElementById('gps-progress');
+                if (progEl) progEl.style.width = '100%';
+            };
 
             const finalizeLocation = async (accuracy, lat, lon) => {
+                hideGpsTracker();
                 console.log("Kullanılan Hassasiyet: " + accuracy + "m");
 
                 if (!navigator.onLine) {
@@ -2296,16 +2886,47 @@
             if (window.bgLocation && window.bgLocation.accuracy <= 40) {
                 finalizeLocation(window.bgLocation.accuracy, window.bgLocation.latitude, window.bgLocation.longitude);
             } else {
+                showGpsTracker();
                 const getLocation = (useHighAcc = true) => {
+                    let hasFinished = false;
+                    
+                    const manualTimeout = setTimeout(() => {
+                        if (hasFinished) return;
+                        hasFinished = true;
+                        
+                        if (useHighAcc) {
+                            const statusTextEl = document.getElementById('gps-anim-status');
+                            if (statusTextEl) statusTextEl.innerText = '⚠️ BİNA İÇİ HIZLI TARAMA...';
+                            getLocation(false);
+                        } else {
+                            hideGpsTracker();
+                            playSound('error');
+                            if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+                            document.getElementById('error-msg-body').innerText = "⏱️ ZAMAN AŞIMI: Sinyal zayıf veya GPS kapalı. Lütfen cihaz konumunu kontrol edin.";
+                            document.getElementById('error-modal').style.display = 'flex';
+                            statusEl.innerText = "❌ İŞLEM İPTAL EDİLDİ";
+                        }
+                    }, useHighAcc ? 7000 : 9000);
+
                     navigator.geolocation.getCurrentPosition(async (pos) => {
+                        if (hasFinished) return;
+                        hasFinished = true;
+                        clearTimeout(manualTimeout);
                         finalizeLocation(pos.coords.accuracy, pos.coords.latitude, pos.coords.longitude);
                     }, (err) => {
+                        if (hasFinished) return;
+                        hasFinished = true;
+                        clearTimeout(manualTimeout);
+
                         if (useHighAcc && err.code === 3) {
-                            statusEl.innerText = "⚠️ BİNA İÇİ HIZLI TARAMA YAPILIYOR...";
+                            const statusTextEl = document.getElementById('gps-anim-status');
+                            if (statusTextEl) statusTextEl.innerText = '⚠️ BİNA İÇİ HIZLI TARAMA...';
                             getLocation(false);
                             return;
                         }
+                        hideGpsTracker();
                         playSound('error');
+                        if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
                         let errMsg = "Bilinmeyen konum hatası.";
                         if (err.code === 1) errMsg = "💥 ERİŞİM REDDİ: Tarayıcı veya telefondan KONUM izni (GPS) vermeniz şarttır.";
                         else if (err.code === 2) errMsg = "📡 SİNYAL YOK: Lütfen cihazınızın Konum (GPS) ayarını açık konuma getirin.";
@@ -2380,6 +3001,59 @@
             }, 4000);
         }
 
+        function toggleKvkkModal(show) { document.getElementById('kvkk-modal').style.display = show ? 'flex' : 'none'; }
+
+        async function exportMyData() {
+            let user = localStorage.getItem('shiftTurbo_user');
+            if (!user || user.includes("BİLİNMEYEN")) {
+                alert("Önce terminale PIN ile giriş yapmalısınız."); return;
+            }
+            const pin = prompt("Güvenlik onayı için lütfen PIN kodunuzu tekrar giriniz:");
+            if (!pin) return;
+
+            const { data, error } = await _supabase.rpc('export_my_data', { p_user_name: user, p_pin: pin.trim() });
+            if (error || !data || !data.success) {
+                alert("Kimlik doğrulama başarısız! PIN kodunuz hatalı."); return;
+            }
+
+            const jsonStr = JSON.stringify(data.data, null, 2);
+            const blob = new Blob([jsonStr], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `ShiftTurbo_Kisisel_Veriler_${user.replace(/\s+/g, '_')}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        async function anonymizeMyAccount() {
+            let user = localStorage.getItem('shiftTurbo_user');
+            if (!user || user.includes("BİLİNMEYEN")) {
+                alert("Önce terminale PIN ile giriş yapmalısınız."); return;
+            }
+            const confirm1 = confirm("⚠️ DİKKAT: Bu işlem profilinizi, cihaz eşleşmenizi ve tüm kişisel verilerinizi sistemden silecektir. Mesai kayıtlarınız yasal olarak anonimleştirilecektir.\n\nBu işlemi başlatmak istiyor musunuz?");
+            if (!confirm1) return;
+
+            const phrase = prompt("⚠️ HESAP SİLME ONAYI:\n\nKazara silinmeleri önlemek için lütfen aşağıdaki kutuya büyük harflerle 'ANONIM' yazınız:");
+            if (phrase !== "ANONIM") {
+                alert("İşlem iptal edildi. Onay kelimesi hatalı."); return;
+            }
+
+            const pin = prompt("KESİN ONAY: İşlemi tamamlamak için lütfen 4 haneli PIN kodunuzu giriniz:");
+            if (!pin) return;
+
+            const { data, error } = await _supabase.rpc('anonymize_my_account', { p_user_name: user, p_pin: pin.trim() });
+            if (error || !data || !data.success) {
+                alert("İşlem reddedildi. PIN kodunuz hatalı."); return;
+            }
+
+            alert(data.message);
+            toggleKvkkModal(false);
+            resetToScanScreen();
+            clearTerminalSession();
+            window.location.reload();
+        }
+
         window.bootSystem = async () => {
             if (window.systemStarted) return;
             window.systemStarted = true;
@@ -2405,14 +3079,14 @@
                     document.getElementById('status-bar').style.width = "100%";
                     document.getElementById('greeting').innerText = "SYSTEM ACTIVE / " + user.toUpperCase();
                     mainActions.innerHTML = `
-                        <button class="btn-out" onclick="requestConfirm('ÇIKIŞ')">MESAİ BİTİR</button>
+                        <button class="btn-out" onclick="requestConfirm('ÇIKIŞ')" style="display:flex;align-items:center;justify-content:center;gap:8px;"><span style="font-size:18px;">⬇</span> MESAİ BİTİR</button>
                         <button class="btn-out btn-mini" onclick="clearTerminalSession(); window.location.replace(window.location.pathname + '?reset=' + Date.now());" style="background: #334155; margin-top: 15px; font-family: 'Poppins', sans-serif; font-weight: bold; letter-spacing: 1px;">🔄 ANA EKRANA DÖN</button>
                     `;
                 } else {
                     document.getElementById('status-bar').style.width = "50%";
                     document.getElementById('greeting').innerText = "SYSTEM READY / " + user.toUpperCase();
                     mainActions.innerHTML = `
-                        <button class="btn-in" onclick="requestConfirm('GİRİŞ')">MESAİ BAŞLAT</button>
+                        <button class="btn-in" onclick="requestConfirm('GİRİŞ')" style="display:flex;align-items:center;justify-content:center;gap:8px;"><span style="font-size:18px;">⬆</span> MESAİ BAŞLAT</button>
                         <button class="btn-out btn-mini" onclick="clearTerminalSession(); window.location.replace(window.location.pathname + '?reset=' + Date.now());" style="background: #334155; margin-top: 15px; font-family: 'Poppins', sans-serif; font-weight: bold; letter-spacing: 1px;">🔄 ANA EKRANA DÖN</button>
                     `;
                 }
@@ -2477,14 +3151,14 @@
                     document.getElementById('status-bar').style.width = "100%";
                     document.getElementById('greeting').innerText = "SYSTEM ACTIVE / " + user.toUpperCase();
                     mainActions.innerHTML = `
-                        <button class="btn-out" onclick="requestConfirm('ÇIKIŞ')">MESAİ BİTİR</button>
+                        <button class="btn-out" onclick="requestConfirm('ÇIKIŞ')" style="display:flex;align-items:center;justify-content:center;gap:8px;"><span style="font-size:18px;">⬇</span> MESAİ BİTİR</button>
                         <button class="btn-out btn-mini" onclick="clearTerminalSession(); window.location.replace(window.location.pathname + '?reset=' + Date.now());" style="background: #334155; margin-top: 15px; font-family: 'Poppins', sans-serif; font-weight: bold; letter-spacing: 1px;">🔄 ANA EKRANA DÖN</button>
                     `;
                 } else {
                     document.getElementById('status-bar').style.width = "50%";
                     document.getElementById('greeting').innerText = "SYSTEM READY / " + user.toUpperCase();
                     mainActions.innerHTML = `
-                        <button class="btn-in" onclick="requestConfirm('GİRİŞ')">MESAİ BAŞLAT</button>
+                        <button class="btn-in" onclick="requestConfirm('GİRİŞ')" style="display:flex;align-items:center;justify-content:center;gap:8px;"><span style="font-size:18px;">⬆</span> MESAİ BAŞLAT</button>
                         <button class="btn-out btn-mini" onclick="clearTerminalSession(); window.location.replace(window.location.pathname + '?reset=' + Date.now());" style="background: #334155; margin-top: 15px; font-family: 'Poppins', sans-serif; font-weight: bold; letter-spacing: 1px;">🔄 ANA EKRANA DÖN</button>
                     `;
                 }
@@ -2508,7 +3182,7 @@
                             pLogs.forEach(l => {
                                 if (l.mahalle && l.mahalle.includes('DOĞRULUK:')) {
                                     const match = l.mahalle.match(/DOĞRULUK:\s*(\d+)m/);
-                                    if (match && parseInt(match[1]) > 300) { pViolation = true; }
+                                    if (match && parseInt(match[1]) > 400) { pViolation = true; }
                                 }
                             });
 
@@ -2603,6 +3277,9 @@
             }
         };
 
+        // KVKK pre-check: Geri dönen kullanıcılarda splash süresini kısaltmak için
+        const hasAcceptedKVKK_precheck = localStorage.getItem('shiftTurbo_kvkk') === 'true';
+
         let isAppBooted = false;
         const startApp = async () => {
             if (isAppBooted) return;
@@ -2647,22 +3324,33 @@
                 const { data } = await _supabase.from('broadcasts').select('message').order('created_at', { ascending: false });
                 if (data && data.length > 0) {
                     let matchedMsg = null;
+                    // 1. Öncelikle kişiye özel bir duyuru var mı diye tüm listeyi kontrol et (Öncelikli Gösterim)
                     for (let b of data) {
                         let m = b.message;
-                        if (m.startsWith('[ALL] ')) {
-                            matchedMsg = m.replace('[ALL] ', '');
-                            break;
-                        } else if (m.match(/^\[(.*?)\]\s*(.*)/)) {
+                        if (m.match(/^\[(.*?)\]\s*(.*)/)) {
                             const match = m.match(/^\[(.*?)\]\s*(.*)/);
                             const target = match[1];
                             const content = match[2];
-                            if (target.toLocaleUpperCase('tr-TR') === user.toLocaleUpperCase('tr-TR')) {
+                            if (target.trim().toLocaleUpperCase('tr-TR') === user.trim().toLocaleUpperCase('tr-TR')) {
                                 matchedMsg = "👤 ÖZEL BİLDİRİM: " + content;
                                 break;
                             }
-                        } else {
-                            matchedMsg = m;
-                            break;
+                        }
+                    }
+                    // 2. Kişiye özel duyuru yoksa en güncel genel duyuruyu veya ön eksiz duyuruyu al
+                    if (!matchedMsg) {
+                        for (let b of data) {
+                            let m = b.message;
+                            if (m.startsWith('[ALL] ')) {
+                                matchedMsg = m.replace('[ALL] ', '');
+                                break;
+                            } else if (m.match(/^\[(.*?)\]\s*(.*)/)) {
+                                // Diğer kişilere özel duyuruları atla
+                                continue;
+                            } else {
+                                matchedMsg = m;
+                                break;
+                            }
                         }
                     }
 
@@ -2709,22 +3397,40 @@
         setTimeout(() => {
             const splashText = document.getElementById('splash-text');
             if (splashText) splashText.innerText = "GÜVENLİK PROTOKOLLERİ DOĞRULANIYOR...";
+            const hasAcceptedKVKK = localStorage.getItem('shiftTurbo_kvkk');
+            const hasUser = localStorage.getItem('shiftTurbo_user');
+            const hasAuth = localStorage.getItem('auth_active') === 'true';
+
+            // Geri dönen kullanıcılar için hızlı geçiş
+            const splashDelay = hasAcceptedKVKK === 'true' ? 300 : 1200;
 
             setTimeout(() => {
                 const splash = document.getElementById('cyber-splash');
                 const landing = document.getElementById('landing-wrapper');
-                const hasAcceptedKVKK = localStorage.getItem('shiftTurbo_kvkk');
 
                 if (hasAcceptedKVKK === 'true') {
+                    // KVKK onaylı: Splash'ı hızla kapat
                     if (splash) splash.style.opacity = '0';
                     setTimeout(() => { if (splash) splash.style.display = 'none'; }, 500);
+
+                    // Oturumu olan kullanıcı: bootSystem zaten çalışacak, landing'e gerek yok
+                    // Oturumu olmayan kullanıcı: Landing'i atla, QR'ı otomatik başlat
+                    if (!(hasUser && hasAuth)) {
+                        // Landing'i gösterme, doğrudan terminal ekranına geç
+                        if (landing) landing.style.display = 'none';
+                        // enterTerminal çağırarak terminal UI'ı göster, otomatik QR başlatma (kamera izni sorununu çözmek için)
+                        setTimeout(() => {
+                            if (typeof resetToScanScreen === 'function') resetToScanScreen();
+                        }, 300);
+                    }
                 } else {
+                    // İlk kez gelen kullanıcı: Landing sayfasını göster (eski davranış)
                     if (landing) landing.style.display = 'flex';
                     if (splash) splash.style.opacity = '0';
                     setTimeout(() => { if (splash) splash.style.display = 'none'; }, 500);
                 }
-            }, 1200);
-        }, 1500);
+            }, splashDelay);
+        }, hasAcceptedKVKK_precheck ? 500 : 1500);
 
         window.enterTerminal = function () {
             if (typeof playSound === "function") playSound('tap');
@@ -2759,13 +3465,35 @@
 
         function initDynamicSubtitle() {
             const phrases = [
-                "Emeğin, Dijital Güvencemiz Altında", "Geleceği Bugünden Tasarla",
-                "Hız ve Verimlilik Bir Arada", "Dijital Dönüşümün Parçası Ol",
-                "ShiftTurbo ile Sınırları Aş", "UCR Technology Güvencesiyle",
-                "Verimliliğin Yeni Adresi", "Sizin İçin, Sizinle Beraber"
+                "Emeğin, Dijital Güvencemiz Altında", 
+                "Alın Teri, En Değerli Sermayedir",
+                "Emeğinize ve Ellerinize Sağlık", 
+                "Siz Varsanız Biz Varız",
+                "Her Damla Alın Teriniz Çok Kıymetli", 
+                "Gücümüz Emeğimizden Gelir",
+                "Helal Kazanç En Büyük Zenginliktir", 
+                "Emeğin Hakkı Asla Ödenmez",
+                "Emeğin Kaybolmaz, Burada Yaşar",
+                "Her Damla Ter Kayıt Altında",
+                "Çalışanın Hakkı, Sistemin Görevi",
+                "Emeğe Saygı, Veriye Dönüşür"
             ];
             const subtitleEl = document.getElementById('dynamic-subtitle');
             if (subtitleEl) subtitleEl.innerText = phrases[Math.floor(Math.random() * phrases.length)];
+
+            // Ana ekrandaki sloganı da periyodik döndür
+            const brandSloganEl = document.getElementById('dynamic-brand-slogan');
+            if (brandSloganEl) {
+                let currentPhraseIndex = 0;
+                setInterval(() => {
+                    brandSloganEl.style.opacity = 0;
+                    setTimeout(() => {
+                        currentPhraseIndex = (currentPhraseIndex + 1) % phrases.length;
+                        brandSloganEl.innerText = phrases[currentPhraseIndex];
+                        brandSloganEl.style.opacity = 1;
+                    }, 500); // 500ms fade out süresi
+                }, 5000); // Her 5 saniyede bir değiştir
+            }
         }
         document.addEventListener('DOMContentLoaded', initDynamicSubtitle);
 
@@ -2794,6 +3522,9 @@
         window.sendMessage = sendMessage;
         window.toggleModal = toggleModal;
         window.toggleAboutModal = toggleAboutModal;
+        window.toggleKvkkModal = toggleKvkkModal;
+        window.exportMyData = exportMyData;
+        window.anonymizeMyAccount = anonymizeMyAccount;
 
         function toggleTerminalTheme() {
             const current = document.documentElement.getAttribute('data-theme');
@@ -2845,6 +3576,16 @@
         <div
             style="position:absolute; bottom:20%; font-family:'Orbitron'; color:var(--primary); letter-spacing:3px; font-size:12px">
             KİMLİK TARANIYOR...</div>
+    </div>
+
+
+
+    <!-- Siberpunk Animated Bottom Waves -->
+    <div class="bottom-waves">
+        <svg class="wave-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2400 120" preserveAspectRatio="none">
+            <path class="wave-path wave-path-1" d="M 0 60 Q 75 30, 150 60 T 300 60 T 450 60 T 600 60 T 750 60 T 900 60 T 1050 60 T 1200 60 T 1350 60 T 1500 60 T 1650 60 T 1800 60 T 1950 60 T 2100 60 T 2250 60 T 2400 60"></path>
+            <path class="wave-path wave-path-2" d="M 0 70 Q 75 45, 150 70 T 300 70 T 450 70 T 600 70 T 750 70 T 900 70 T 1050 70 T 1200 70 T 1350 70 T 1500 70 T 1650 70 T 1800 70 T 1950 70 T 2100 70 T 2250 70 T 2400 70"></path>
+        </svg>
     </div>
 
 </body>

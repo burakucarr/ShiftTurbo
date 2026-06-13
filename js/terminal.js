@@ -206,19 +206,18 @@ setInterval(updateTime, 1000); updateTime();
 function createNumPad() {
     const grid = document.getElementById('numpad-grid');
     if (!grid) return;
-    const nums = [1, 2, 3, 4, 5, 6, 7, 8, 9, "C", 0, "OK"];
+    const nums = [1, 2, 3, 4, 5, 6, 7, 8, 9, "⌫", 0, "OK"];
     grid.innerHTML = nums.map(n => `<button class="num-btn" onclick="pressNum('${n}')">${n}</button>`).join('');
 }
 
 function pressNum(n) {
     playSound('tap');
-    if (n === "C") { currentPin = ""; }
+    if (n === "⌫" || n === "C") { currentPin = currentPin.slice(0, -1); }
     else if (n === "OK") { checkPin(); return; }
     else { if (currentPin.length < 4) currentPin += n; }
 
     const display = document.getElementById('pin-display');
     if (display) display.innerText = "*".repeat(currentPin.length) || "****";
-    if (currentPin.length === 4) setTimeout(checkPin, 300);
 }
 
 async function startQR() {
@@ -264,57 +263,52 @@ function getDeviceUUID() {
 
 async function checkPin() {
     const pin = currentPin.trim();
-    const { data, error } = await _supabase.from('users').select('*').eq('pin', pin);
+    const clientUUID = getDeviceUUID();
 
-    if (data && data.length > 0) {
-        const userObj = data[0];
-        const fullName = userObj.ad_soyad;
-        const clientUUID = getDeviceUUID();
+    // 🔴 KRİTİK GÜVENLİK DÜZELTMESİ:
+    // GET request (url parametresi) yerine RPC (Remote Procedure Call) kullanarak
+    // POST request atıyoruz. Böylece PIN kodu ağ loglarında plaintext olarak gözükmüyor.
+    const { data, error } = await _supabase.rpc('verify_pin', { 
+        input_pin: pin, 
+        client_device_id: clientUUID 
+    });
 
-        // 🔍 CİHAZ EŞLEŞME KONTROLÜ (DEVICE BINDING)
-        if (userObj.device_id !== undefined) {
-            const dbDeviceId = userObj.device_id;
-            if (dbDeviceId && dbDeviceId !== clientUUID) {
-                playSound('error');
-                document.getElementById('main-card').classList.add('shake');
-                setTimeout(() => document.getElementById('main-card').classList.remove('shake'), 300);
-                currentPin = ""; document.getElementById('pin-display').innerText = "****";
-
-                document.getElementById('error-msg-body').innerHTML = `<b>⚠️ GÜVENLİK KİLİDİ (CİHAZ EŞLEŞME HATASI):</b><br><br>Bu PIN kodu daha önce başka bir telefon veya tarayıcı ile eşleştirilmiş!<br><br>💡 <b>Aynı telefonu kullanıyor olsanız bile</b>, tarayıcı geçmişini/önbelleğini temizlediğinizde veya uygulamayı silip yüklediğinizde cihaz kimliğiniz değişir.<br><br>🛠️ <b>ÇÖZÜM:</b> Lütfen yöneticinizden <b>Yönetici Paneli -> Personel Yönetimi</b> sekmesinden isminizin yanındaki <b>'📱 CİHAZ KİLİDİNİ AÇ'</b> butonuna basmasını talep ediniz. Ardından tekrar PIN girerek bu cihazı yeni cihazınız olarak tanımlayabilirsiniz.`;
-                document.getElementById('error-modal').style.display = 'flex';
-                return;
-            }
-        } else {
-            console.warn("⚠️ Supabase 'users' tablosunda 'device_id' sütunu bulunamadı.");
-        }
-
+    if (data && data.success) {
         playSound('success');
-        localStorage.setItem('temp_user_name', fullName);
-        localStorage.setItem('temp_user_pin', pin);
-
+        localStorage.setItem('temp_user_name', data.user_name);
+        
         document.getElementById('pin-pad').style.display = 'none';
-        document.getElementById('user-check-text').innerText = `MERHABA ${fullName.split(' ')[0].toUpperCase()}, GİRİŞ YAPAN SEN MİSİN?`;
+        document.getElementById('user-check-text').innerText = `MERHABA ${data.user_name.split(' ')[0].toUpperCase()}, GİRİŞ YAPAN SEN MİSİN?`;
         document.getElementById('confirm-box').style.display = 'block';
 
+    } else if (data && data.error_type === 'device_mismatch') {
+        playSound('error');
+        document.getElementById('main-card').classList.add('shake');
+        setTimeout(() => document.getElementById('main-card').classList.remove('shake'), 300);
+        currentPin = ""; document.getElementById('pin-display').innerText = "****";
+
+        document.getElementById('error-msg-body').innerHTML = `<b>⚠️ GÜVENLİK KİLİDİ (CİHAZ EŞLEŞME HATASI):</b><br><br>Bu PIN kodu daha önce başka bir telefon veya tarayıcı ile eşleştirilmiş!<br><br>💡 <b>Aynı telefonu kullanıyor olsanız bile</b>, tarayıcı geçmişini/önbelleğini temizlediğinizde veya uygulamayı silip yüklediğinizde cihaz kimliğiniz değişir.<br><br>🛠️ <b>ÇÖZÜM:</b> Lütfen yöneticinizden <b>Yönetici Paneli -> Personel Yönetimi</b> sekmesinden isminizin yanındaki <b>'📱 CİHAZ KİLİDİNİ AÇ'</b> butonuna basmasını talep ediniz. Ardından tekrar PIN girerek bu cihazı yeni cihazınız olarak tanımlayabilirsiniz.`;
+        document.getElementById('error-modal').style.display = 'flex';
     } else {
         playSound('error');
         document.getElementById('main-card').classList.add('shake');
         setTimeout(() => document.getElementById('main-card').classList.remove('shake'), 300);
         currentPin = ""; document.getElementById('pin-display').innerText = "****";
+
+        // Güvenlik: 5 Hatalı deneme veya lockout uyarısı
+        if (data && (data.error_type === 'account_locked' || data.lockout)) {
+            const minutes = data.locked_until_minutes || (data.remaining_seconds ? Math.ceil(data.remaining_seconds / 60) : 15);
+            document.getElementById('error-msg-body').innerHTML = `<b>⛔ HESAP KİLİTLENDİ:</b><br><br>Çok fazla hatalı PIN denemesi yaptınız.<br><br>Lütfen ${minutes} dakika sonra tekrar deneyin.`;
+            document.getElementById('error-modal').style.display = 'flex';
+        }
     }
 }
 
 async function verifySuccess() {
     const fullName = localStorage.getItem('temp_user_name') || "PERSONEL";
-    const pin = localStorage.getItem('temp_user_pin');
     const clientUUID = getDeviceUUID();
 
-    // 1. Cihaz ID Güncellemesini Arka Planda Yap (Ana akışı asla bloklama!)
-    if (pin) {
-        _supabase.from('users').update({ device_id: clientUUID }).eq('pin', pin)
-            .then(() => console.log("Cihaz kaydı güncellendi."))
-            .catch(e => console.warn("Cihaz kaydı uyarısı:", e));
-    }
+    // Cihaz ID güncellemesine gerek yok, verify_pin SQL metodu cihazı otomatik kaydeder (Güvenli Backend-Side Binding)
 
     // 2. Bildirim İzni İsteme (Ana akışı asla bloklama!)
     if ('Notification' in window && 'serviceWorker' in navigator) {
@@ -425,7 +419,7 @@ async function executeAction() {
 
         setTimeout(() => {
             if (errorModal) errorModal.style.display = 'none';
-            if (typeof startQR === 'function') startQR(); // Anında QR okuma ekranına dön
+            if (typeof resetToScanScreen === 'function') resetToScanScreen(); // QR okuma ekranına dön (otomatik kamera isteği iptal edildi)
         }, 5000);
         return;
     }
@@ -761,7 +755,7 @@ window.bootSystem = async () => {
                     pLogs.forEach(l => {
                         if (l.mahalle && l.mahalle.includes('DOĞRULUK:')) {
                             const match = l.mahalle.match(/DOĞRULUK:\s*(\d+)m/);
-                            if (match && parseInt(match[1]) > 300) { pViolation = true; }
+                            if (match && parseInt(match[1]) > 400) { pViolation = true; }
                         }
                     });
 
@@ -842,7 +836,7 @@ window.bootSystem = async () => {
 
                 setTimeout(() => {
                     if (errorModal) errorModal.style.display = 'none';
-                    if (typeof window.startQR === 'function') window.startQR(); // QR okuma ekranına dön
+                    if (typeof window.resetToScanScreen === 'function') window.resetToScanScreen(); // QR okuma ekranına dön (otomatik kamera isteği iptal edildi)
                     else window.location.replace(window.location.pathname + '?reset=' + Date.now());
                 }, 5000);
                 return;
@@ -894,22 +888,33 @@ async function fetchLatestBroadcast() {
         const { data } = await _supabase.from('broadcasts').select('message').order('created_at', { ascending: false });
         if (data && data.length > 0) {
             let matchedMsg = null;
+            // 1. Öncelikle kişiye özel bir duyuru var mı diye tüm listeyi kontrol et (Öncelikli Gösterim)
             for (let b of data) {
                 let m = b.message;
-                if (m.startsWith('[ALL] ')) {
-                    matchedMsg = m.replace('[ALL] ', '');
-                    break;
-                } else if (m.match(/^\[(.*?)\]\s*(.*)/)) {
+                if (m.match(/^\[(.*?)\]\s*(.*)/)) {
                     const match = m.match(/^\[(.*?)\]\s*(.*)/);
                     const target = match[1];
                     const content = match[2];
-                    if (target.toLocaleUpperCase('tr-TR') === user.toLocaleUpperCase('tr-TR')) {
+                    if (target.trim().toLocaleUpperCase('tr-TR') === user.trim().toLocaleUpperCase('tr-TR')) {
                         matchedMsg = "👤 ÖZEL BİLDİRİM: " + content;
                         break;
                     }
-                } else {
-                    matchedMsg = m;
-                    break;
+                }
+            }
+            // 2. Kişiye özel duyuru yoksa en güncel genel duyuruyu veya ön eksiz duyuruyu al
+            if (!matchedMsg) {
+                for (let b of data) {
+                    let m = b.message;
+                    if (m.startsWith('[ALL] ')) {
+                        matchedMsg = m.replace('[ALL] ', '');
+                        break;
+                    } else if (m.match(/^\[(.*?)\]\s*(.*)/)) {
+                        // Diğer kişilere özel duyuruları atla
+                        continue;
+                    } else {
+                        matchedMsg = m;
+                        break;
+                    }
                 }
             }
 

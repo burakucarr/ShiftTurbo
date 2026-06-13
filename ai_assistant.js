@@ -6,9 +6,9 @@
 (function (window) {
     const AI = {
         history: [],
-        apiKey: (window.SHIFTURBO_CONFIG && window.SHIFTURBO_CONFIG.geminiApiKey) ||
-            (typeof SHIFTURBO_CONFIG !== 'undefined' && SHIFTURBO_CONFIG.geminiApiKey) ||
-            localStorage.getItem('shiftTurbo_gemini_key') || '',
+        // Gemini API key artık client'ta tutulmuyor — proxy worker üzerinden çağrılıyor.
+        // PROXY_URL: Cloudflare Worker'ın URL'si (shiftturbo.tech'e deploy edilmiş).
+        proxyUrl: (window.SHIFTURBO_CONFIG && window.SHIFTURBO_CONFIG.proxyUrl) || 'https://shiftturbo-proxy.burakkucar55-5af.workers.dev',
 
         init() {
             console.log("🤖 Shift-AI Assistant Başlatıldı.");
@@ -21,14 +21,11 @@
                 this.dismissedAnomalies = new Set();
             }
 
-            // Eğer config.js içerisinde API anahtarı tanımlıysa, Local Storage'daki eski/güvensiz anahtarı temizleyelim
-            const configKey = (window.SHIFTURBO_CONFIG && window.SHIFTURBO_CONFIG.geminiApiKey) ||
-                (typeof SHIFTURBO_CONFIG !== 'undefined' && SHIFTURBO_CONFIG.geminiApiKey);
-            if (configKey) {
-                if (localStorage.getItem('shiftTurbo_gemini_key')) {
-                    localStorage.removeItem('shiftTurbo_gemini_key');
-                    console.log("🔒 Eski Gemini API Key tarayıcı hafızasından güvenli bir şekilde silindi.");
-                }
+            // Artık Gemini API key client'ta tutulmadığından, localStorage'da kalmış olabilecek
+            // eski key'i temizle.
+            if (localStorage.getItem('shiftTurbo_gemini_key')) {
+                localStorage.removeItem('shiftTurbo_gemini_key');
+                console.log("🔒 Eski Gemini API Key tarayıcı hafızasından güvenli bir şekilde silindi.");
             }
             this.updateSuggestions();
         },
@@ -42,10 +39,6 @@
             this.addMessage(query, 'user');
             input.value = '';
 
-            if (!this.apiKey) {
-                this.addMessage("⚠️ Devam etmek için lütfen ayarlar (⚙️) simgesinden Gemini API anahtarınızı girin.", 'bot');
-                return;
-            }
 
             const aiBox = document.getElementById('ai-box');
             aiBox.classList.add('analyzing');
@@ -135,48 +128,18 @@
         },
 
         async callGemini(query, context) {
-            let availableModels = [];
+            // Gemini istekleri artık doğrudan Google'a değil, proxy worker'a gidiyor.
+            // API key sunucu tarafında (Cloudflare Worker Secret) tutuluyor.
+            // Model sırası: En yeni ve hızlıdan başla, fallback'lerle devam et.
+            const modelsToTry = [
+                { ver: 'v1beta', path: 'models/gemini-3.5-flash' },
+                { ver: 'v1beta', path: 'models/gemini-3.1-flash-lite' },
+                { ver: 'v1beta', path: 'models/gemini-2.5-flash' },
+                { ver: 'v1beta', path: 'models/gemini-2.5-flash-lite' },
+            ];
 
-            // 1. Önce API'den Kullanıcının Key'ine Tanımlı Modelleri Çekmeyi Dene (En Garanti Yol!)
-            try {
-                const listUrl = `https://generativelanguage.googleapis.com/v1beta/models?key=${this.apiKey}`;
-                const listResp = await fetch(listUrl);
-                const listData = await listResp.json();
 
-                if (listData.models && listData.models.length > 0) {
-                    // Sadece generateContent destekleyen ve flash/pro içeren modelleri filtrele
-                    availableModels = listData.models
-                        .filter(m => m.supportedGenerationMethods && m.supportedGenerationMethods.includes('generateContent'))
-                        .map(m => ({ ver: 'v1beta', path: m.name })); // m.name zaten "models/gemini-1.5-flash" formatındadır
-                    console.log("🎯 API'den Çekilen Aktif Modeller:", availableModels);
-                }
-            } catch (err) {
-                console.warn("Model listesi çekilemedi, statik listeye geçiliyor.", err);
-            }
-
-            // 2. Eğer API'den çekemediysek veya liste boşsa, en geniş statik listeyi kullan
-            if (availableModels.length === 0) {
-                availableModels = [
-                    { ver: 'v1beta', path: 'models/gemini-1.5-flash-latest' },
-                    { ver: 'v1', path: 'models/gemini-1.5-flash' },
-                    { ver: 'v1beta', path: 'models/gemini-1.5-flash' },
-                    { ver: 'v1beta', path: 'models/gemini-1.5-flash-002' },
-                    { ver: 'v1beta', path: 'models/gemini-1.5-flash-8b' },
-                    { ver: 'v1beta', path: 'models/gemini-1.5-pro-latest' },
-                    { ver: 'v1', path: 'models/gemini-1.5-pro' },
-                    { ver: 'v1beta', path: 'models/gemini-2.0-flash-exp' }
-                ];
-            }
-
-            let lastError = "Bilinmeyen Hata";
-
-            for (const model of availableModels) {
-                try {
-                    // model.path zaten "models/..." ile başlıyor
-                    const url = `https://generativelanguage.googleapis.com/${model.ver}/${model.path}:generateContent?key=${this.apiKey}`;
-
-                    const prompt = `
-Sen ShiftTurbo Personel Takip Sistemi'nin yapay zeka asistanısın. 
+            const prompt = `Sen ShiftTurbo Personel Takip Sistemi'nin yapay zeka asistanısın. 
 Aşağıdaki sistem verilerini baz alarak kullanıcının sorusuna kısa, öz ve profesyonel bir cevap ver. 
 Cevabın 2-3 cümleyi geçmesin.
 
@@ -184,8 +147,15 @@ Sistem Verileri:
 ${context}
 
 Kullanıcı Sorusu:
-${query}
-`;
+${query}`;
+
+            let lastError = "Bilinmeyen Hata";
+
+            for (const model of modelsToTry) {
+                try {
+                    // /gemini/{version}/{model}:generateContent  →  proxy worker
+                    const proxyPath = `/gemini/${model.ver}/${model.path}:generateContent`;
+                    const url = this.proxyUrl + proxyPath;
 
                     const response = await fetch(url, {
                         method: 'POST',
@@ -195,14 +165,14 @@ ${query}
                         })
                     });
 
+                    if (response.status === 429) { lastError = `${model.path}: Çok fazla istek (429)`; continue; }
+                    if (response.status === 403) { lastError = `${model.path}: Erişim reddedildi (403)`; continue; }
+
                     const data = await response.json();
 
                     if (data.error) {
-                        if (data.error.message.includes('API key not valid') || data.error.message.includes('API_KEY_INVALID')) {
-                            throw new Error("Geçersiz API Anahtarı! Lütfen kopyaladığın anahtarı kontrol et.");
-                        }
-                        lastError = `${model.path} (${model.ver}): ${data.error.message}`;
-                        continue; // Diğer modele geç
+                        lastError = `${model.path}: ${data.error.message}`;
+                        continue;
                     }
 
                     if (data.candidates && data.candidates.length > 0 && data.candidates[0].content) {
@@ -212,7 +182,6 @@ ${query}
                         continue;
                     }
                 } catch (err) {
-                    if (err.message.includes("Geçersiz API Anahtarı")) throw err;
                     lastError = err.message;
                 }
             }
@@ -237,6 +206,9 @@ ${query}
             // Anomalilere dayalı dinamik öneriler (Tekilleştirilmiş - Deduplicated)
             const seenOutside = new Set();
             const seenOvertime = new Set();
+            const seenForgotten = new Set();
+            const seenDouble = new Set();
+            const seenLowScore = new Set();
 
             if (!this.dismissedAnomalies) this.dismissedAnomalies = new Set();
 
@@ -247,7 +219,7 @@ ${query}
                 if (a.type === 'OUTSIDE' && !seenOutside.has(a.name)) {
                     seenOutside.add(a.name);
                     baseSuggestions.push({
-                        text: `📢 ${a.name}'ye Uyarı Gönder`,
+                        text: `📢 ${a.name} Dışarıdan İşlem`,
                         isAnomaly: true,
                         anomalyKey: anomalyKey,
                         action: async (btnDOM) => {
@@ -264,13 +236,64 @@ ${query}
                 if (a.type === 'OVERTIME' && !seenOvertime.has(a.name)) {
                     seenOvertime.add(a.name);
                     baseSuggestions.push({
-                        text: `🏮 ${a.name} İçin Mola Hatırlatması`,
+                        text: `🏮 ${a.name} Aşırı Mesai (${a.hours}s)`,
                         isAnomaly: true,
                         anomalyKey: anomalyKey,
                         action: async (btnDOM) => {
                             this.dismissedAnomalies.add(anomalyKey);
                             localStorage.setItem('shiftTurbo_dismissed_anomalies', JSON.stringify([...this.dismissedAnomalies]));
                             const success = await this.sendQuickBroadcast(`Dikkat ${a.name}: 10 saati aşan mesai tespit edildi. Lütfen mola veriniz.`, a.name, btnDOM);
+                            if (!success) {
+                                this.dismissedAnomalies.delete(anomalyKey);
+                                localStorage.setItem('shiftTurbo_dismissed_anomalies', JSON.stringify([...this.dismissedAnomalies]));
+                            }
+                        }
+                    });
+                }
+                if (a.type === 'FORGOTTEN_CHECKOUT' && !seenForgotten.has(a.name)) {
+                    seenForgotten.add(a.name);
+                    baseSuggestions.push({
+                        text: `⏰ ${a.name} Çıkış Unutuldu (${a.date})`,
+                        isAnomaly: true,
+                        anomalyKey: anomalyKey,
+                        action: async (btnDOM) => {
+                            this.dismissedAnomalies.add(anomalyKey);
+                            localStorage.setItem('shiftTurbo_dismissed_anomalies', JSON.stringify([...this.dismissedAnomalies]));
+                            const success = await this.sendQuickBroadcast(`Dikkat ${a.name}: Geçmiş mesainizde ÇIKIŞ yapmayı unuttuğunuz tespit edildi. Lütfen kontrol edin.`, a.name, btnDOM);
+                            if (!success) {
+                                this.dismissedAnomalies.delete(anomalyKey);
+                                localStorage.setItem('shiftTurbo_dismissed_anomalies', JSON.stringify([...this.dismissedAnomalies]));
+                            }
+                        }
+                    });
+                }
+                if (a.type === 'DOUBLE_ACTION' && !seenDouble.has(a.name)) {
+                    seenDouble.add(a.name);
+                    baseSuggestions.push({
+                        text: `🔄 ${a.name} Mükerrer ${a.actionType}`,
+                        isAnomaly: true,
+                        anomalyKey: anomalyKey,
+                        action: async (btnDOM) => {
+                            this.dismissedAnomalies.add(anomalyKey);
+                            localStorage.setItem('shiftTurbo_dismissed_anomalies', JSON.stringify([...this.dismissedAnomalies]));
+                            const success = await this.sendQuickBroadcast(`Dikkat ${a.name}: Arka arkaya ${a.actionType} kaydı tespit edildi. Lütfen sistem kaydını düzeltin.`, a.name, btnDOM);
+                            if (!success) {
+                                this.dismissedAnomalies.delete(anomalyKey);
+                                localStorage.setItem('shiftTurbo_dismissed_anomalies', JSON.stringify([...this.dismissedAnomalies]));
+                            }
+                        }
+                    });
+                }
+                if (a.type === 'LOW_SCORE' && !seenLowScore.has(a.name)) {
+                    seenLowScore.add(a.name);
+                    baseSuggestions.push({
+                        text: `📉 ${a.name} Kritik Skor (${a.score})`,
+                        isAnomaly: true,
+                        anomalyKey: anomalyKey,
+                        action: async (btnDOM) => {
+                            this.dismissedAnomalies.add(anomalyKey);
+                            localStorage.setItem('shiftTurbo_dismissed_anomalies', JSON.stringify([...this.dismissedAnomalies]));
+                            const success = await this.sendQuickBroadcast(`Dikkat ${a.name}: Operasyonel uyum puanınız kritik seviyededir (${a.score}). Lütfen hassasiyet gösterin.`, a.name, btnDOM);
                             if (!success) {
                                 this.dismissedAnomalies.delete(anomalyKey);
                                 localStorage.setItem('shiftTurbo_dismissed_anomalies', JSON.stringify([...this.dismissedAnomalies]));
@@ -293,18 +316,25 @@ ${query}
                     wrapper.className = 'anomaly-suggestion-wrapper fade-in';
                     wrapper.style.display = 'inline-flex';
                     wrapper.style.alignItems = 'center';
-                    wrapper.style.background = 'rgba(239, 68, 68, 0.15)';
-                    wrapper.style.border = '1px solid #ef4444';
-                    wrapper.style.borderRadius = '8px';
                     wrapper.style.margin = '4px';
                     wrapper.style.overflow = 'hidden';
+                    wrapper.style.borderRadius = '8px';
+
+                    const isOrange = s.anomalyKey.includes('_OVERTIME') || s.anomalyKey.includes('_FORGOTTEN_CHECKOUT') || s.anomalyKey.includes('_LOW_SCORE');
+                    const themeColor = isOrange ? '#f59e0b' : '#ef4444';
+                    const bgColor = isOrange ? 'rgba(245, 158, 11, 0.12)' : 'rgba(239, 68, 68, 0.12)';
+                    const textColor = isOrange ? '#ffba7a' : '#fca5a5';
+                    const borderLeftColor = isOrange ? 'rgba(245, 158, 11, 0.3)' : 'rgba(239, 68, 68, 0.3)';
+
+                    wrapper.style.background = bgColor;
+                    wrapper.style.border = `1px solid ${themeColor}`;
 
                     const actionBtn = document.createElement('button');
                     actionBtn.className = 'anomaly-action-btn';
                     actionBtn.innerText = s.text;
                     actionBtn.style.background = 'transparent';
                     actionBtn.style.border = 'none';
-                    actionBtn.style.color = '#fca5a5';
+                    actionBtn.style.color = textColor;
                     actionBtn.style.padding = '8px 14px';
                     actionBtn.style.fontFamily = "'Poppins', sans-serif";
                     actionBtn.style.fontSize = '12px';
@@ -315,10 +345,10 @@ ${query}
                     const dismissBtn = document.createElement('button');
                     dismissBtn.className = 'anomaly-dismiss-btn';
                     dismissBtn.innerHTML = '<i class="fas fa-times"></i>';
-                    dismissBtn.title = 'Bu uyarıyı gizle / sil';
-                    dismissBtn.style.background = 'rgba(239, 68, 68, 0.3)';
+                    dismissBtn.title = 'Bu uyarıyı gizle';
+                    dismissBtn.style.background = isOrange ? 'rgba(245, 158, 11, 0.25)' : 'rgba(239, 68, 68, 0.25)';
                     dismissBtn.style.border = 'none';
-                    dismissBtn.style.borderLeft = '1px solid rgba(239, 68, 68, 0.4)';
+                    dismissBtn.style.borderLeft = `1px solid ${borderLeftColor}`;
                     dismissBtn.style.color = '#fff';
                     dismissBtn.style.padding = '8px 12px';
                     dismissBtn.style.cursor = 'pointer';

@@ -134,7 +134,7 @@ window.calculateScore = function (personName, logsArray) {
     pLogs.forEach(log => {
         if (log.mahalle && log.mahalle.includes('DOĞRULUK:')) {
             const match = log.mahalle.match(/DOĞRULUK:\s*(\d+)m/);
-            if (match && parseInt(match[1]) > 300) score -= 5;
+            if (match && parseInt(match[1]) > 400) score -= 5;
         }
     });
 
@@ -230,6 +230,12 @@ window.renderLogRow = function (log, opts) {
     const useTimeSplit = opts.useTimeSplit || false;
 
     const isCrit = window.checkCriticalAlert(log, allLogs, pLogs);
+    let hoursDiff = 0;
+    if (isCrit && log.type === 'GİRİŞ') {
+        const girisZamani = new Date(log.raw_time);
+        hoursDiff = (new Date() - girisZamani) / 3600000;
+    }
+
     const score = getCachedScore(log.personel);
     const isNew = checkNew ? (new Date() - new Date(log.raw_time)) < 30000 : false;
     const isMessage = log.type === 'MESAJ';
@@ -254,11 +260,15 @@ window.renderLogRow = function (log, opts) {
         ? `<a href="javascript:void(0)" ${clickAction} class="btn-msg-read" style="margin-bottom:8px; display:inline-block;">AÇ / OKU</a><br><span class="log-time-highlight" style="font-size:15px; font-family:'Orbitron', sans-serif; color:var(--text-main); font-weight:700;"><i class="fas fa-clock time-icon" style="color:var(--primary); margin-right:5px;"></i> ${timeDisplay}</span><br><span style="font-size:12px; font-family:'Poppins', sans-serif; font-weight:600; color:var(--text-muted); display:inline-block; margin-top:4px;">📅 ${dateDisplay}</span>`
         : `<span class="log-time-highlight" style="font-size:15px; font-family:'Orbitron', sans-serif; color:var(--text-main); font-weight:700;"><i class="fas fa-clock time-icon" style="color:var(--primary); margin-right:5px;"></i> ${timeDisplay}</span><br><span style="font-size:12px; font-family:'Poppins', sans-serif; font-weight:600; color:var(--text-muted); display:inline-block; margin-top:4px;">📅 ${dateDisplay}</span>`;
 
+    const forceEndBtn = (hoursDiff >= 10.5)
+        ? `<button onclick="window.endPersonnelShift('${log.personel}')" class="btn-cyber" style="background:#ef4444; color:#fff; font-size:9px; font-family:'Poppins', sans-serif; font-weight:600; padding:4px 8px; border-radius:4px; margin-left:6px; cursor:pointer; border:none; display:inline-block; vertical-align:middle; box-shadow:0 0 8px rgba(239,68,68,0.4);">🔴 BİTİR</button>`
+        : '';
+
     return `<tr class="${isCrit ? 'critical-alarm' : ''} ${isNew ? 'new-action-row' : ''}">
 <td style="font-family:'Poppins', sans-serif; font-size:15px; font-weight:700; letter-spacing:0.5px; color:var(--text-main);">
     ${log.personel}<br>
     ${scoreBox}
-    ${isCrit ? '<br><span class="critical-badge">⚠️ 10 SAAT+ MESAİ</span>' : ''} 
+    ${isCrit ? `<br><span class="critical-badge" style="display:inline-block; vertical-align:middle;">⚠️ 10 SAAT+ MESAİ</span>${forceEndBtn}` : ''} 
 </td>
 <td>
     <span class="badge ${log.type}" ${clickAction} style="${badgeStyle}">${displayText}</span><br>

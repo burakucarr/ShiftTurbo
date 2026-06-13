@@ -18,6 +18,11 @@
         _supabase = _initResult.client;
         _supabaseClientType = _initResult.type;
         window._supabase = _supabase;
+        
+        // Supabase bağlantısı hazır olduğunda, oturum aktifse canlı verileri beklemeden hemen çek
+        if (isAuthenticated && _supabase) {
+            fetchData();
+        }
     });
     let isActiveStaffMode = false;
     let autoRefreshInterval = null;
@@ -365,6 +370,10 @@
 }
 
 function logout() {
+    document.getElementById('logout-modal').style.display = 'flex';
+}
+
+function executeLogout() {
     isAuthenticated = false;
     localStorage.removeItem('shiftTurbo_admin_logged_in');
     _supabase.auth.signOut().then(() => {
@@ -541,6 +550,26 @@ window.deleteSingleBroadcast = async function (id) {
     }
 }
 
+async function endPersonnelShift(personelName) {
+    if (!await cyberConfirm("MESAYİ SONLANDIRMA", `⚠️ Sayın Yönetici, "${personelName}" isimli personelin mesaisini uzaktan sonlandırmak istediğinize emin misiniz?`)) return;
+
+    const { error } = await _supabase.from('logs').insert([{
+        personel_name: personelName,
+        type: 'ÇIKIŞ',
+        lat: 41.0082,
+        lon: 28.9784,
+        mahalle: 'Uzaktan Sonlandırma (Yönetici)'
+    }]);
+
+    if (error) {
+        showToast("HATA", "Mesai sonlandırılamadı: " + error.message, "error");
+    } else {
+        showToast("İŞLEM BAŞARILI", `📢 "${personelName}" mesaisi uzaktan sonlandırıldı.`, "success");
+        if (typeof fetchData === 'function') await fetchData();
+    }
+}
+window.endPersonnelShift = endPersonnelShift;
+
 window.toggleHistory = function () {
     const list = document.getElementById('broadcast-list');
     const icon = document.getElementById('history-icon');
@@ -566,10 +595,10 @@ async function loadStaffList() {
             return `
                 <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
                     <td style="padding: 15px; color: #fff; font-weight: 600;">${u.ad_soyad} ${deviceBadge}</td>
-                    <td style="padding: 15px; font-family: 'Orbitron'; color: var(--primary);">${u.pin}</td>
+                    <td style="padding: 15px; font-family: 'Orbitron'; color: var(--primary);">••••</td>
                     <td style="padding: 15px; text-align: right;">
-                        <button onclick="resetDevice('${u.pin}', '${cleanName}')" style="background: rgba(244, 129, 32, 0.1); border: 1px solid #f48120; color: #f48120; padding: 5px 12px; border-radius: 8px; cursor: pointer; font-size: 10px; margin-right: 5px;">📱 KİLİDİ AÇ</button>
-                        <button onclick="deleteStaff('${u.pin}', '${cleanName}')" style="background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; color: #ef4444; padding: 5px 12px; border-radius: 8px; cursor: pointer; font-size: 10px;">SİL</button>
+                        <button onclick="resetDevice('${cleanName}')" style="background: rgba(244, 129, 32, 0.1); border: 1px solid #f48120; color: #f48120; padding: 5px 12px; border-radius: 8px; cursor: pointer; font-size: 10px; margin-right: 5px;">📱 CİHAZ KİLİDİNİ AÇ</button>
+                        <button onclick="deleteStaff('${cleanName}')" style="background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; color: #ef4444; padding: 5px 12px; border-radius: 8px; cursor: pointer; font-size: 10px;">SİL</button>
                     </td>
                 </tr>
             `;
@@ -577,17 +606,10 @@ async function loadStaffList() {
     }
 }
 
-async function resetDevice(identifier, name = "Personel") {
+async function resetDevice(name) {
     if (!await cyberConfirm("CİHAZ KİLİDİ SIFIRLAMA", `${name} adlı personelin cihaz eşleşmesini sıfırlamak istediğinize emin misiniz? Personel yeni telefonundan giriş yaptığında cihazı otomatik eşleşecektir.`)) return;
 
-    let queryColumn = 'id';
-    if (typeof identifier === 'string' && identifier.length === 4) {
-        queryColumn = 'pin';
-    } else if (typeof identifier === 'number' && identifier > 999) {
-        queryColumn = 'pin';
-    }
-
-    const { error } = await _supabase.from('users').update({ device_id: null }).eq(queryColumn, identifier);
+    const { error } = await _supabase.from('users').update({ device_id: null }).eq('ad_soyad', name);
     if (error) {
         showToast("SİSTEM UYARISI", "Güncelleme yapılamadı: " + error.message, "error");
     } else {
@@ -608,14 +630,13 @@ async function addStaff() {
         return;
     }
 
-    // 🔍 AYNI ŞİFRE (PIN) DENETİMİ - 100% Garantili Tip Bağımsız Kontrol
-    const { data: allUsersCheck } = await _supabase.from('users').select('ad_soyad, pin');
-    if (allUsersCheck) {
-        const existing = allUsersCheck.find(u => String(u.pin).trim() === String(pin).trim());
-        if (existing) {
-            showToast("PIN ÇAKIŞMASI", `⚠️ DİKKAT: Bu PIN kodu zaten "${existing.ad_soyad}" adına tanımlı! Lütfen farklı bir PIN belirleyin.`, "error");
-            return;
-        }
+    // 🔍 AYNI ŞİFRE (PIN) DENETİMİ - RPC ile Güvenli Veritabanı Kontrolü
+    const { data: pinExists, error: checkError } = await _supabase.rpc('check_pin_exists', { input_pin: pin });
+    if (checkError) {
+        console.warn("PIN çakışma kontrolü hatası:", checkError);
+    } else if (pinExists) {
+        showToast("PIN ÇAKIŞMASI", `⚠️ DİKKAT: Bu PIN kodu zaten başka bir personele tanımlı! Lütfen farklı bir PIN belirleyin.`, "error");
+        return;
     }
 
     const { error } = await _supabase.from('users').insert([{ ad_soyad: name, pin: pin }]);
@@ -630,13 +651,10 @@ async function addStaff() {
     }
 }
 
-async function deleteStaff(identifier, name = "Personel") {
+async function deleteStaff(name) {
     if (!await cyberConfirm("PERSONEL SİLME", `${name} isimli personeli sistemden kalıcı olarak silmek istediğinize emin misiniz?`)) return;
 
-    let queryColumn = 'pin';
-    // identifier her zaman PIN'dir.
-
-    const { error } = await _supabase.from('users').delete().eq(queryColumn, identifier);
+    const { error } = await _supabase.from('users').delete().eq('ad_soyad', name);
     if (error) {
         showToast("HATA", "Personel silinemedi: " + error.message, "error");
     } else {
@@ -657,6 +675,7 @@ window.deleteStaff = deleteStaff;
 window.resetDevice = resetDevice;
 
 window.logout = logout;
+window.executeLogout = executeLogout;
 window.exportPDF = exportPDF;
 window.showMsg = showMsg;
 window.closeMsg = closeMsg;
@@ -884,6 +903,12 @@ function applyFilter(fromUser = true) {
             const pLogsSorted = sortedPersonLogsMap[log.personel];
 
             const isCrit = checkCriticalAlert(log, window.allLogs, pLogs);
+            let hoursDiff = 0;
+            if (isCrit && log.type === 'GİRİŞ') {
+                const girisZamani = new Date(log.raw_time);
+                hoursDiff = (new Date() - girisZamani) / 3600000;
+            }
+
             const score = getCachedScore(log.personel);
             const isNew = (new Date() - new Date(log.raw_time)) < 30000;
             const isMessage = log.type === 'MESAJ';
@@ -904,11 +929,15 @@ function applyFilter(fromUser = true) {
                 ? `<a href="javascript:void(0)" ${clickAction} class="btn-msg-read" style="margin-bottom:8px; display:inline-block;">AÇ / OKU</a><br><span class="log-time-highlight" style="font-size:15px; font-family:'Orbitron', sans-serif; color:var(--text-main); font-weight:700;"><i class="fas fa-clock time-icon" style="color:var(--primary); margin-right:5px;"></i> ${log.time}</span><br><span style="font-size:12px; font-family:'Poppins', sans-serif; font-weight:600; color:var(--text-muted); display:inline-block; margin-top:4px;">📅 ${log.date_str || log.time}</span>`
                 : `<span class="log-time-highlight" style="font-size:15px; font-family:'Orbitron', sans-serif; color:var(--text-main); font-weight:700;"><i class="fas fa-clock time-icon" style="color:var(--primary); margin-right:5px;"></i> ${log.time}</span><br><span style="font-size:12px; font-family:'Poppins', sans-serif; font-weight:600; color:var(--text-muted); display:inline-block; margin-top:4px;">📅 ${log.date_str || log.time}</span>`;
 
+            const forceEndBtn = (hoursDiff >= 10.5)
+                ? `<button onclick="window.endPersonnelShift('${log.personel}')" class="btn-cyber" style="background:#ef4444; color:#fff; font-size:9px; font-family:'Poppins', sans-serif; font-weight:600; padding:4px 8px; border-radius:4px; margin-left:6px; cursor:pointer; border:none; display:inline-block; vertical-align:middle; box-shadow:0 0 8px rgba(239,68,68,0.4);">🔴 BİTİR</button>`
+                : '';
+
             return `<tr class="${isCrit ? 'critical-alarm' : ''} ${isNew ? 'new-action-row' : ''}">
 <td style="font-family:'Poppins', sans-serif; font-size:15px; font-weight:700; letter-spacing:0.5px; color:var(--text-main);">
     ${log.personel}<br>
     ${scoreBox}
-    ${isCrit ? '<br><span class="critical-badge">⚠️ 10 SAAT+ MESAİ</span>' : ''} 
+    ${isCrit ? `<br><span class="critical-badge" style="display:inline-block; vertical-align:middle;">⚠️ 10 SAAT+ MESAİ</span>${forceEndBtn}` : ''} 
 </td>
 <td>
     <span class="badge ${log.type}" ${clickAction} style="${badgeStyle}">${displayText}</span><br>
@@ -1174,7 +1203,7 @@ async function exportPDF() {
 
     users.forEach(u => {
         const name = u.ad_soyad.trim().toLocaleUpperCase('tr-TR');
-        const rate = rates[u.pin] || 200;
+        const rate = Number((rates[u.pin] || 200).toFixed(2));
         const hours = typeof calculateStaffHours === 'function' ? calculateStaffHours(name, filteredLogs) : 0;
         const basePay = hours * rate;
         const score = typeof window.calculateScore === 'function' ? window.calculateScore(name) : 100;
@@ -1272,6 +1301,7 @@ setInterval(ensureSignature, 1000);
 window.nextStep = nextStep;
 window.checkAuth = checkAuth;
 window.logout = logout;
+window.executeLogout = executeLogout;
 window.fetchData = fetchData;
 window.applyFilter = applyFilter;
 window.filterActiveStaff = filterActiveStaff;
