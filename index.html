@@ -3401,17 +3401,17 @@
             const hasUser = localStorage.getItem('shiftTurbo_user');
             const hasAuth = localStorage.getItem('auth_active') === 'true';
 
-            // Geri dönen kullanıcılar için hızlı geçiş
-            const splashDelay = hasAcceptedKVKK === 'true' ? 300 : 1200;
+            // Metinlerin rahatça okunabilmesi için bekleme süresi
+            const splashDelay = hasAcceptedKVKK === 'true' ? 1400 : 2000;
 
             setTimeout(() => {
                 const splash = document.getElementById('cyber-splash');
                 const landing = document.getElementById('landing-wrapper');
 
                 if (hasAcceptedKVKK === 'true') {
-                    // KVKK onaylı: Splash'ı hızla kapat
+                    // KVKK onaylı: Splash'ı kapat
                     if (splash) splash.style.opacity = '0';
-                    setTimeout(() => { if (splash) splash.style.display = 'none'; }, 500);
+                    setTimeout(() => { if (splash) splash.style.display = 'none'; }, 800);
 
                     // Oturumu olan kullanıcı: bootSystem zaten çalışacak, landing'e gerek yok
                     // Oturumu olmayan kullanıcı: Landing'i atla, QR'ı otomatik başlat
@@ -3427,10 +3427,10 @@
                     // İlk kez gelen kullanıcı: Landing sayfasını göster (eski davranış)
                     if (landing) landing.style.display = 'flex';
                     if (splash) splash.style.opacity = '0';
-                    setTimeout(() => { if (splash) splash.style.display = 'none'; }, 500);
+                    setTimeout(() => { if (splash) splash.style.display = 'none'; }, 800);
                 }
             }, splashDelay);
-        }, hasAcceptedKVKK_precheck ? 500 : 1500);
+        }, hasAcceptedKVKK_precheck ? 1200 : 2000);
 
         window.enterTerminal = function () {
             if (typeof playSound === "function") playSound('tap');
