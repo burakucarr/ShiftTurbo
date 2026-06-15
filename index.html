@@ -24,6 +24,17 @@
     <script src="./config.js"></script>
     <script src="./js/shared.js"></script>
 
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('shiftTurbo_terminal_theme');
+            if (savedTheme === 'light') {
+                document.documentElement.setAttribute('data-theme', 'light');
+            } else {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            }
+        })();
+    </script>
+
     <style>
         /* ============================================
            🎨 SHIFTURBO — SHARED DESIGN SYSTEM (shared.css)
@@ -48,6 +59,7 @@
             --border: rgba(255, 255, 255, 0.1);
             --text-main: #ffffff;
             --text-sub: #cbd5e1;
+            --text-muted: #64748b;
             --success: #10b981;
             --error: #ef4444;
             --ai-glow: rgba(139, 92, 246, 0.4);
@@ -164,6 +176,11 @@
             background-size: cover;
         }
 
+        [data-theme="light"] #gamification-card {
+            background: rgba(15, 23, 42, 0.03) !important;
+            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.05) !important;
+        }
+
         /* KVKK Light Mode Styles */
         [data-theme="light"] #kvkk-overlay {
             background: rgba(241, 245, 249, 0.98) !important;
@@ -207,6 +224,28 @@
         }
         [data-theme="light"] #kvkk-modal .kvkk-modal-footer {
             border-top: 1px solid rgba(15, 23, 42, 0.1) !important;
+        }
+
+        /* === SPLASH & BIO-SCANNER LIGHT MODE === */
+        [data-theme="light"] #cyber-splash {
+            background: var(--bg) !important;
+        }
+        [data-theme="light"] #cyber-splash::before {
+            background: radial-gradient(circle, rgba(154, 59, 0, 0.08) 0%, transparent 70%) !important;
+        }
+        [data-theme="light"] .splash-brand {
+            color: var(--text-main) !important;
+        }
+        [data-theme="light"] .cyber-spinner {
+            border-color: rgba(154, 59, 0, 0.15) !important;
+            border-top-color: var(--primary) !important;
+            border-right-color: var(--primary) !important;
+        }
+        [data-theme="light"] .cyber-text {
+            color: var(--primary) !important;
+        }
+        [data-theme="light"] #bio-scanner {
+            background: rgba(241, 245, 249, 0.95) !important;
         }
 
         * {
@@ -827,6 +866,19 @@
             position: relative;
             margin-top: 20px;
             height: max-content;
+            animation: cardEntrance 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+            z-index: 1;
+        }
+
+        @keyframes cardEntrance {
+            from {
+                opacity: 0;
+                transform: translateY(20px) scale(0.97);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
         }
 
         .card::before {
@@ -837,8 +889,8 @@
             border-radius: 30px 0 0 0;
             position: absolute;
             content: "";
-            width: 20px;
-            height: 20px;
+            width: 35px;
+            height: 35px;
         }
 
         .card::after {
@@ -849,15 +901,39 @@
             border-radius: 0 0 30px 0;
             position: absolute;
             content: "";
-            width: 20px;
-            height: 20px;
+            width: 35px;
+            height: 35px;
+        }
+
+        .corner-accent {
+            position: absolute;
+            width: 35px;
+            height: 35px;
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        .corner-accent.top-right {
+            top: -1px;
+            right: -1px;
+            border-top: 2px solid var(--primary);
+            border-right: 2px solid var(--primary);
+            border-radius: 0 30px 0 0;
+        }
+
+        .corner-accent.bottom-left {
+            bottom: -1px;
+            left: -1px;
+            border-bottom: 2px solid var(--primary);
+            border-left: 2px solid var(--primary);
+            border-radius: 0 0 0 30px;
         }
 
         .status-icons {
             display: flex;
             justify-content: center;
-            flex-wrap: wrap;
-            gap: 8px 12px;
+            flex-wrap: nowrap;
+            gap: 6px 10px;
             margin-top: 15px;
             opacity: 0.9;
             width: 100%;
@@ -1137,7 +1213,7 @@
         #status {
             margin-top: 30px;
             font-size: 8px;
-            color: #475569;
+            color: rgba(148, 163, 184, 0.6);
             letter-spacing: 2px;
             padding-top: 20px;
             border-top: 1px solid rgba(255, 255, 255, 0.05);
@@ -1256,6 +1332,9 @@
             transform: scale(0.5);
             filter: drop-shadow(0 0 20px rgba(244, 129, 32, 0.4));
             z-index: 1;
+            border-radius: 22%;
+            object-fit: cover;
+            scale: 1.15;
         }
 
         @keyframes splashLogoReveal {
@@ -1590,6 +1669,36 @@
         }
 
         @media (max-width: 480px) {
+            #landing-wrapper {
+                padding: 20px 15px !important;
+            }
+
+            .landing-header {
+                margin-bottom: 8px !important;
+                margin-top: 0px !important;
+            }
+
+            .landing-header img {
+                width: 44px !important;
+                height: 44px !important;
+                margin-bottom: 6px !important;
+            }
+
+            .landing-title {
+                font-size: 24px !important;
+                letter-spacing: 5px !important;
+            }
+
+            .landing-subtitle {
+                margin-top: 6px !important;
+                margin-bottom: 12px !important;
+            }
+
+            .landing-features {
+                gap: 6px !important;
+                margin-bottom: 15px !important;
+            }
+
             .time-display {
                 font-size: 40px;
                 letter-spacing: -2px;
@@ -1600,22 +1709,27 @@
                 letter-spacing: 3px;
             }
 
-            .landing-title {
-                font-size: 24px !important;
-                letter-spacing: 5px !important;
+            .l-card {
+                padding: 8px 10px !important;
             }
 
             .l-card h3 {
                 font-size: 12px !important;
+                margin-bottom: 4px !important;
             }
 
             .l-card p {
                 font-size: 10px !important;
+                line-height: 1.4 !important;
             }
 
             .btn-enter-terminal {
                 font-size: 12px !important;
-                padding: 16px 30px !important;
+                padding: 14px 24px !important;
+            }
+
+            .landing-action {
+                margin-bottom: 10px !important;
             }
         }
 
@@ -1623,6 +1737,30 @@
             .card {
                 padding: 1.5rem 1rem !important;
                 border-radius: 20px !important;
+            }
+
+            .card::before {
+                border-radius: 20px 0 0 0 !important;
+                width: 28px !important;
+                height: 28px !important;
+            }
+
+            .card::after {
+                border-radius: 0 0 20px 0 !important;
+                width: 28px !important;
+                height: 28px !important;
+            }
+
+            .corner-accent.top-right {
+                border-radius: 0 20px 0 0 !important;
+                width: 28px !important;
+                height: 28px !important;
+            }
+
+            .corner-accent.bottom-left {
+                border-radius: 0 0 0 20px !important;
+                width: 28px !important;
+                height: 28px !important;
             }
 
             .brand-logo-text {
@@ -1740,7 +1878,7 @@
 
     <div id="landing-wrapper" style="display: none;">
         <div class="landing-header">
-            <img src="logom.png" alt="ShiftTurbo" style="width: 56px; height: 56px; margin-bottom: 12px; filter: drop-shadow(0 0 15px rgba(244, 129, 32, 0.3)); animation: splashLogoGlow 3s ease-in-out infinite;">
+            <img src="logom.png" alt="ShiftTurbo" style="width: 56px; height: 56px; margin-bottom: 12px; filter: drop-shadow(0 0 15px rgba(244, 129, 32, 0.3)); animation: splashLogoGlow 3s ease-in-out infinite; border-radius: 22%; object-fit: cover; scale: 1.15;">
             <h1 class="landing-title">SHİFT<span>TURBO</span></h1>
             <p class="landing-subtitle" id="dynamic-subtitle">Zamanı Durdurma, Onu Yönet</p>
         </div>
@@ -1979,6 +2117,8 @@
 
 
     <div class="card" id="main-card">
+        <span class="corner-accent top-right"></span>
+        <span class="corner-accent bottom-left"></span>
 
         <div id="greeting"
             style="font-size: 9px; color: #475569; letter-spacing: 2px; margin-bottom: 15px; font-weight: 600;">SİSTEM
@@ -1992,14 +2132,14 @@
         <div class="status-icons" id="system-status-container">
 
             <div id="gps-status-icon" class="icon-item"><span class="live-ping-wrapper"><span
-                        class="live-ping-wave"></span><span class="live-ping-dot"></span></span> KONUM_BAĞLANTISI</div>
+                        class="live-ping-wave"></span><span class="live-ping-dot"></span></span> KONUM BAĞLANTISI</div>
 
             <div id="net-status-icon" class="icon-item"><span class="live-ping-wrapper"><span
-                        class="live-ping-wave"></span><span class="live-ping-dot"></span></span> GÜVENLİ_AĞ</div>
+                        class="live-ping-wave"></span><span class="live-ping-dot"></span></span> GÜVENLİ AĞ</div>
 
             <div id="data-status-icon" class="icon-item"><span class="live-ping-wrapper" id="live-data-ping"><span
                         class="live-ping-wave"></span><span class="live-ping-dot"></span></span> <span
-                    id="data-status-text">CANLI_VERİ</span></div>
+                    id="data-status-text">CANLI VERİ</span></div>
 
         </div>
 
@@ -2042,7 +2182,7 @@
             <div id="confirm-box" class="fade-in">
 
                 <p id="user-check-text"
-                    style="font-size: 10px; letter-spacing: 1px; color: #94a3b8; font-family: 'Orbitron';"></p>
+                    style="font-size: 10px; letter-spacing: 1px; color: var(--text-sub); font-family: 'Orbitron';"></p>
 
                 <button class="btn-in btn-mini" onclick="verifySuccess()">EVET, BENİM</button>
 
@@ -2054,7 +2194,7 @@
             <div id="action-confirm" class="fade-in">
 
                 <p id="action-text"
-                    style="font-size: 10px; letter-spacing: 1px; color: #fff; font-family: 'Orbitron'; margin-bottom: 10px;">
+                    style="font-size: 10px; letter-spacing: 1px; color: var(--text-main); font-family: 'Orbitron'; margin-bottom: 10px;">
                 </p>
 
                 <button id="final-ok-btn" onclick="executeAction()">ONAYLIYORUM</button>
@@ -2072,7 +2212,7 @@
                 </div>
                 <div id="badges-container" style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom: 15px;"></div>
                 <div id="gamification-msg"
-                    style="font-family: 'Poppins', sans-serif; font-size: 11px; color: #cbd5e1; line-height: 1.6; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 12px;">
+                    style="font-family: 'Poppins', sans-serif; font-size: 11px; color: var(--text-sub); line-height: 1.6; border-top: 1px solid var(--border); padding-top: 12px;">
                 </div>
             </div>
 
@@ -2171,12 +2311,12 @@
                     if (error) throw error;
 
                     dataPingEl.classList.remove('live-ping-error');
-                    dataTextEl.innerText = "CANLI_VERİ";
+                    dataTextEl.innerText = "CANLI VERİ";
                     dataTextEl.style.color = "var(--primary)";
                 } catch (e) {
                     console.warn("Ping hatası (Sunucu yavaş olabilir):", e);
                     dataPingEl.classList.add('live-ping-error');
-                    dataTextEl.innerText = "SUNUCU_YAVAŞ";
+                    dataTextEl.innerText = "SUNUCU YAVAŞ";
                     dataTextEl.style.color = "var(--error)";
                 }
                 setTimeout(runPing, 30000); // 30 saniyede bir otonom denetle (Proxy yükünü azaltmak için)
@@ -3301,9 +3441,9 @@
                 const netIcon = document.getElementById('net-status-icon');
                 if (!netIcon) return;
                 if (navigator.onLine) {
-                    netIcon.innerHTML = `<span class="live-ping-wrapper"><span class="live-ping-wave"></span><span class="live-ping-dot"></span></span> GÜVENLİ_AĞ`; netIcon.style.color = ""; netIcon.classList.remove('status-error'); netIcon.classList.add('blink');
+                    netIcon.innerHTML = `<span class="live-ping-wrapper"><span class="live-ping-wave"></span><span class="live-ping-dot"></span></span> GÜVENLİ AĞ`; netIcon.style.color = ""; netIcon.classList.remove('status-error'); netIcon.classList.add('blink');
                 } else {
-                    netIcon.innerHTML = `<span class="live-ping-wrapper live-ping-error"><span class="live-ping-wave"></span><span class="live-ping-dot"></span></span> BAĞLANTI_YOK`; netIcon.style.color = "var(--error)"; netIcon.classList.add('status-error'); netIcon.classList.remove('blink');
+                    netIcon.innerHTML = `<span class="live-ping-wrapper live-ping-error"><span class="live-ping-wave"></span><span class="live-ping-dot"></span></span> BAĞLANTI YOK`; netIcon.style.color = "var(--error)"; netIcon.classList.add('status-error'); netIcon.classList.remove('blink');
                 }
             };
             window.addEventListener('online', updateStatus); window.addEventListener('offline', updateStatus); updateStatus();
@@ -3575,11 +3715,14 @@
     <div id="bio-scanner">
         <div class="scan-line"></div>
         <div class="scan-circle">
-            <i class="fas fa-fingerprint"></i>
+            <i class="fas fa-shield-alt"></i>
         </div>
         <div
-            style="position:absolute; bottom:20%; font-family:'Orbitron'; color:var(--primary); letter-spacing:3px; font-size:12px">
-            KİMLİK TARANIYOR...</div>
+            style="position:absolute; bottom:20%; font-family:'Orbitron'; color:var(--primary); letter-spacing:3px; font-size:12px; text-align:center; width:90%; left:5%; right:5%;">
+            SİSTEM BAĞLANTISI DOĞRULANIYOR...</div>
+        <div
+            style="position:absolute; bottom:13%; font-family:'Poppins'; color:var(--text-muted); font-size:9px; letter-spacing:1px; text-align:center; width:80%; left:10%; right:10%; line-height:1.4; font-weight:500;">
+            Güvenli protokol el sıkışması yapılıyor. Cihazınızdan herhangi bir kişisel veya biyometrik veri toplanmaz.</div>
     </div>
 
 
