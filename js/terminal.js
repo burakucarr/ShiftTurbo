@@ -65,6 +65,11 @@ async function syncOfflineQueue() {
                 failedItems.push(item);
             } else {
                 console.log("✅ Çevrimdışı kayıt başarıyla aktarıldı:", item.offline_id);
+                // Senkronizasyon başarılı: yerel status cache'ini de güncelle (GİRİŞ/ÇIKIŞ için)
+                if (item.personel_name && (item.type === 'GİRİŞ' || item.type === 'ÇIKIŞ')) {
+                    window.ShiftTurboShared.setStatus(item.personel_name, item.type);
+                    console.log(`🔄 Yerel status cache güncellendi: ${item.personel_name} → ${item.type}`);
+                }
             }
         } catch (e) {
             failedItems.push(item);
@@ -405,7 +410,7 @@ async function executeAction() {
         document.getElementById('status').innerText = "❌ ZATEN ÇIKIŞ YAPILMIŞ!";
 
         // ANINDA GİZLE:
-        resetToScanScreen();
+        window.resetToScanScreen();
 
         const errorMsgBody = document.getElementById('error-msg-body');
         const errorModal = document.getElementById('error-modal');
@@ -415,11 +420,11 @@ async function executeAction() {
         }
         try { speakAI("Sayın personel, sistemde daha önceden çıkış yaptınız. Çıkış kaydınız zaten mevcuttur."); } catch (e) { }
 
-        clearTerminalSession();
+        window.clearTerminalSession();
 
         setTimeout(() => {
             if (errorModal) errorModal.style.display = 'none';
-            if (typeof resetToScanScreen === 'function') resetToScanScreen(); // QR okuma ekranına dön (otomatik kamera isteği iptal edildi)
+            if (typeof window.resetToScanScreen === 'function') window.resetToScanScreen(); // QR okuma ekranına dön (otomatik kamera isteği iptal edildi)
         }, 5000);
         return;
     }
@@ -429,7 +434,7 @@ async function executeAction() {
         document.getElementById('status').innerText = "❌ ZATEN MESAİDESİNİZ!";
 
         // ANINDA GİZLE
-        hideAllTerminalPanels();
+        window.hideAllTerminalPanels();
 
         const errorMsgBody = document.getElementById('error-msg-body');
         const errorModal = document.getElementById('error-modal');
@@ -453,7 +458,56 @@ async function executeAction() {
         console.log("Kullanılan Hassasiyet: " + accuracy + "m");
 
         if (!navigator.onLine) {
-            console.log("⚠️ İnternet bağlantısı yok! İşlem çevrimdışı kuyruğa alınıyor...");
+            console.log("⚠️ İnternet bağlantısı yok! Çevrimdışı mod devreye girdi.");
+
+            // ÇEVRİMDIŞI ÇİFT KAYIT KORUMASI:
+            // Çevrimdışıyken de yerel cache ve offline kuyruk üzerinden çifte kayıt engellenir.
+            // Kişi başka bir terminalde işlem yapmış olabilir; bu terminal son bilinen durumu
+            // yanlış tutuyorsa bu koruma son savunma hattıdır.
+            if (type === 'ÇIKIŞ' && buluttakiSonDurum === 'ÇIKIŞ') {
+                console.warn("🛑 ÇEVRİMDIŞI ÇIKIŞ ENGELLENDİ: Yerel cache zaten ÇIKIŞ gösteriyor.");
+                playSound('error');
+
+                window.resetToScanScreen();
+
+                const errorMsgBodyOff = document.getElementById('error-msg-body');
+                const errorModalOff = document.getElementById('error-modal');
+                if (errorMsgBodyOff && errorModalOff) {
+                    errorMsgBodyOff.innerHTML = `<b>⚠️ BİLGİLENDİRME (DAHA ÖNCEDEN ÇIKIŞ YAPILDI):</b><br><br>Cihazın yerel kayıtlarında zaten bir çıkış işlemi bulunmaktadır.<br><br>İnternet bağlantısı olmadığından bulut doğrulaması yapılamıyor. Bağlantı sağlandığında sistem otomatik eşitlenecektir.<br><br>Tekrar çıkış kaydı oluşturulmadı.`;
+                    errorModalOff.style.display = 'flex';
+                }
+                try { speakAI("Sayın personel, cihaz kayıtlarında zaten bir çıkış işlemi bulunmaktadır."); } catch (e) { }
+
+                window.clearTerminalSession();
+
+                setTimeout(() => {
+                    if (errorModalOff) errorModalOff.style.display = 'none';
+                    if (typeof window.resetToScanScreen === 'function') window.resetToScanScreen();
+                }, 5000);
+                return;
+            }
+
+            if (type === 'GİRİŞ' && buluttakiSonDurum === 'GİRİŞ') {
+                console.warn("🛑 ÇEVRİMDIŞI GİRİŞ ENGELLENDİ: Yerel cache zaten GİRİŞ gösteriyor.");
+                playSound('error');
+
+                window.hideAllTerminalPanels();
+
+                const errorMsgBodyOff2 = document.getElementById('error-msg-body');
+                const errorModalOff2 = document.getElementById('error-modal');
+                if (errorMsgBodyOff2 && errorModalOff2) {
+                    errorMsgBodyOff2.innerHTML = `<b>⚠️ BİLGİLENDİRME (ZATEN MESAİDESİNİZ):</b><br><br>Cihazın yerel kayıtlarında zaten aktif bir mesai başlangıcınız bulunmaktadır.<br><br>İnternet bağlantısı olmadığından bulut doğrulaması yapılamıyor. Bağlantı sağlandığında sistem otomatik eşitlenecektir.`;
+                    errorModalOff2.style.display = 'flex';
+                }
+                try { speakAI("Sayın personel, cihaz kayıtlarında zaten aktif bir mesai kaydınız bulunmaktadır."); } catch (e) { }
+                setTimeout(() => {
+                    if (errorModalOff2) errorModalOff2.style.display = 'none';
+                    location.reload();
+                }, 5000);
+                return;
+            }
+
+            console.log("✅ Çevrimdışı işlem onaylandı, kuyruğa alınıyor...");
             playSound('success');
 
             const offlineQueue = window.ShiftTurboShared.getObfuscated('shiftTurbo_offline_queue') || [];
@@ -482,8 +536,8 @@ async function executeAction() {
                 window.isRedirectingNow = true;
                 console.log("🚀 Ses tamamen bitti veya garanti süre doldu, sayfa yönlendiriliyor!");
                 if (type === 'ÇIKIŞ') {
-                    resetToScanScreen();
-                    clearTerminalSession();
+                    window.resetToScanScreen();
+                    window.clearTerminalSession();
                     window.location.replace(window.location.pathname + '?reset=' + Date.now());
                 } else {
                     localStorage.setItem('isShiftActive', 'true');
@@ -532,8 +586,8 @@ async function executeAction() {
                 window.isRedirectingNow = true;
                 console.log("🚀 Ses tamamen bitti veya garanti süre doldu, sayfa yönlendiriliyor!");
                 if (type === 'ÇIKIŞ') {
-                    resetToScanScreen();
-                    clearTerminalSession();
+                    window.resetToScanScreen();
+                    window.clearTerminalSession();
                     window.location.replace(window.location.pathname + '?reset=' + Date.now());
                 } else {
                     localStorage.setItem('isShiftActive', 'true');
@@ -823,8 +877,8 @@ window.bootSystem = async () => {
                 if (currentUserForRealtime) window.ShiftTurboShared.setStatus(currentUserForRealtime, 'ÇIKIŞ');
                 if (typeof playSound === 'function') playSound('error');
 
-                resetToScanScreen();
-                clearTerminalSession();
+                window.resetToScanScreen();
+                window.clearTerminalSession();
 
                 const errorMsgBody = document.getElementById('error-msg-body');
                 const errorModal = document.getElementById('error-modal');

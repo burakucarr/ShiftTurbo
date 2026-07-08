@@ -283,12 +283,14 @@
         }
         document.getElementById("loginOverlay").style.display = "none";
         document.getElementById("adminPanel").style.display = "block";
-        if (Notification.permission !== "granted") {
-            Notification.requestPermission().then(permission => {
-                if (permission === "granted") checkAndRefreshPushSubscription();
-            });
-        } else {
-            checkAndRefreshPushSubscription();
+        if (typeof Notification !== 'undefined') {
+            if (Notification.permission !== "granted") {
+                Notification.requestPermission().then(permission => {
+                    if (permission === "granted") checkAndRefreshPushSubscription();
+                });
+            } else {
+                checkAndRefreshPushSubscription();
+            }
         }
         fetchData();
 
@@ -384,7 +386,7 @@ function executeLogout() {
 function checkNewNotifications(logs) {
     if (logs.length > lastLogCount && lastLogCount > 0) {
         const newLog = logs[0];
-        if (Notification.permission === "granted") {
+        if (typeof Notification !== 'undefined' && Notification.permission === "granted") {
             new Notification("YENİ İŞLEM: " + newLog.personel, {
                 body: `${newLog.type} - ${newLog.mahalle}`,
                 icon: "logom.png"

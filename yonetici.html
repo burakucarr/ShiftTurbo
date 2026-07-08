@@ -89,7 +89,10 @@
                         score = window.calculateScore(person, window.allLogs);
                     }
                     
-                    const lastLog = personLogs[personLogs.length - 1];
+                    // Durum tespiti için MESAJ loglarını filtrele, sadece GİRİŞ/ÇIKIŞ hareketlerine bak
+                    const statusLogs = personLogs.filter(l => l.type === 'GİRİŞ' || l.type === 'ÇIKIŞ');
+                    const lastLog = statusLogs.length > 0 ? statusLogs[statusLogs.length - 1] : null;
+                    
                     let statusStr = lastLog ? `${lastLog.type} (${lastLog.time})` : 'Bilinmiyor';
                     let overtimeWarning = "";
                     if (lastLog && lastLog.type === 'GİRİŞ') {
@@ -4398,7 +4401,9 @@ Mesajın sonuna 'ShiftTurbo Güvenlik Sistemi' imzasını ekle.`;
                 }
                 document.getElementById("loginOverlay").style.display = "none";
                 document.getElementById("adminPanel").style.display = "block";
-                if (Notification.permission !== "granted") Notification.requestPermission();
+                if (typeof Notification !== 'undefined' && Notification.permission !== "granted") {
+                    Notification.requestPermission();
+                }
                 checkPWAPushStatus();
                 fetchData();
 
@@ -4718,7 +4723,7 @@ Mesajın sonuna 'ShiftTurbo Güvenlik Sistemi' imzasını ekle.`;
                         if (typeof playSound === 'function') playSound('success');
                         showToast("YENİ HAREKET", `${newest.personel} (${newest.type})`, newest.type === 'GİRİŞ' ? 'success' : 'error');
 
-                        if (Notification.permission === "granted") {
+                        if (typeof Notification !== 'undefined' && Notification.permission === "granted") {
                             new Notification(`ShiftTurbo: ${newest.personel}`, {
                                 body: `${newest.type} kaydı işlendi. (${newest.time})`,
                                 icon: 'logom.png'
@@ -4741,7 +4746,7 @@ Mesajın sonuna 'ShiftTurbo Güvenlik Sistemi' imzasını ekle.`;
                     window.ShiftAI.updateSuggestions(anomalies);
                     
                     // AKILLI BİLDİRİMLER (Aktif Panel)
-                    if (Notification.permission === "granted" && anomalies.length > 0) {
+                    if (typeof Notification !== 'undefined' && Notification.permission === "granted" && anomalies.length > 0) {
                         if (!window.notifiedAnomalies) {
                             const stored = localStorage.getItem('shiftTurbo_notified_anomalies');
                             window.notifiedAnomalies = new Set(stored ? JSON.parse(stored) : []);
@@ -5409,16 +5414,39 @@ Mesajın sonuna 'ShiftTurbo Güvenlik Sistemi' imzasını ekle.`;
 
                 // 2. 📜 ANA OPERASYON LOGLARI VERİLERİNİ TOPLA
                 const tableData = [];
-                const rows = document.querySelectorAll('#logTable tr');
-                rows.forEach(row => {
-                    const cols = row.querySelectorAll('td');
-                    if (cols.length >= 4) {
-                        const pName = cleanPdfText(cols[0].innerText.replace(/\n.*/g, ''));
-                        const pStatus = cleanPdfText(cols[1].innerText);
-                        const pNote = cleanPdfText(cols[2].innerText);
-                        const pTime = cleanPdfText(cols[3].innerText.replace(/\n/g, ' '));
-                        tableData.push([pName, pStatus, pNote, pTime]);
+                const cache = (window.buildLogDataCache && typeof window.buildLogDataCache === 'function')
+                    ? window.buildLogDataCache(window.allLogs)
+                    : { personLogsMap: {}, sortedPersonLogsMap: {} };
+                const personLogsMap = cache.personLogsMap || {};
+                const sortedPersonLogsMap = cache.sortedPersonLogsMap || {};
+
+                filteredLogs.forEach(log => {
+                    const name = log.personel || "BILINMEYEN";
+                    
+                    if (!sortedPersonLogsMap[name]) {
+                        const pLogs = personLogsMap[name] || window.allLogs.filter(l => l.personel === name);
+                        sortedPersonLogsMap[name] = pLogs.slice().reverse();
                     }
+                    const pLogsSorted = sortedPersonLogsMap[name];
+                    const durationText = (typeof calculateRowDuration === 'function')
+                        ? calculateRowDuration(log, window.allLogs, pLogsSorted)
+                        : '';
+
+                    const isMessage = log.type === 'MESAJ';
+                    const displayText = isMessage ? 'BILDİRİM' : (log.type + (durationText ? ` (${durationText})` : ''));
+                    
+                    let noteText = isMessage ? 'Personel Bildirimi' : (log.mahalle ? log.mahalle.replace(' (⚡ Çevrimdışı)', '') : '-');
+                    let isOffline = log.mahalle && log.mahalle.includes('⚡ Çevrimdışı');
+                    if (isOffline) noteText += ' (CEVRIMDISI)';
+
+                    const timeStr = `${log.time} ${log.date_str}`;
+
+                    tableData.push([
+                        cleanPdfText(name),
+                        cleanPdfText(displayText),
+                        cleanPdfText(noteText),
+                        cleanPdfText(timeStr)
+                    ]);
                 });
 
                 // Tablo 2: Ana Operasyon Logları (PDF)
@@ -5580,24 +5608,53 @@ Mesajın sonuna 'ShiftTurbo Güvenlik Sistemi' imzasını ekle.`;
             window.checkPWAPushStatus = checkPWAPushStatus;
 
             async function initPWAPush() {
-                if (!('serviceWorker' in navigator) || !('Notification' in window)) {
-                    showToast("DESTEKLENMİYOR", "Cihazınız veya tarayıcınız arka plan bildirimlerini desteklemiyor.", "error");
+                // ── ADIM 1: Temel destek kontrolü ─────────────────────────────
+                if (!('serviceWorker' in navigator)) {
+                    showToast("DESTEKLENMİYOR", "Bu tarayıcı Service Worker desteklemiyor. Chrome veya Safari (iOS 16.4+) kullanın.", "error");
+                    return;
+                }
+                if (!('Notification' in window)) {
+                    showToast("DESTEKLENMİYOR", "Bu tarayıcı bildirim API'sini desteklemiyor.", "error");
+                    return;
+                }
+
+                // ── ADIM 2: iOS Ana Ekran kontrolü ────────────────────────────
+                // iOS'ta Web Push SADECE Ana Ekrana eklenmiş (PWA) uygulamalarda çalışır.
+                const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window).MSStream;
+                const isStandalone = window.navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches;
+                if (isIOS && !isStandalone) {
+                    showToast(
+                        "iOS: ANA EKRANA EKLEYİN",
+                        "iPhone'da bildirim alabilmek için bu sayfayı önce Ana Ekrana ekleyin: Safari → Paylaş → Ana Ekrana Ekle. Sonra uygulamayı Ana Ekrandan açıp tekrar deneyin.",
+                        "error"
+                    );
                     return;
                 }
 
                 try {
                     const reg = await navigator.serviceWorker.ready;
+
+                    // ── ADIM 3: Push Manager kontrolü ─────────────────────────
+                    if (!reg.pushManager) {
+                        showToast(
+                            "PUSH DESTEKLENMİYOR",
+                            isIOS
+                                ? "iOS 16.4+ ve Ana Ekrana ekli olması gerekiyor. Safari sürümünüzü kontrol edin."
+                                : "Tarayıcınız Push API desteklemiyor. Chrome veya Firefox kullanın.",
+                            "error"
+                        );
+                        return;
+                    }
+
                     let sub = await reg.pushManager.getSubscription();
 
-                    // EĞER ZATEN BİR ABONELİK VARSA: Kapat (Unsubscribe)
+                    // ── EĞER ZATEN ABONELİK VARSA: Kapat ─────────────────────
                     if (sub) {
                         const confirmed = await cyberConfirm("BİLDİRİMLERİ KAPAT", "Canlı mobil bildirim aboneliğinizi iptal etmek istediğinize emin misiniz?");
                         if (!confirmed) return;
 
-                        // Tarayıcı push aboneliğini iptal et
                         await sub.unsubscribe();
 
-                        // Veritabanından sil
                         try {
                             await _supabase.from('push_subscriptions').delete().eq('endpoint', sub.endpoint);
                         } catch (dbEx) {
@@ -5609,35 +5666,45 @@ Mesajın sonuna 'ShiftTurbo Güvenlik Sistemi' imzasını ekle.`;
                         } catch (e) { }
 
                         showToast("BİLDİRİMLER DEAKTİF", "Arka plan mobil bildirimleri kapatıldı.", "info");
-                        const btn = document.getElementById('btn-pwa-push');
-                        if (btn) {
-                            btn.style.background = 'rgba(147, 51, 234, 0.2)';
-                            btn.style.color = '#c084fc';
-                            btn.style.borderColor = '#9333ea';
-                            btn.innerText = '🔔 BİLDİRİMLERİ AÇ';
+                        const btnOff = document.getElementById('btn-pwa-push');
+                        if (btnOff) {
+                            btnOff.style.background = 'rgba(147, 51, 234, 0.2)';
+                            btnOff.style.color = '#c084fc';
+                            btnOff.style.borderColor = '#9333ea';
+                            btnOff.innerText = '🔔 BİLDİRİMLERİ AÇ';
                         }
                         return;
                     }
 
-                    // EĞER ABONELİK YOKSA: Aç (Subscribe)
-                    const perm = await Notification.requestPermission();
+                    // ── ABONELİK YOKSA: İzin İste ─────────────────────────────
+                    let perm;
+                    try {
+                        perm = await Notification.requestPermission();
+                    } catch (permErr) {
+                        // Bazı tarayıcılar callback tabanlı eski API kullanır
+                        perm = await new Promise((resolve) => Notification.requestPermission(resolve));
+                    }
+
                     if (perm !== 'granted') {
-                        showToast("İZİN REDDEDİLDİ", "Bildirim izni vermediğiniz için canlı mobil bildirimler aktif edilemedi.", "error");
+                        showToast(
+                            "İZİN REDDEDİLDİ",
+                            "Bildirim izni vermediğiniz için bildirimler aktif edilemedi. Tarayıcı ayarlarından shiftturbo.tech için bildirimlere izin verin.",
+                            "error"
+                        );
                         return;
                     }
 
+                    // ── Periodic Sync (opsiyonel, Chrome'a özgü) ──────────────
                     if ('periodicSync' in reg) {
                         try {
-                            await reg.periodicSync.register('check-shift-turbo-logs', {
-                                minInterval: 15 * 60 * 1000 // 15 dakikada bir (tarayıcı kapalıyken bile yoklar)
-                            });
-                            console.log("Periodic Sync başarıyla kaydedildi.");
+                            await reg.periodicSync.register('check-shift-turbo-logs', { minInterval: 15 * 60 * 1000 });
                         } catch (e) {
                             console.warn("Periodic Sync izni alınamadı:", e);
                         }
                     }
 
-                    const publicVapidKey = 'BIHa5SYDwhb6LIMu28hUCwf9oe4PxdZ0_1dlgMCaXo0dByL6KD0Uh5d6lfHCuzq4mTccDTHvWh2GBmIjZ0a9wq8';
+                    // ── Push Aboneliği Oluştur ─────────────────────────────────
+                    const publicVapidKey = 'BJ6yn3SpofZvSHYVRnT62OBvszxpYdOw75ibzPSi7u2do6MIVh8cu88HftRoSkyszIXKWrlZIpZ3o1uvwbG-s24';
                     const urlBase64ToUint8Array = (base64String) => {
                         const padding = '='.repeat((4 - base64String.length % 4) % 4);
                         const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
@@ -5652,12 +5719,14 @@ Mesajın sonuna 'ShiftTurbo Güvenlik Sistemi' imzasını ekle.`;
                         applicationServerKey: urlBase64ToUint8Array(publicVapidKey)
                     });
 
-                    // Aboneliği veritabanına kaydet / güncelle
+                    // ── Aboneliği Veritabanına Kaydet ──────────────────────────
                     try {
-                        await _supabase.from('push_subscriptions').upsert([{
+                        const subJson = JSON.parse(JSON.stringify(sub));
+                        const { error: dbErr } = await _supabase.from('push_subscriptions').upsert([{
                             endpoint: sub.endpoint,
-                            subscription: JSON.parse(JSON.stringify(sub))
+                            subscription: subJson
                         }], { onConflict: 'endpoint' });
+                        if (dbErr) console.error("Abonelik DB hatası:", dbErr);
                     } catch (dbEx) {
                         console.error("Abonelik veritabanına kaydedilemedi:", dbEx);
                     }
@@ -5666,20 +5735,28 @@ Mesajın sonuna 'ShiftTurbo Güvenlik Sistemi' imzasını ekle.`;
                         await _supabase.from('broadcasts').insert([{ message: '🔔 Arka Plan Bildirimleri Aktif Edildi (Panel Kapalıyken Çalışacak)' }]);
                     } catch (e) { }
 
-                    showToast("MOBİL BİLDİRİMLER AKTİF!", "Tarayıcınız kapalı olsa bile arka planda bildirimler cep telefonunuza düşecek!", "success");
-                    const btn = document.getElementById('btn-pwa-push');
-                    if (btn) {
-                        btn.style.background = 'rgba(16, 185, 129, 0.2)';
-                        btn.style.color = '#10b981';
-                        btn.style.borderColor = '#10b981';
-                        btn.innerText = '🔔 BİLDİRİMLERİ KAPAT';
+                    showToast("MOBİL BİLDİRİMLER AKTİF!", "Panel kapalı olsa bile personel hareketlerinde bildirim alacaksınız!", "success");
+                    const btnOn = document.getElementById('btn-pwa-push');
+                    if (btnOn) {
+                        btnOn.style.background = 'rgba(16, 185, 129, 0.2)';
+                        btnOn.style.color = '#10b981';
+                        btnOn.style.borderColor = '#10b981';
+                        btnOn.innerText = '🔔 BİLDİRİMLERİ KAPAT';
                     }
+
                 } catch (e) {
-                    console.error(e);
-                    showToast("HATA", "Bildirim aboneliği başlatılamadı: " + e.message, "error");
+                    console.error("initPWAPush hatası:", e);
+                    let errMsg = e.message || "Bilinmeyen hata";
+                    if (errMsg.includes('applicationServerKey') || errMsg.includes('VAPID')) {
+                        errMsg = "VAPID anahtar hatası. Sayfayı yenileyip tekrar deneyin.";
+                    } else if (errMsg.includes('permission') || errMsg.includes('denied')) {
+                        errMsg = "Bildirim izni gerekli. Tarayıcı ayarlarından shiftturbo.tech bildirimine izin verin.";
+                    }
+                    showToast("HATA", "Bildirim aboneliği başlatılamadı: " + errMsg, "error");
                 }
             }
             window.initPWAPush = initPWAPush;
+
 
             async function fetchStaffList() {
                 const tbody = document.getElementById('staffListTable');
@@ -6392,6 +6469,13 @@ Mesajın sonuna 'ShiftTurbo Güvenlik Sistemi' imzasını ekle.`;
     <script>
         // Accessibility Auto-Fixer
         document.addEventListener('DOMContentLoaded', () => {
+            // 📲 Service Worker Kaydı (Yönetici PWA için)
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('ShiftTurbo Yönetici PWA Hazır!', reg))
+                    .catch(err => console.log('Yönetici PWA Hatası:', err));
+            }
+
             // KVKK Retention Policy: 180 günden eski logları otomatik sil (Arka Planda)
             if (typeof window.ShiftTurboShared !== 'undefined' && typeof _supabase !== 'undefined') {
                 _supabase.rpc('delete_old_logs', { days_to_keep: 180 })

@@ -2017,7 +2017,7 @@
                 📩 MERKEZE İLET</div>
             <div
                 style="font-size: 9px; color: #64748b; letter-spacing: 1px; margin-bottom: 15px; text-transform: uppercase;">
-                Şikayet, Öneri veya Durum Bildirisi</div>
+                Durum Bildirisi veya Operasyon Notu</div>
 
             <textarea id="msg-area"
                 placeholder="Mesajınızı buraya yazınız... (Örn: Ekipman arızası var, bölge temizlendi vb.)"></textarea>
@@ -2226,7 +2226,7 @@
 
 
 
-        <button class="btn-message" onclick="toggleModal(true)">📩 ŞİKAYET / ÖNERİ İLET</button>
+        <button class="btn-message" onclick="toggleModal(true)">📩 DURUM BİLDİR</button>
 
         <div id="status" onclick="toggleAboutModal(true)" style="cursor: pointer; transition: all 0.3s ease;">
             <i class="fas fa-info-circle" style="margin-right: 5px; font-size: 7px; vertical-align: middle;"></i>
@@ -2843,7 +2843,7 @@
                 document.getElementById('status').innerText = "❌ ZATEN ÇIKIŞ YAPILMIŞ!";
 
                 // ANINDA GİZLE Kİ TEKRAR BASAMASIN
-                resetToScanScreen();
+                window.resetToScanScreen();
 
                 const errorMsgBody = document.getElementById('error-msg-body');
                 const errorModal = document.getElementById('error-modal');
@@ -2853,11 +2853,11 @@
                 }
                 try { speakAI("Sayın personel, sistemde daha önceden çıkış yaptınız. Çıkış kaydınız zaten mevcuttur."); } catch (e) { }
 
-                clearTerminalSession();
+                window.clearTerminalSession();
 
                 setTimeout(() => {
                     if (errorModal) errorModal.style.display = 'none';
-                    if (typeof resetToScanScreen === 'function') resetToScanScreen();
+                    if (typeof window.resetToScanScreen === 'function') window.resetToScanScreen();
                 }, 5000);
                 return;
             }
@@ -2867,7 +2867,7 @@
                 document.getElementById('status').innerText = "❌ ZATEN MESAİDESİNİZ!";
 
                 // ANINDA GİZLE Kİ TEKRAR BASAMASIN
-                hideAllTerminalPanels();
+                window.hideAllTerminalPanels();
 
                 const errorMsgBody = document.getElementById('error-msg-body');
                 const errorModal = document.getElementById('error-modal');
@@ -2924,7 +2924,54 @@
                 console.log("Kullanılan Hassasiyet: " + accuracy + "m");
 
                 if (!navigator.onLine) {
-                    console.log("⚠️ İnternet bağlantısı yok! İşlem çevrimdışı kuyruğa alınıyor...");
+                    console.log("⚠️ İnternet bağlantısı yok! Çevrimdışı mod devreye girdi.");
+
+                    // ÇEVRİMDIŞI ÇİFT KAYIT KORUMASI:
+                    // Çevrimdışıyken de yerel cache ve offline kuyruk üzerinden çifte kayıt engellenir.
+                    if (type === 'ÇIKIŞ' && buluttakiSonDurum === 'ÇIKIŞ') {
+                        console.warn("🛑 ÇEVRİMDIŞI ÇIKIŞ ENGELLENDİ: Yerel cache zaten ÇIKIŞ gösteriyor.");
+                        playSound('error');
+
+                        window.resetToScanScreen();
+
+                        const errorMsgBodyOff = document.getElementById('error-msg-body');
+                        const errorModalOff = document.getElementById('error-modal');
+                        if (errorMsgBodyOff && errorModalOff) {
+                            errorMsgBodyOff.innerHTML = `<b>⚠️ BİLGİLENDİRME (DAHA ÖNCEDEN ÇIKIŞ YAPILDI):</b><br><br>Cihazın yerel kayıtlarında zaten bir çıkış işlemi bulunmaktadır.<br><br>İnternet bağlantısı olmadığından bulut doğrulaması yapılamıyor. Bağlantı sağlandığında sistem otomatik eşitlenecektir.<br><br>Tekrar çıkış kaydı oluşturulmadı.`;
+                            errorModalOff.style.display = 'flex';
+                        }
+                        try { speakAI("Sayın personel, cihaz kayıtlarında zaten bir çıkış işlemi bulunmaktadır."); } catch (e) { }
+
+                        window.clearTerminalSession();
+
+                        setTimeout(() => {
+                            if (errorModalOff) errorModalOff.style.display = 'none';
+                            if (typeof window.resetToScanScreen === 'function') window.resetToScanScreen();
+                        }, 5000);
+                        return;
+                    }
+
+                    if (type === 'GİRİŞ' && buluttakiSonDurum === 'GİRİŞ') {
+                        console.warn("🛑 ÇEVRİMDIŞI GİRİŞ ENGELLENDİ: Yerel cache zaten GİRİŞ gösteriyor.");
+                        playSound('error');
+
+                        window.hideAllTerminalPanels();
+
+                        const errorMsgBodyOff2 = document.getElementById('error-msg-body');
+                        const errorModalOff2 = document.getElementById('error-modal');
+                        if (errorMsgBodyOff2 && errorModalOff2) {
+                            errorMsgBodyOff2.innerHTML = `<b>⚠️ BİLGİLENDİRME (ZATEN MESAİDESİNİZ):</b><br><br>Cihazın yerel kayıtlarında zaten aktif bir mesai başlangıcınız bulunmaktadır.<br><br>İnternet bağlantısı olmadığından bulut doğrulaması yapılamıyor. Bağlantı sağlandığında sistem otomatik eşitlenecektir.`;
+                            errorModalOff2.style.display = 'flex';
+                        }
+                        try { speakAI("Sayın personel, cihaz kayıtlarında zaten aktif bir mesai kaydınız bulunmaktadır."); } catch (e) { }
+                        setTimeout(() => {
+                            if (errorModalOff2) errorModalOff2.style.display = 'none';
+                            location.reload();
+                        }, 5000);
+                        return;
+                    }
+
+                    console.log("✅ Çevrimdışı işlem onaylandı, kuyruğa alınıyor...");
                     playSound('success');
 
                     const offlineQueue = window.ShiftTurboShared.getObfuscated('shiftTurbo_offline_queue') || [];
@@ -2953,8 +3000,8 @@
                         window.isRedirectingNow = true;
                         console.log("🚀 Ses tamamen bitti veya garanti süre doldu, sayfa yönlendiriliyor!");
                         if (type === 'ÇIKIŞ') {
-                            resetToScanScreen();
-                            clearTerminalSession();
+                            window.resetToScanScreen();
+                            window.clearTerminalSession();
                             window.location.replace(window.location.pathname + '?reset=' + Date.now());
                         } else {
                             localStorage.setItem('isShiftActive', 'true');
@@ -3003,8 +3050,8 @@
                         window.isRedirectingNow = true;
                         console.log("🚀 Ses tamamen bitti veya garanti süre doldu, sayfa yönlendiriliyor!");
                         if (type === 'ÇIKIŞ') {
-                            resetToScanScreen();
-                            clearTerminalSession();
+                            window.resetToScanScreen();
+                            window.clearTerminalSession();
                             window.location.replace(window.location.pathname + '?reset=' + Date.now());
                         } else {
                             localStorage.setItem('isShiftActive', 'true');
@@ -3193,8 +3240,8 @@
 
             alert(data.message);
             toggleKvkkModal(false);
-            resetToScanScreen();
-            clearTerminalSession();
+            window.resetToScanScreen();
+            window.clearTerminalSession();
             window.location.reload();
         }
 
@@ -3224,14 +3271,14 @@
                     document.getElementById('greeting').innerText = "SYSTEM ACTIVE / " + user.toUpperCase();
                     mainActions.innerHTML = `
                         <button class="btn-out" onclick="requestConfirm('ÇIKIŞ')" style="display:flex;align-items:center;justify-content:center;gap:8px;"><span style="font-size:18px;">⬇</span> MESAİ BİTİR</button>
-                        <button class="btn-out btn-mini" onclick="clearTerminalSession(); window.location.replace(window.location.pathname + '?reset=' + Date.now());" style="background: #334155; margin-top: 15px; font-family: 'Poppins', sans-serif; font-weight: bold; letter-spacing: 1px;">🔄 ANA EKRANA DÖN</button>
+                        <button class="btn-out btn-mini" onclick="window.clearTerminalSession(); window.location.replace(window.location.pathname + '?reset=' + Date.now());" style="background: #334155; margin-top: 15px; font-family: 'Poppins', sans-serif; font-weight: bold; letter-spacing: 1px;">🔄 ANA EKRANA DÖN</button>
                     `;
                 } else {
                     document.getElementById('status-bar').style.width = "50%";
                     document.getElementById('greeting').innerText = "SYSTEM READY / " + user.toUpperCase();
                     mainActions.innerHTML = `
                         <button class="btn-in" onclick="requestConfirm('GİRİŞ')" style="display:flex;align-items:center;justify-content:center;gap:8px;"><span style="font-size:18px;">⬆</span> MESAİ BAŞLAT</button>
-                        <button class="btn-out btn-mini" onclick="clearTerminalSession(); window.location.replace(window.location.pathname + '?reset=' + Date.now());" style="background: #334155; margin-top: 15px; font-family: 'Poppins', sans-serif; font-weight: bold; letter-spacing: 1px;">🔄 ANA EKRANA DÖN</button>
+                        <button class="btn-out btn-mini" onclick="window.clearTerminalSession(); window.location.replace(window.location.pathname + '?reset=' + Date.now());" style="background: #334155; margin-top: 15px; font-family: 'Poppins', sans-serif; font-weight: bold; letter-spacing: 1px;">🔄 ANA EKRANA DÖN</button>
                     `;
                 }
 
@@ -3243,10 +3290,10 @@
                     if (dbDeviceId && dbDeviceId !== clientUUID) {
                         console.warn("⚠️ GÜVENLİK İHLALİ: Oturum başka bir cihaza taşınmış. Yerel oturum kapatılıyor.");
                         if (typeof playSound === 'function') playSound('error');
-                        clearTerminalSession();
+                        window.clearTerminalSession();
 
                         // UI'ı tamamen sıfırla ve kilitle (Yarım oturum durumunu engellemek için)
-                        hideAllTerminalPanels();
+                        window.hideAllTerminalPanels();
                         if (mainActions) mainActions.style.display = 'none';
                         const greetingEl = document.getElementById('greeting');
                         if (greetingEl) greetingEl.innerText = "SİSTEM BAĞLANTISI";
@@ -3296,14 +3343,14 @@
                     document.getElementById('greeting').innerText = "SYSTEM ACTIVE / " + user.toUpperCase();
                     mainActions.innerHTML = `
                         <button class="btn-out" onclick="requestConfirm('ÇIKIŞ')" style="display:flex;align-items:center;justify-content:center;gap:8px;"><span style="font-size:18px;">⬇</span> MESAİ BİTİR</button>
-                        <button class="btn-out btn-mini" onclick="clearTerminalSession(); window.location.replace(window.location.pathname + '?reset=' + Date.now());" style="background: #334155; margin-top: 15px; font-family: 'Poppins', sans-serif; font-weight: bold; letter-spacing: 1px;">🔄 ANA EKRANA DÖN</button>
+                        <button class="btn-out btn-mini" onclick="window.clearTerminalSession(); window.location.replace(window.location.pathname + '?reset=' + Date.now());" style="background: #334155; margin-top: 15px; font-family: 'Poppins', sans-serif; font-weight: bold; letter-spacing: 1px;">🔄 ANA EKRANA DÖN</button>
                     `;
                 } else {
                     document.getElementById('status-bar').style.width = "50%";
                     document.getElementById('greeting').innerText = "SYSTEM READY / " + user.toUpperCase();
                     mainActions.innerHTML = `
                         <button class="btn-in" onclick="requestConfirm('GİRİŞ')" style="display:flex;align-items:center;justify-content:center;gap:8px;"><span style="font-size:18px;">⬆</span> MESAİ BAŞLAT</button>
-                        <button class="btn-out btn-mini" onclick="clearTerminalSession(); window.location.replace(window.location.pathname + '?reset=' + Date.now());" style="background: #334155; margin-top: 15px; font-family: 'Poppins', sans-serif; font-weight: bold; letter-spacing: 1px;">🔄 ANA EKRANA DÖN</button>
+                        <button class="btn-out btn-mini" onclick="window.clearTerminalSession(); window.location.replace(window.location.pathname + '?reset=' + Date.now());" style="background: #334155; margin-top: 15px; font-family: 'Poppins', sans-serif; font-weight: bold; letter-spacing: 1px;">🔄 ANA EKRANA DÖN</button>
                     `;
                 }
 
@@ -3395,8 +3442,8 @@
                         if (currentUserForRealtime) window.ShiftTurboShared.setStatus(currentUserForRealtime, 'ÇIKIŞ');
                         if (typeof playSound === 'function') playSound('error');
 
-                        resetToScanScreen();
-                        clearTerminalSession();
+                        window.resetToScanScreen();
+                        window.clearTerminalSession();
 
                         const errorMsgBody = document.getElementById('error-msg-body');
                         const errorModal = document.getElementById('error-modal');
@@ -3564,7 +3611,7 @@
                         if (landing) landing.style.display = 'none';
                         // enterTerminal çağırarak terminal UI'ı göster, otomatik QR başlatma (kamera izni sorununu çözmek için)
                         setTimeout(() => {
-                            if (typeof resetToScanScreen === 'function') resetToScanScreen();
+                            if (typeof window.resetToScanScreen === 'function') window.resetToScanScreen();
                         }, 300);
                     }
                 } else {
