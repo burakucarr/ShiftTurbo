@@ -2851,14 +2851,14 @@
                     errorMsgBody.innerHTML = `<b>⚠️ BİLGİLENDİRME (DAHA ÖNCEDEN ÇIKIŞ YAPILDI):</b><br><br>Sistem kayıtlarında zaten başarılı bir çıkış işleminiz bulunmaktadır.<br><br>Çıkış işleminiz daha önce merkeze iletilmiş ve güvence altına alınmıştır. Tekrar çıkış yapmanıza gerek yoktur.`;
                     errorModal.style.display = 'flex';
                 }
-                try { speakAI("Sayın personel, sistemde daha önceden çıkış yaptınız. Çıkış kaydınız zaten mevcuttur."); } catch (e) { }
+                try { speakAI("Sayın personel, mesainiz daha önceden kaydedilmiş. Ana ekrana yönlendiriliyorsunuz."); } catch (e) { }
 
                 window.clearTerminalSession();
 
                 setTimeout(() => {
                     if (errorModal) errorModal.style.display = 'none';
-                    if (typeof window.resetToScanScreen === 'function') window.resetToScanScreen();
-                }, 5000);
+                    window.location.replace(window.location.pathname + '?reset=' + Date.now());
+                }, 3500);
                 return;
             }
 
