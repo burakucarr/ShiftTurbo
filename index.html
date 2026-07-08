@@ -2989,38 +2989,29 @@
                     window.ShiftTurboShared.setObfuscated('shiftTurbo_offline_queue', offlineQueue);
                     window.ShiftTurboShared.setStatus(name, type);
 
-                    // Çevrimdışı İşlem Başladı Ekranı (Kullanıcının istediği Güvenlik Protokolü ekranını ANINDA veriyoruz)
+                    // Çevrimdışı İşlem Başladı Ekranı
                     statusEl.innerHTML = type === 'ÇIKIŞ' ? `🛑 GÜVENLİK PROTOKOLÜ: MESAİ BİTİRİLDİ (ÇEVRİMDİŞI)` : `<span class="plane-animation">✈️</span> 🛰️ GÜVENLİK PROTOKOLÜ: MESAİ AKTİF (ÇEVRİMDİŞI)`;
                     statusEl.classList.add('success-glow');
 
-                    // %100 Garantili Yönlendirme Kilidi (Ses bitmeden sayfa ASLA yenilenemez)
-                    window.isRedirectingNow = false;
-                    const performFinalRedirect = () => {
-                        if (window.isRedirectingNow) return;
-                        window.isRedirectingNow = true;
-                        console.log("🚀 Ses tamamen bitti veya garanti süre doldu, sayfa yönlendiriliyor!");
+                    // Ses: fire-and-forget (yönlendirmeyi BEKLEME)
+                    try {
+                        const firstName = name ? name.split(' ')[0] : 'Personel';
+                        speakAI(
+                            type === 'ÇIKIŞ' ? `Sayın ${firstName}, mesainiz kaydedildi.` : `Sayın ${firstName}, mesainiz başlatıldı.`,
+                            type === 'ÇIKIŞ' ? ["mesai_bitir_cevrimdisi_1.mp3", "mesai_bitir_cevrimdisi_2.mp3"] : ["mesai_baslat_cevrimdisi_1.mp3", "mesai_baslat_cevrimdisi_2.mp3"]
+                        );
+                    } catch (e) { console.warn("TTS Error:", e); }
+
+                    // 3 saniye sonra YÖNLENDİR (sesi bekleme)
+                    setTimeout(() => {
                         if (type === 'ÇIKIŞ') {
-                            window.resetToScanScreen();
                             window.clearTerminalSession();
                             window.location.replace(window.location.pathname + '?reset=' + Date.now());
                         } else {
                             localStorage.setItem('isShiftActive', 'true');
                             location.reload();
                         }
-                    };
-
-                    // Yapay Zeka Sesli Anons (Çevrimdışı - Rastgele Ses Havuzu + Callback + Garanti Timer)
-                    try {
-                        const firstName = name ? name.split(' ')[0] : 'Personel';
-                        speakAI(
-                            type === 'ÇIKIŞ' ? `Sayın ${firstName}, internet bağlantısı algılanamadı. Mesai bitiş kaydınız çevrimdışı olarak yerel hafızaya güvence altına alındı.` : `Sayın ${firstName}, internet bağlantısı algılanamadı. Mesai başlangıç kaydınız çevrimdışı olarak yerel hafızaya güvence altına alındı.`,
-                            type === 'ÇIKIŞ' ? ["mesai_bitir_cevrimdisi_1.mp3", "mesai_bitir_cevrimdisi_2.mp3"] : ["mesai_baslat_cevrimdisi_1.mp3", "mesai_baslat_cevrimdisi_2.mp3"],
-                            performFinalRedirect
-                        );
-                    } catch (e) { console.warn("TTS Error:", e); }
-
-                    // Olası bir tarayıcı onended tetiklenmeme bug'ına karşı 16 saniyelik Garanti Timer (Uzun AI anonsu bitene kadar ASLA kesilmez)
-                    setTimeout(performFinalRedirect, 16000);
+                    }, 3000);
                     return;
                 }
 
@@ -3039,38 +3030,29 @@
                     document.getElementById('error-modal').style.display = 'flex';
                 } else {
                     window.ShiftTurboShared.setStatus(name, type);
-                    // Çevrimiçi İşlem Başladı Ekranı (Kullanıcının istediği Güvenlik Protokolü ekranını ANINDA veriyoruz)
+                    // Çevrimiçi İşlem Başarılı
                     statusEl.innerHTML = type === 'ÇIKIŞ' ? `🛑 GÜVENLİK PROTOKOLÜ: MESAİ BİTİRİLDİ` : `<span class="plane-animation">✈️</span> 🛰️ GÜVENLİK PROTOKOLÜ: MESAİ AKTİF`;
                     statusEl.classList.add('success-glow');
 
-                    // %100 Garantili Yönlendirme Kilidi (Ses bitmeden sayfa ASLA yenilenemez)
-                    window.isRedirectingNow = false;
-                    const performFinalRedirect = () => {
-                        if (window.isRedirectingNow) return;
-                        window.isRedirectingNow = true;
-                        console.log("🚀 Ses tamamen bitti veya garanti süre doldu, sayfa yönlendiriliyor!");
+                    // Ses: fire-and-forget (yönlendirmeyi BEKLEME)
+                    try {
+                        const firstName = name ? name.split(' ')[0] : 'Personel';
+                        speakAI(
+                            type === 'ÇIKIŞ' ? `Sayın ${firstName}, mesainiz kaydedildi. İyi istirahatler.` : `Sayın ${firstName}, mesainiz başlatıldı. İyi çalışmalar.`,
+                            type === 'ÇIKIŞ' ? ["mesai_bitir_1.mp3", "mesai_bitir2.mp3", "mesai_bitir_3.mp3"] : ["mesai_baslat_1.mp3", "mesai_baslat_2.mp3", "mesai_baslat_3.mp3"]
+                        );
+                    } catch (e) { console.warn("TTS Error:", e); }
+
+                    // 3 saniye sonra YÖNLENDİR (sesi bekleme)
+                    setTimeout(() => {
                         if (type === 'ÇIKIŞ') {
-                            window.resetToScanScreen();
                             window.clearTerminalSession();
                             window.location.replace(window.location.pathname + '?reset=' + Date.now());
                         } else {
                             localStorage.setItem('isShiftActive', 'true');
                             location.reload();
                         }
-                    };
-
-                    // Yapay Zeka Sesli Anons (Çevrimiçi - Rastgele Ses Havuzu + Callback + Garanti Timer)
-                    try {
-                        const firstName = name ? name.split(' ')[0] : 'Personel';
-                        speakAI(
-                            type === 'ÇIKIŞ' ? `Sayın ${firstName}, mesainiz başarıyla sonlandırıldı. Tüm operasyonel kayıtlar merkeze aktarıldı ve güvence altına alındı. İyi istirahatler dileriz.` : `Sayın ${firstName}, mesainiz başarıyla başlatıldı. Shift Turbo güvenlik sistemleri devrede. İyi çalışmalar dileriz.`,
-                            type === 'ÇIKIŞ' ? ["mesai_bitir_1.mp3", "mesai_bitir2.mp3", "mesai_bitir_3.mp3"] : ["mesai_baslat_1.mp3", "mesai_baslat_2.mp3", "mesai_baslat_3.mp3"],
-                            performFinalRedirect
-                        );
-                    } catch (e) { console.warn("TTS Error:", e); }
-
-                    // Olası bir tarayıcı onended tetiklenmeme bug'ına karşı 16 saniyelik Garanti Timer (Uzun AI anonsu bitene kadar ASLA kesilmez)
-                    setTimeout(performFinalRedirect, 16000);
+                    }, 3000);
                 }
             };
 
