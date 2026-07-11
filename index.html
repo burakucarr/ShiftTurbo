@@ -2353,7 +2353,8 @@
                         lat: item.lat,
                         lon: item.lon,
                         mahalle: item.mahalle,
-                        created_at: item.device_time
+                        created_at: item.device_time,
+                        business_id: item.business_id
                     }]);
 
                     if (error) {
@@ -2549,7 +2550,16 @@
             if (!html5QrCode) html5QrCode = new Html5Qrcode("reader");
 
             html5QrCode.start({ facingMode: "environment" }, { fps: 25, qrbox: 250 }, async (decodedText) => {
-                if (decodedText.toUpperCase().includes("SHIFT")) {
+                const upperText = decodedText.toUpperCase();
+                if (upperText.includes("SHIFTURBO:") || upperText.includes("SHIFT")) {
+                    let businessId = null;
+                    if (upperText.includes("SHIFTURBO:")) {
+                        const parts = decodedText.split(":");
+                        businessId = parts[1] ? parts[1].trim() : null;
+                    }
+                    if (businessId) {
+                        localStorage.setItem('shiftTurbo_business_id', businessId);
+                    }
                     playSound('success');
                     await html5QrCode.stop();
                     document.getElementById('qrWrapper').style.display = 'none';
@@ -2585,56 +2595,98 @@
         async function checkPin() {
             const pin = currentPin.trim();
             const clientUUID = getDeviceUUID();
+            const businessId = localStorage.getItem('shiftTurbo_business_id');
 
-            // Önce RPC ile dene, yoksa direkt tablodan doğrula
-            let rpcData = null;
-            let rpcError = null;
+            if (!pin) { playSound('error'); return; }
 
-            try {
-                const result = await _supabase.rpc('verify_pin', { 
-                    input_pin: pin, 
-                    client_device_id: clientUUID 
-                });
-                rpcData = result.data;
-                rpcError = result.error;
-            } catch(e) {
-                rpcError = e;
-            }
-
-            // RPC fonksiyonu yoksa (404) direkt tabloya bak
-            if (rpcError && (rpcError.code === 'PGRST202' || rpcError.message?.includes('404') || rpcError.status === 404 || String(rpcError).includes('404') || rpcError.code === '42883')) {
-                console.warn("verify_pin RPC bulunamadı, fallback modu aktif.");
-                const { data: users, error: usersError } = await _supabase.from('users').select('ad_soyad, pin, device_id');
-
-                if (usersError || !users || users.length === 0) {
-                    // Eğer anonim erişim de yoksa proxy üzerinden dene
-                    try {
-                        const proxyRes = await fetch(proxyUrl + '/users?select=ad_soyad,pin,device_id');
-                        const proxyUsers = proxyRes.ok ? await proxyRes.json() : [];
-                        if (proxyUsers.length > 0) {
-                            return await _checkPinFallback(pin, clientUUID, proxyUsers);
-                        }
-                    } catch(pe) {}
-                    playSound('error');
-                    showToast("SİSTEM HATASI", "Veritabanına erişilemiyor. İnternet bağlantınızı kontrol edin.", "error");
-                    return;
-                }
-                return await _checkPinFallback(pin, clientUUID, users);
-            }
-
-            if (rpcError) {
-                console.error("PIN doğrulama hatası:", rpcError);
+            if (!businessId) {
                 playSound('error');
-                showToast("SİSTEM HATASI", "Sunucu ile bağlantı kurulamadı. Lütfen tekrar deneyin.", "error");
+                showToast("HATA", "Lütfen önce işletme QR kodunu taratın.", "error");
+                window.resetToScanScreen();
                 return;
             }
 
-            _handlePinResult(rpcData);
+            if (!_supabase) {
+                playSound('error');
+                showToast("BAĞLANTI HATASI", "Sunucu bağlantısı hazır değil, lütfen sayfayı yenileyin.", "error");
+                return;
+            }
+
+            // --- KATMAN 1: 3-parametreli yeni RPC (business_id ile) ---
+            try {
+                const result = await _supabase.rpc('verify_pin', {
+                    input_pin: pin,
+                    client_device_id: clientUUID,
+                    business_id: businessId
+                });
+                if (!result.error) {
+                    console.log("✅ verify_pin (3-param) başarılı:", result.data);
+                    return _handlePinResult(result.data, pin, clientUUID, businessId);
+                }
+                console.warn("verify_pin 3-param hatası:", result.error);
+            } catch(e) {
+                console.warn("verify_pin 3-param exception:", e);
+            }
+
+            // --- KATMAN 2: 2-parametreli eski RPC (business_id'siz) ---
+            try {
+                const result2 = await _supabase.rpc('verify_pin', {
+                    input_pin: pin,
+                    client_device_id: clientUUID
+                });
+                if (!result2.error) {
+                    console.log("✅ verify_pin (2-param) başarılı:", result2.data);
+                    return _handlePinResult(result2.data, pin, clientUUID, businessId);
+                }
+                console.warn("verify_pin 2-param hatası:", result2.error);
+            } catch(e) {
+                console.warn("verify_pin 2-param exception:", e);
+            }
+
+            // --- KATMAN 3: Direkt tablodan doğrulama ---
+            console.warn("RPC başarısız, direkt tablo doğrulamasına geçiliyor...");
+            try {
+                const { data: users, error: usersError } = await _supabase
+                    .from('users')
+                    .select('ad_soyad, pin, device_id, business_id')
+                    .eq('business_id', businessId);
+
+                if (!usersError && users && users.length > 0) {
+                    console.log("✅ Direkt tablo erişimi başarılı, kullanıcılar:", users.length);
+                    return await _checkPinFallback(pin, clientUUID, businessId, users);
+                }
+                console.warn("Direkt tablo erişimi başarısız:", usersError, "users:", users);
+            } catch(e) {
+                console.warn("Direkt tablo exception:", e);
+            }
+
+            // --- KATMAN 4: Proxy üzerinden doğrulama ---
+            console.warn("Direkt tablo başarısız, proxy deneniyor...");
+            try {
+                const proxyRes = await fetch(proxyUrl + '/users?select=ad_soyad,pin,device_id,business_id');
+                if (proxyRes.ok) {
+                    const proxyUsers = await proxyRes.json();
+                    const filteredUsers = proxyUsers.filter(u => u.business_id === businessId || !u.business_id);
+                    if (filteredUsers.length > 0) {
+                        console.log("✅ Proxy erişimi başarılı, kullanıcılar:", filteredUsers.length);
+                        return await _checkPinFallback(pin, clientUUID, businessId, filteredUsers);
+                    }
+                }
+            } catch(e) {
+                console.warn("Proxy exception:", e);
+            }
+
+            // --- Tüm katmanlar başarısız ---
+            playSound('error');
+            document.getElementById('main-card').classList.add('shake');
+            setTimeout(() => document.getElementById('main-card').classList.remove('shake'), 600);
+            currentPin = ""; document.getElementById('pin-display').innerText = "****";
+            document.getElementById('error-msg-body').innerHTML = `<b>⚠️ BAĞLANTI HATASI:</b><br><br>Sunucuya erişilemiyor. Lütfen internet bağlantınızı kontrol edin ve tekrar deneyin.<br><br><small style="color:#888">İşletme ID: ${businessId?.substring(0,8)}...</small>`;
+            document.getElementById('error-modal').style.display = 'flex';
         }
 
-        async function _checkPinFallback(pin, clientUUID, users) {
+        async function _checkPinFallback(pin, clientUUID, businessId, users) {
             // bcryptjs ile client-side PIN doğrulama
-            // Önce bcryptjs yükle (CDN)
             if (!window.dcodeIO && !window.bcrypt) {
                 try {
                     await new Promise((resolve, reject) => {
@@ -2645,11 +2697,8 @@
                         document.head.appendChild(s);
                     });
                 } catch(e) {
-                    // bcryptjs yüklenemedi - düz eşleştirme dene (geçici)
-                    console.warn("bcryptjs yüklenemedi, PIN doğrulaması yapılamıyor.");
-                    playSound('error');
-                    showToast("SİSTEM HATASI", "Veritabanı fonksiyonlarını kurmak için yöneticiye başvurun.", "error");
-                    return;
+                    console.warn("bcryptjs yüklenemedi:", e);
+                    // bcryptjs olmadan düz metin karşılaştırma yap
                 }
             }
 
@@ -2660,9 +2709,14 @@
                 if (!u.pin) continue;
                 let isMatch = false;
                 try {
-                    isMatch = await bcrypt.compare(pin, u.pin);
+                    if (bcrypt) {
+                        isMatch = await bcrypt.compare(pin, u.pin);
+                    } else {
+                        // bcryptjs yoksa düz metin karşılaştır (eski sistemler için)
+                        isMatch = (pin === u.pin);
+                    }
                 } catch(e) {
-                    // Karma değil, düz metin PIN (eski format)
+                    // Hash değil düz metin PIN
                     isMatch = (pin === u.pin);
                 }
                 if (isMatch) { matchedUser = u; break; }
@@ -2670,17 +2724,12 @@
 
             if (!matchedUser) {
                 playSound('error');
-                // Haptic feedback (titreşim)
                 if (navigator.vibrate) navigator.vibrate([100, 50, 150]);
-                // Gelişmiş shake animasyonu
                 document.getElementById('main-card').classList.add('shake');
                 setTimeout(() => document.getElementById('main-card').classList.remove('shake'), 600);
-                // PIN input kırmızı flash efekti
                 const pinDisp = document.getElementById('pin-display');
-                pinDisp.classList.add('pin-error-flash');
-                setTimeout(() => pinDisp.classList.remove('pin-error-flash'), 800);
-                currentPin = ""; 
-                pinDisp.innerText = "****";
+                if (pinDisp.classList) { pinDisp.classList.add('pin-error-flash'); setTimeout(() => pinDisp.classList.remove('pin-error-flash'), 800); }
+                currentPin = ""; pinDisp.innerText = "****";
                 showToast("HATALI PIN", "Girdiğiniz PIN kodu geçersizdir.", "error");
                 return;
             }
@@ -2689,18 +2738,23 @@
             if (matchedUser.device_id && matchedUser.device_id !== clientUUID) {
                 document.getElementById('error-msg-body').innerHTML = `<b>📱 CİHAZ EŞLEŞME HATASI:</b><br><br>Bu PIN kodu başka bir telefon/cihaz ile eşleştirilmiş. Yöneticinizden 'Cihaz Kilidini Açmasını' talep edin.`;
                 document.getElementById('error-modal').style.display = 'flex';
+                currentPin = ""; document.getElementById('pin-display').innerText = "****";
                 return;
             }
 
             // Cihaz kaydı yoksa ata
             if (!matchedUser.device_id) {
-                await _supabase.from('users').update({ device_id: clientUUID }).eq('ad_soyad', matchedUser.ad_soyad);
+                try {
+                    await _supabase.from('users').update({ device_id: clientUUID })
+                        .eq('ad_soyad', matchedUser.ad_soyad)
+                        .eq('business_id', businessId);
+                } catch(e) { console.warn("Cihaz kaydı güncellenemedi:", e); }
             }
 
-            _handlePinResult({ success: true, user_name: matchedUser.ad_soyad });
+            _handlePinResult({ success: true, user_name: matchedUser.ad_soyad }, pin, clientUUID, businessId);
         }
 
-        function _handlePinResult(data) {
+        function _handlePinResult(data, pin, clientUUID, businessId) {
             if (data && data.success) {
                 const fullName = data.user_name;
                 playSound('success');
@@ -2711,17 +2765,12 @@
                 document.getElementById('confirm-box').style.display = 'block';
             } else {
                 playSound('error');
-                // Haptic feedback (titreşim)
                 if (navigator.vibrate) navigator.vibrate([100, 50, 150]);
-                // Gelişmiş shake animasyonu
                 document.getElementById('main-card').classList.add('shake');
                 setTimeout(() => document.getElementById('main-card').classList.remove('shake'), 600);
-                // PIN input kırmızı flash efekti
                 const pinDisp2 = document.getElementById('pin-display');
-                pinDisp2.classList.add('pin-error-flash');
-                setTimeout(() => pinDisp2.classList.remove('pin-error-flash'), 800);
-                currentPin = ""; 
-                pinDisp2.innerText = "****";
+                if (pinDisp2.classList) { pinDisp2.classList.add('pin-error-flash'); setTimeout(() => pinDisp2.classList.remove('pin-error-flash'), 800); }
+                currentPin = ""; pinDisp2.innerText = "****";
                 if (data && data.lockout) {
                     if (navigator.vibrate) navigator.vibrate([200, 100, 200, 100, 300]);
                     const sec = data.remaining_seconds || 900;
@@ -2974,6 +3023,7 @@
                     console.log("✅ Çevrimdışı işlem onaylandı, kuyruğa alınıyor...");
                     playSound('success');
 
+                    const businessId = localStorage.getItem('shiftTurbo_business_id');
                     const offlineQueue = window.ShiftTurboShared.getObfuscated('shiftTurbo_offline_queue') || [];
                     const offlineRecord = {
                         offline_id: 'off_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now(),
@@ -2983,7 +3033,8 @@
                         lon: lon,
                         mahalle: `DOĞRULUK: ${Math.round(accuracy)}m (⚡ Çevrimdışı)`,
                         device_time: new Date().toISOString(),
-                        is_offline_sync: true
+                        is_offline_sync: true,
+                        business_id: businessId
                     };
                     offlineQueue.push(offlineRecord);
                     window.ShiftTurboShared.setObfuscated('shiftTurbo_offline_queue', offlineQueue);
@@ -2993,17 +3044,7 @@
                     statusEl.innerHTML = type === 'ÇIKIŞ' ? `🛑 GÜVENLİK PROTOKOLÜ: MESAİ BİTİRİLDİ (ÇEVRİMDİŞI)` : `<span class="plane-animation">✈️</span> 🛰️ GÜVENLİK PROTOKOLÜ: MESAİ AKTİF (ÇEVRİMDİŞI)`;
                     statusEl.classList.add('success-glow');
 
-                    // Ses: fire-and-forget (yönlendirmeyi BEKLEME)
-                    try {
-                        const firstName = name ? name.split(' ')[0] : 'Personel';
-                        speakAI(
-                            type === 'ÇIKIŞ' ? `Sayın ${firstName}, mesainiz kaydedildi.` : `Sayın ${firstName}, mesainiz başlatıldı.`,
-                            type === 'ÇIKIŞ' ? ["mesai_bitir_cevrimdisi_1.mp3", "mesai_bitir_cevrimdisi_2.mp3"] : ["mesai_baslat_cevrimdisi_1.mp3", "mesai_baslat_cevrimdisi_2.mp3"]
-                        );
-                    } catch (e) { console.warn("TTS Error:", e); }
-
-                    // 3 saniye sonra YÖNLENDİR (sesi bekleme)
-                    setTimeout(() => {
+                    const doRedirect = () => {
                         if (type === 'ÇIKIŞ') {
                             window.clearTerminalSession();
                             window.location.replace(window.location.pathname + '?reset=' + Date.now());
@@ -3011,16 +3052,40 @@
                             localStorage.setItem('isShiftActive', 'true');
                             location.reload();
                         }
-                    }, 3000);
+                    };
+                    
+                    let redirected = false;
+                    const safeRedirect = () => {
+                        if (redirected) return;
+                        redirected = true;
+                        doRedirect();
+                    };
+
+                    // Ses bittiğinde veya en geç 8 saniye sonra yönlendir
+                    setTimeout(safeRedirect, 8000);
+
+                    try {
+                        const firstName = name ? name.split(' ')[0] : 'Personel';
+                        speakAI(
+                            type === 'ÇIKIŞ' ? `Sayın ${firstName}, mesainiz kaydedildi.` : `Sayın ${firstName}, mesainiz başlatıldı.`,
+                            type === 'ÇIKIŞ' ? ["mesai_bitir_cevrimdisi_1.mp3", "mesai_bitir_cevrimdisi_2.mp3"] : ["mesai_baslat_cevrimdisi_1.mp3", "mesai_baslat_cevrimdisi_2.mp3"],
+                            safeRedirect
+                        );
+                    } catch (e) { 
+                        console.warn("TTS Error:", e); 
+                        safeRedirect();
+                    }
                     return;
                 }
 
+                const businessId = localStorage.getItem('shiftTurbo_business_id');
                 const { error } = await _supabase.from('logs').insert([{
                     personel_name: name,
                     type: type,
                     lat: lat,
                     lon: lon,
-                    mahalle: `DOĞRULUK: ${Math.round(accuracy)}m`
+                    mahalle: `DOĞRULUK: ${Math.round(accuracy)}m`,
+                    business_id: businessId
                 }]);
 
                 if (error) {
@@ -3034,17 +3099,7 @@
                     statusEl.innerHTML = type === 'ÇIKIŞ' ? `🛑 GÜVENLİK PROTOKOLÜ: MESAİ BİTİRİLDİ` : `<span class="plane-animation">✈️</span> 🛰️ GÜVENLİK PROTOKOLÜ: MESAİ AKTİF`;
                     statusEl.classList.add('success-glow');
 
-                    // Ses: fire-and-forget (yönlendirmeyi BEKLEME)
-                    try {
-                        const firstName = name ? name.split(' ')[0] : 'Personel';
-                        speakAI(
-                            type === 'ÇIKIŞ' ? `Sayın ${firstName}, mesainiz kaydedildi. İyi istirahatler.` : `Sayın ${firstName}, mesainiz başlatıldı. İyi çalışmalar.`,
-                            type === 'ÇIKIŞ' ? ["mesai_bitir_1.mp3", "mesai_bitir2.mp3", "mesai_bitir_3.mp3"] : ["mesai_baslat_1.mp3", "mesai_baslat_2.mp3", "mesai_baslat_3.mp3"]
-                        );
-                    } catch (e) { console.warn("TTS Error:", e); }
-
-                    // 3 saniye sonra YÖNLENDİR (sesi bekleme)
-                    setTimeout(() => {
+                    const doRedirect = () => {
                         if (type === 'ÇIKIŞ') {
                             window.clearTerminalSession();
                             window.location.replace(window.location.pathname + '?reset=' + Date.now());
@@ -3052,7 +3107,29 @@
                             localStorage.setItem('isShiftActive', 'true');
                             location.reload();
                         }
-                    }, 3000);
+                    };
+                    
+                    let redirected = false;
+                    const safeRedirect = () => {
+                        if (redirected) return;
+                        redirected = true;
+                        doRedirect();
+                    };
+
+                    // Ses bittiğinde veya en geç 8 saniye sonra yönlendir
+                    setTimeout(safeRedirect, 8000);
+
+                    try {
+                        const firstName = name ? name.split(' ')[0] : 'Personel';
+                        speakAI(
+                            type === 'ÇIKIŞ' ? `Sayın ${firstName}, mesainiz kaydedildi. İyi istirahatler.` : `Sayın ${firstName}, mesainiz başlatıldı. İyi çalışmalar.`,
+                            type === 'ÇIKIŞ' ? ["mesai_bitir_1.mp3", "mesai_bitir2.mp3", "mesai_bitir_3.mp3"] : ["mesai_baslat_1.mp3", "mesai_baslat_2.mp3", "mesai_baslat_3.mp3"],
+                            safeRedirect
+                        );
+                    } catch (e) { 
+                        console.warn("TTS Error:", e); 
+                        safeRedirect();
+                    }
                 }
             };
 
@@ -3126,6 +3203,7 @@
             document.getElementById('status').innerText = "⏳ MESAJ İLETİLİYOR...";
 
             const finalizeMsg = async (lat, lon) => {
+                const businessId = localStorage.getItem('shiftTurbo_business_id');
                 if (!navigator.onLine) {
                     console.log("⚠️ İnternet yok! Mesaj çevrimdışı kuyruğa alınıyor...");
                     playSound('success');
@@ -3138,14 +3216,15 @@
                         mahalle: msg + " (⚡ Çevrimdışı)",
                         lat: lat, lon: lon,
                         device_time: new Date().toISOString(),
-                        is_offline_sync: true
+                        is_offline_sync: true,
+                        business_id: businessId
                     });
                     window.ShiftTurboShared.setObfuscated('shiftTurbo_offline_queue', offlineQueue);
                     finishMessage();
                     return;
                 }
 
-                await _supabase.from('logs').insert([{ personel_name: user, type: 'MESAJ', mahalle: msg, lat: lat, lon: lon }]);
+                await _supabase.from('logs').insert([{ personel_name: user, type: 'MESAJ', mahalle: msg, lat: lat, lon: lon, business_id: businessId }]);
                 finishMessage();
             };
 
@@ -3265,7 +3344,8 @@
                 }
 
                 const clientUUID = getDeviceUUID();
-                const { data: userCheck } = await _supabase.from('users').select('device_id').eq('ad_soyad', user).limit(1);
+                const businessId = localStorage.getItem('shiftTurbo_business_id');
+                const { data: userCheck } = await _supabase.from('users').select('device_id').eq('ad_soyad', user).eq('business_id', businessId).limit(1);
 
                 if (userCheck && userCheck.length > 0) {
                     const dbDeviceId = userCheck[0].device_id;
@@ -3298,6 +3378,7 @@
                         const res = await _supabase
                             .from('logs').select('type, personel_name, created_at')
                             .eq('personel_name', user)
+                            .eq('business_id', businessId)
                             .in('type', ['GİRİŞ', 'ÇIKIŞ']).order('created_at', { ascending: false }).limit(1);
                         if (res && res.data && res.data.length > 0) {
                             lastAction = res.data[0].type;
@@ -3494,7 +3575,8 @@
             }
 
             try {
-                const { data } = await _supabase.from('broadcasts').select('message').order('created_at', { ascending: false });
+                const businessId = localStorage.getItem('shiftTurbo_business_id');
+                const { data } = await _supabase.from('broadcasts').select('message').eq('business_id', businessId).order('created_at', { ascending: false });
                 if (data && data.length > 0) {
                     let matchedMsg = null;
                     // 1. Öncelikle kişiye özel bir duyuru var mı diye tüm listeyi kontrol et (Öncelikli Gösterim)

@@ -315,7 +315,11 @@ async function _sharedSyncLogs(supabaseClient) {
         });
     }
 
+    const businessId = (typeof window !== 'undefined' && window.currentBusinessId) || localStorage.getItem('shiftTurbo_business_id');
     let query = supabaseClient.from('logs').select('*');
+    if (businessId) {
+        query = query.eq('business_id', businessId);
+    }
     if (maxTime) {
         query = query.gt('created_at', maxTime);
     }

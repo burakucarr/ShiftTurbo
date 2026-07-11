@@ -270,13 +270,50 @@ async function checkPin() {
     const pin = currentPin.trim();
     const clientUUID = getDeviceUUID();
 
-    // 🔴 KRİTİK GÜVENLİK DÜZELTMESİ:
-    // GET request (url parametresi) yerine RPC (Remote Procedure Call) kullanarak
-    // POST request atıyoruz. Böylece PIN kodu ağ loglarında plaintext olarak gözükmüyor.
-    const { data, error } = await _supabase.rpc('verify_pin', { 
-        input_pin: pin, 
-        client_device_id: clientUUID 
-    });
+    if (!pin) {
+        playSound('error');
+        return;
+    }
+
+    // 🔴 Supabase bağlantısı henüz hazır değilse bekle
+    if (!_supabase) {
+        document.getElementById('error-msg-body').innerHTML = `<b>⚠️ BAĞLANTI HATASI:</b><br><br>Sunucu bağlantısı henüz hazır değil. Lütfen birkaç saniye bekleyip tekrar deneyin.`;
+        document.getElementById('error-modal').style.display = 'flex';
+        currentPin = ""; document.getElementById('pin-display').innerText = "****";
+        return;
+    }
+
+    let data, error;
+    try {
+        // 🔴 KRİTİK GÜVENLİK DÜZELTMESİ:
+        // GET request (url parametresi) yerine RPC (Remote Procedure Call) kullanarak
+        // POST request atıyoruz. Böylece PIN kodu ağ loglarında plaintext olarak gözükmüyor.
+        ({ data, error } = await _supabase.rpc('verify_pin', { 
+            input_pin: pin, 
+            client_device_id: clientUUID 
+        }));
+    } catch (e) {
+        console.error('PIN doğrulama hatası (exception):', e);
+        playSound('error');
+        document.getElementById('main-card').classList.add('shake');
+        setTimeout(() => document.getElementById('main-card').classList.remove('shake'), 300);
+        currentPin = ""; document.getElementById('pin-display').innerText = "****";
+        document.getElementById('error-msg-body').innerHTML = `<b>⚠️ BAĞLANTI HATASI:</b><br><br>Sunucu ile iletişim kurulamadı. İnternet bağlantınızı kontrol edip tekrar deneyin.<br><br>Hata: ${e.message || e}`;
+        document.getElementById('error-modal').style.display = 'flex';
+        return;
+    }
+
+    // Supabase'den gelen hata (ağ/RPC hatası)
+    if (error) {
+        console.error('Supabase RPC verify_pin hatası:', error);
+        playSound('error');
+        document.getElementById('main-card').classList.add('shake');
+        setTimeout(() => document.getElementById('main-card').classList.remove('shake'), 300);
+        currentPin = ""; document.getElementById('pin-display').innerText = "****";
+        document.getElementById('error-msg-body').innerHTML = `<b>⚠️ SUNUCU HATASI:</b><br><br>PIN doğrulaması sırasında bir hata oluştu. Lütfen tekrar deneyin.<br><br>Hata kodu: ${error.code || ''} ${error.message || ''}`;
+        document.getElementById('error-modal').style.display = 'flex';
+        return;
+    }
 
     if (data && data.success) {
         playSound('success');
@@ -300,10 +337,16 @@ async function checkPin() {
         setTimeout(() => document.getElementById('main-card').classList.remove('shake'), 300);
         currentPin = ""; document.getElementById('pin-display').innerText = "****";
 
-        // Güvenlik: 5 Hatalı deneme veya lockout uyarısı
+        // Güvenlik: Hesap kilitlendi mi?
         if (data && (data.error_type === 'account_locked' || data.lockout)) {
             const minutes = data.locked_until_minutes || (data.remaining_seconds ? Math.ceil(data.remaining_seconds / 60) : 15);
             document.getElementById('error-msg-body').innerHTML = `<b>⛔ HESAP KİLİTLENDİ:</b><br><br>Çok fazla hatalı PIN denemesi yaptınız.<br><br>Lütfen ${minutes} dakika sonra tekrar deneyin.`;
+            document.getElementById('error-modal').style.display = 'flex';
+        } else {
+            // Genel hata: yanlış PIN veya data null döndü
+            const detail = data ? (data.message || data.error_type || JSON.stringify(data)) : 'Sunucudan yanıt alınamadı.';
+            console.warn('checkPin genel hata - data:', data, 'error:', error);
+            document.getElementById('error-msg-body').innerHTML = `<b>❌ PIN HATASI:</b><br><br>PIN doğrulanamadı. Lütfen PIN kodunuzu kontrol edip tekrar deneyin.<br><br><small style="color:#888">${detail}</small>`;
             document.getElementById('error-modal').style.display = 'flex';
         }
     }
