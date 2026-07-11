@@ -3100,19 +3100,26 @@
                 }
 
                 const businessId = localStorage.getItem('shiftTurbo_business_id');
-                const { error } = await _supabase.from('logs').insert([{
-                    personel_name: name,
-                    type: type,
-                    lat: lat,
-                    lon: lon,
-                    mahalle: `DOĞRULUK: ${Math.round(accuracy)}m`,
-                    business_id: businessId
-                }]);
+                let insertResult = null;
+                try {
+                    insertResult = await _supabase.from('logs').insert([{
+                        personel_name: name,
+                        type: type,
+                        lat: lat,
+                        lon: lon,
+                        mahalle: `DOĞRULUK: ${Math.round(accuracy || 999)}m`,
+                        business_id: businessId
+                    }]);
+                } catch (e) {
+                    console.error("Veritabanı kayıt hatası:", e);
+                    insertResult = { error: { message: e.message || String(e) } };
+                }
 
+                const error = insertResult ? insertResult.error : null;
                 if (error) {
                     playSound('error');
                     statusEl.innerText = "❌ VERİTABANI HATASI";
-                    document.getElementById('error-msg-body').innerText = "Kayıt Başarısız: " + error.message;
+                    document.getElementById('error-msg-body').innerText = "Kayıt Başarısız: " + (error.message || "Bilinmeyen sunucu hatası");
                     document.getElementById('error-modal').style.display = 'flex';
                 } else {
                     window.ShiftTurboShared.setStatus(name, type);
