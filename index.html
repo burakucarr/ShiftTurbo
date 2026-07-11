@@ -2557,9 +2557,11 @@
                         const parts = decodedText.split(":");
                         businessId = parts[1] ? parts[1].trim() : null;
                     }
-                    if (businessId) {
-                        localStorage.setItem('shiftTurbo_business_id', businessId);
+                    // Eğer eski QR ise veya boş döndüyse varsayılan dükkanı ata
+                    if (!businessId || businessId === 'undefined' || businessId === 'null') {
+                        businessId = '947d3584-a8bf-4d63-b844-0c5952e22754';
                     }
+                    localStorage.setItem('shiftTurbo_business_id', businessId);
                     playSound('success');
                     await html5QrCode.stop();
                     document.getElementById('qrWrapper').style.display = 'none';
@@ -2592,10 +2594,29 @@
             return uuid;
         }
 
+        function showToast(title, msg, type = 'success') {
+            console.log(`[Toast] ${title}: ${msg} (${type})`);
+            if (type === 'error') {
+                const errorMsgBody = document.getElementById('error-msg-body');
+                const errorModal = document.getElementById('error-modal');
+                if (errorMsgBody && errorModal) {
+                    errorMsgBody.innerHTML = `<b>❌ ${title}:</b><br><br>${msg}`;
+                    errorModal.style.display = 'flex';
+                } else {
+                    alert(`${title}\n\n${msg}`);
+                }
+            }
+        }
+
         async function checkPin() {
             const pin = currentPin.trim();
             const clientUUID = getDeviceUUID();
-            const businessId = localStorage.getItem('shiftTurbo_business_id');
+            let businessId = localStorage.getItem('shiftTurbo_business_id');
+
+            if (businessId === 'undefined' || businessId === 'null' || !businessId) {
+                businessId = '947d3584-a8bf-4d63-b844-0c5952e22754';
+                localStorage.setItem('shiftTurbo_business_id', businessId);
+            }
 
             if (!pin) { playSound('error'); return; }
 
@@ -3140,23 +3161,28 @@
                 const getLocation = (useHighAcc = true) => {
                     let hasFinished = false;
                     
+                    // 6 saniye sonra otomatik olarak "yaklaşık konum" ile devam et (Kilitlenmeyi önler)
                     const manualTimeout = setTimeout(() => {
                         if (hasFinished) return;
                         hasFinished = true;
                         
-                        if (useHighAcc) {
-                            const statusTextEl = document.getElementById('gps-anim-status');
-                            if (statusTextEl) statusTextEl.innerText = '⚠️ BİNA İÇİ HIZLI TARAMA...';
-                            getLocation(false);
-                        } else {
-                            hideGpsTracker();
-                            playSound('error');
-                            if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
-                            document.getElementById('error-msg-body').innerText = "⏱️ ZAMAN AŞIMI: Sinyal zayıf veya GPS kapalı. Lütfen cihaz konumunu kontrol edin.";
-                            document.getElementById('error-modal').style.display = 'flex';
-                            statusEl.innerText = "❌ İŞLEM İPTAL EDİLDİ";
-                        }
-                    }, useHighAcc ? 7000 : 9000);
+                        console.warn("⚠️ GPS Zaman aşımı! Yaklaşık konumla devam ediliyor...");
+                        
+                        // Son bilinen bgLocation varsa onu kullan, yoksa boş koordinat gönder
+                        const fallbackLat = window.bgLocation ? window.bgLocation.latitude : null;
+                        const fallbackLon = window.bgLocation ? window.bgLocation.longitude : null;
+                        const fallbackAcc = window.bgLocation ? window.bgLocation.accuracy : 999;
+                        
+                        finalizeLocation(fallbackAcc, fallbackLat, fallbackLon);
+                    }, 6000);
+
+                    if (!navigator.geolocation) {
+                        if (hasFinished) return;
+                        hasFinished = true;
+                        clearTimeout(manualTimeout);
+                        finalizeLocation(999, null, null);
+                        return;
+                    }
 
                     navigator.geolocation.getCurrentPosition(async (pos) => {
                         if (hasFinished) return;
@@ -3168,24 +3194,14 @@
                         hasFinished = true;
                         clearTimeout(manualTimeout);
 
-                        if (useHighAcc && err.code === 3) {
-                            const statusTextEl = document.getElementById('gps-anim-status');
-                            if (statusTextEl) statusTextEl.innerText = '⚠️ BİNA İÇİ HIZLI TARAMA...';
-                            getLocation(false);
-                            return;
-                        }
-                        hideGpsTracker();
-                        playSound('error');
-                        if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
-                        let errMsg = "Bilinmeyen konum hatası.";
-                        if (err.code === 1) errMsg = "💥 ERİŞİM REDDİ: Tarayıcı veya telefondan KONUM izni (GPS) vermeniz şarttır.";
-                        else if (err.code === 2) errMsg = "📡 SİNYAL YOK: Lütfen cihazınızın Konum (GPS) ayarını açık konuma getirin.";
-                        else if (err.code === 3) errMsg = "⏱️ ZAMAN AŞIMI: Sinyal çok zayıf... Cihaz konumunuzu doğrulayamıyor.";
-
-                        document.getElementById('error-msg-body').innerText = errMsg;
-                        document.getElementById('error-modal').style.display = 'flex';
-                        statusEl.innerText = "❌ İŞLEM İPTAL EDİLDİ";
-                    }, { enableHighAccuracy: useHighAcc, timeout: useHighAcc ? 6000 : 8000, maximumAge: 10000 });
+                        console.warn("GPS Hatası alındı, yaklaşık konumla devam ediliyor:", err);
+                        
+                        const fallbackLat = window.bgLocation ? window.bgLocation.latitude : null;
+                        const fallbackLon = window.bgLocation ? window.bgLocation.longitude : null;
+                        const fallbackAcc = window.bgLocation ? window.bgLocation.accuracy : 999;
+                        
+                        finalizeLocation(fallbackAcc, fallbackLat, fallbackLon);
+                    }, { enableHighAccuracy: useHighAcc, timeout: 5000, maximumAge: 10000 });
                 };
                 getLocation(true);
             }
