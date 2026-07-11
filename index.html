@@ -3154,56 +3154,56 @@
                 }
             };
 
+            // 🛰️ Animasyonlu GPS ekranı kaldırıldı. İşlem doğrudan arka planda hızlı konum almaya çalışır.
+            statusEl.innerText = "⏳ İŞLEM KAYDEDİLİYOR...";
+            
+            const startBackgroundLocationCheck = () => {
+                let hasFinished = false;
+
+                // Max 2 saniye bekler, alamazsa doğrudan devam eder (Donmayı önler)
+                const timeoutId = setTimeout(() => {
+                    if (hasFinished) return;
+                    hasFinished = true;
+                    console.log("⏱️ Arka plan GPS zaman aşımı. Yaklaşık konumla devam ediliyor...");
+                    const fallbackLat = window.bgLocation ? window.bgLocation.latitude : null;
+                    const fallbackLon = window.bgLocation ? window.bgLocation.longitude : null;
+                    const fallbackAcc = window.bgLocation ? window.bgLocation.accuracy : 999;
+                    finalizeLocation(fallbackAcc, fallbackLat, fallbackLon);
+                }, 2000);
+
+                if (!navigator.geolocation) {
+                    if (hasFinished) return;
+                    hasFinished = true;
+                    clearTimeout(timeoutId);
+                    finalizeLocation(999, null, null);
+                    return;
+                }
+
+                navigator.geolocation.getCurrentPosition(
+                    async (pos) => {
+                        if (hasFinished) return;
+                        hasFinished = true;
+                        clearTimeout(timeoutId);
+                        finalizeLocation(pos.coords.accuracy, pos.coords.latitude, pos.coords.longitude);
+                    },
+                    (err) => {
+                        if (hasFinished) return;
+                        hasFinished = true;
+                        clearTimeout(timeoutId);
+                        console.warn("Arka plan GPS hatası:", err);
+                        const fallbackLat = window.bgLocation ? window.bgLocation.latitude : null;
+                        const fallbackLon = window.bgLocation ? window.bgLocation.longitude : null;
+                        const fallbackAcc = window.bgLocation ? window.bgLocation.accuracy : 999;
+                        finalizeLocation(fallbackAcc, fallbackLat, fallbackLon);
+                    },
+                    { enableHighAccuracy: false, timeout: 1800, maximumAge: 10000 }
+                );
+            };
+
             if (window.bgLocation && window.bgLocation.accuracy <= 40) {
                 finalizeLocation(window.bgLocation.accuracy, window.bgLocation.latitude, window.bgLocation.longitude);
             } else {
-                showGpsTracker();
-                const getLocation = (useHighAcc = true) => {
-                    let hasFinished = false;
-                    
-                    // 6 saniye sonra otomatik olarak "yaklaşık konum" ile devam et (Kilitlenmeyi önler)
-                    const manualTimeout = setTimeout(() => {
-                        if (hasFinished) return;
-                        hasFinished = true;
-                        
-                        console.warn("⚠️ GPS Zaman aşımı! Yaklaşık konumla devam ediliyor...");
-                        
-                        // Son bilinen bgLocation varsa onu kullan, yoksa boş koordinat gönder
-                        const fallbackLat = window.bgLocation ? window.bgLocation.latitude : null;
-                        const fallbackLon = window.bgLocation ? window.bgLocation.longitude : null;
-                        const fallbackAcc = window.bgLocation ? window.bgLocation.accuracy : 999;
-                        
-                        finalizeLocation(fallbackAcc, fallbackLat, fallbackLon);
-                    }, 6000);
-
-                    if (!navigator.geolocation) {
-                        if (hasFinished) return;
-                        hasFinished = true;
-                        clearTimeout(manualTimeout);
-                        finalizeLocation(999, null, null);
-                        return;
-                    }
-
-                    navigator.geolocation.getCurrentPosition(async (pos) => {
-                        if (hasFinished) return;
-                        hasFinished = true;
-                        clearTimeout(manualTimeout);
-                        finalizeLocation(pos.coords.accuracy, pos.coords.latitude, pos.coords.longitude);
-                    }, (err) => {
-                        if (hasFinished) return;
-                        hasFinished = true;
-                        clearTimeout(manualTimeout);
-
-                        console.warn("GPS Hatası alındı, yaklaşık konumla devam ediliyor:", err);
-                        
-                        const fallbackLat = window.bgLocation ? window.bgLocation.latitude : null;
-                        const fallbackLon = window.bgLocation ? window.bgLocation.longitude : null;
-                        const fallbackAcc = window.bgLocation ? window.bgLocation.accuracy : 999;
-                        
-                        finalizeLocation(fallbackAcc, fallbackLat, fallbackLon);
-                    }, { enableHighAccuracy: useHighAcc, timeout: 5000, maximumAge: 10000 });
-                };
-                getLocation(true);
+                startBackgroundLocationCheck();
             }
         }
 
