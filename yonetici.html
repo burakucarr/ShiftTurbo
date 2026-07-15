@@ -5011,14 +5011,12 @@ Mesajın sonuna 'ShiftTurbo Güvenlik Sistemi' imzasını ekle.`;
             window.toggleQRModal = toggleQRModal;
 
             function printQRCode() {
-                const container = document.getElementById('qr-code-container');
-                if (!container) return;
-                
                 const win = window.open('', '_blank');
                 win.document.write(`
                     <html>
                     <head>
                         <title>ShiftTurbo İşletme QR Kodu</title>
+                        <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"><\/script>
                         <style>
                             body {
                                 display: flex;
@@ -5091,15 +5089,25 @@ Mesajın sonuna 'ShiftTurbo Güvenlik Sistemi' imzasını ekle.`;
                             <h1>SHİFTTURBO</h1>
                             <div class="business-name">${window.currentBusinessName || 'YENİ İŞLETME'}</div>
                             <div class="subtitle">İŞLETME GİRİŞ KAREKODU</div>
-                            <div class="qr-container">
-                                ${container.innerHTML}
-                            </div>
+                            <div class="qr-container" id="print-qr-canvas"></div>
                             <p>Lütfen mesainizi başlatmak veya bitirmek için mobil cihazınızdaki terminalden bu karekodu okutun.</p>
                         </div>
                         <script>
                             window.onload = function() {
-                                window.print();
-                                setTimeout(function() { window.close(); }, 500);
+                                // Kalıcı statik QR oluştur
+                                new QRCode(document.getElementById('print-qr-canvas'), {
+                                    text: 'SHIFTURBO:${window.currentBusinessId}',
+                                    width: 220,
+                                    height: 220,
+                                    colorDark : "#000000",
+                                    colorLight : "#ffffff",
+                                    correctLevel : QRCode.CorrectLevel.H
+                                });
+                                // QR oluşturulduktan sonra biraz süre verip yazdır
+                                setTimeout(function() {
+                                    window.print();
+                                    window.close();
+                                }, 500);
                             };
                         <\/script>
                     </body>
