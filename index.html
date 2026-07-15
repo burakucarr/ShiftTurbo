@@ -2553,15 +2553,29 @@
                 const upperText = decodedText.toUpperCase();
                 if (upperText.includes("SHIFTURBO:") || upperText.includes("SHIFT")) {
                     let businessId = null;
+                    let totpToken = null;
+
                     if (upperText.includes("SHIFTURBO:")) {
+                        // Format: SHIFTURBO:{business_id}:{totp_token} (yeni dinamik QR)
+                        // veya:   SHIFTURBO:{business_id}              (eski statik QR — geriye dönük uyumlu)
                         const parts = decodedText.split(":");
                         businessId = parts[1] ? parts[1].trim() : null;
+                        totpToken = parts[2] ? parts[2].trim() : null;
                     }
-                    // Eğer eski QR ise veya boş döndüyse varsayılan dükkanı ata
+
+                    // Geçersiz veya eski format fallback
                     if (!businessId || businessId === 'undefined' || businessId === 'null') {
                         businessId = '947d3584-a8bf-4d63-b844-0c5952e22754';
                     }
+
                     localStorage.setItem('shiftTurbo_business_id', businessId);
+                    // TOTP token'ı kaydet (dinamik QR); yoksa eski değeri temizle
+                    if (totpToken) {
+                        localStorage.setItem('shiftTurbo_totp_token', totpToken);
+                    } else {
+                        localStorage.removeItem('shiftTurbo_totp_token');
+                    }
+
                     playSound('success');
                     await html5QrCode.stop();
                     document.getElementById('qrWrapper').style.display = 'none';
@@ -2581,6 +2595,7 @@
                 }
             });
         }
+
 
         function getDeviceUUID() {
             let uuid = localStorage.getItem('shiftTurbo_device_uuid');
@@ -2612,6 +2627,7 @@
             const pin = currentPin.trim();
             const clientUUID = getDeviceUUID();
             let businessId = localStorage.getItem('shiftTurbo_business_id');
+            let totpToken = localStorage.getItem('shiftTurbo_totp_token') || null;
 
             if (businessId === 'undefined' || businessId === 'null' || !businessId) {
                 businessId = '947d3584-a8bf-4d63-b844-0c5952e22754';
@@ -2633,13 +2649,11 @@
                 return;
             }
 
-            // --- KATMAN 1: 3-parametreli yeni RPC (business_id ile) ---
+            // --- KATMAN 1: 3-parametreli yeni RPC (business_id + totp_token ile) ---
             try {
-                const result = await _supabase.rpc('verify_pin', {
-                    input_pin: pin,
-                    client_device_id: clientUUID,
-                    business_id: businessId
-                });
+                const rpcParams = { input_pin: pin, client_device_id: clientUUID, business_id: businessId };
+                if (totpToken) rpcParams.input_totp_token = totpToken;
+                const result = await _supabase.rpc('verify_pin', rpcParams);
                 if (!result.error) {
                     console.log("✅ verify_pin (3-param) başarılı:", result.data);
                     return _handlePinResult(result.data, pin, clientUUID, businessId);

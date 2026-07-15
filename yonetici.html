@@ -3492,22 +3492,69 @@ Mesajın sonuna 'ShiftTurbo Güvenlik Sistemi' imzasını ekle.`;
         </div>
     </div>
 
-    <!-- 🖨️ QR KOD GÖSTERİM VE YAZDIRMA MODALİ -->
-    <div id="qr-modal" class="cyber-modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(2, 6, 23, 0.85); justify-content: center; align-items: center; z-index: 3000; backdrop-filter: blur(10px);">
-        <div class="cyber-modal" style="background: var(--table-row-bg); border: 2px solid var(--primary); padding: 30px; border-radius: 20px; text-align: center; max-width: 400px; width: 90%; box-shadow: 0 0 30px rgba(244, 129, 32, 0.25);">
-            <h3 style="font-family: 'Orbitron', sans-serif; color: var(--primary); margin-bottom: 20px; font-size: 16px; letter-spacing: 2px;">İŞLETME GİRİŞ KAREKODU</h3>
-            <div id="qr-code-container" style="background: white; padding: 20px; border-radius: 12px; display: inline-block; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
+    <!-- 🔄 DİNAMİK TOTP QR KOD GÖSTERİM MODALİ -->
+    <div id="qr-modal" class="cyber-modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(2, 6, 23, 0.88); justify-content: center; align-items: center; z-index: 3000; backdrop-filter: blur(12px);">
+        <div class="cyber-modal" style="background: var(--table-row-bg); border: 2px solid var(--primary); padding: 28px 28px 24px; border-radius: 22px; text-align: center; max-width: 380px; width: 92%; box-shadow: 0 0 40px rgba(244, 129, 32, 0.3);">
+            <h3 style="font-family: 'Orbitron', sans-serif; color: var(--primary); margin-bottom: 6px; font-size: 14px; letter-spacing: 2px;">DİNAMİK GİRİŞ KAREKODU</h3>
+            <p style="font-family: 'Poppins', sans-serif; font-size: 10px; color: var(--text-sub); margin: 0 0 16px 0; letter-spacing: 1px; text-transform: uppercase;">Her 30 saniyede bir güncellenir</p>
+
+            <!-- Countdown Bar -->
+            <div class="totp-countdown-wrapper">
+                <div class="totp-countdown-label">
+                    <i class="fas fa-shield-alt" style="color: var(--primary); font-size: 10px;"></i>
+                    Yeni koda kalan süre: <span class="totp-seconds" id="modal-totp-seconds">30</span>sn
+                </div>
+                <div class="totp-progress-bar-track">
+                    <div class="totp-progress-bar-fill" id="modal-totp-bar" style="width: 100%;"></div>
+                </div>
+            </div>
+
+            <!-- QR Kod -->
+            <div id="qr-code-container" style="background: white; padding: 18px; border-radius: 14px; display: inline-block; margin-bottom: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.5);">
                 <div id="qrcode-canvas"></div>
             </div>
-            <p style="font-family: 'Poppins', sans-serif; font-size: 11px; color: var(--text-sub); margin-bottom: 20px; line-height: 1.5;">
-                Bu karekodu yazdırıp işletme girişine asın.<br>Personel terminalinden bu karekod okutularak sisteme giriş yapılacaktır.
+
+            <p style="font-family: 'Poppins', sans-serif; font-size: 10px; color: var(--text-sub); margin-bottom: 18px; line-height: 1.6;">
+                Personel bu kodu telefonuyla okutarak PIN ekranına erişir.<br>
+                <span style="color: rgba(244,129,32,0.7);">⚠️ QR kodu ekran görüntüsü alarak paylaşmayın.</span>
             </p>
+
             <div style="display: flex; gap: 10px; justify-content: center;">
-                <button class="btn-cyber btn-green" onclick="printQRCode()">🖨️ YAZDIR</button>
-                <button class="btn-cyber" style="background: rgba(255,255,255,0.05); color: #fff; border-color: #475569;" onclick="toggleQRModal(false)">KAPAT</button>
+                <button class="btn-cyber" style="background: rgba(139, 92, 246, 0.15); color: #a78bfa; border-color: #8b5cf6; font-size: 11px; padding: 10px 14px;" onclick="openKioskMode()">
+                    <i class="fas fa-tv"></i> KİOSK MODU
+                </button>
+                <button class="btn-cyber btn-green" style="font-size: 11px; padding: 10px 14px;" onclick="printQRCode()">🖨️ YAZDIR</button>
+                <button class="btn-cyber" style="background: rgba(255,255,255,0.05); color: #fff; border-color: #475569; font-size: 11px; padding: 10px 14px;" onclick="toggleQRModal(false)">KAPAT</button>
             </div>
         </div>
     </div>
+
+    <!-- 🖥️ KİOSK MODU (TAM EKRAN DİNAMİK QR) -->
+    <div id="kiosk-overlay">
+        <div class="kiosk-inner">
+            <div class="kiosk-logo-row">
+                <img src="logom.png" alt="Logo" style="width:36px; height:36px; object-fit:contain; filter: drop-shadow(0 0 10px var(--primary));">
+                <div class="kiosk-logo-text">SHİFT<span>TURBO</span></div>
+            </div>
+            <div class="kiosk-business-name" id="kiosk-business-name">İŞLETME</div>
+            <div class="kiosk-qr-card">
+                <div id="kiosk-qr-canvas" style="width:280px; height:280px;"></div>
+            </div>
+            <div class="kiosk-countdown-wrapper">
+                <div class="kiosk-countdown-row">
+                    <span class="kiosk-countdown-text"><i class="fas fa-sync-alt" style="margin-right:5px;"></i>Yeni koda kalan</span>
+                    <span class="kiosk-seconds-badge" id="kiosk-totp-seconds">30</span>
+                </div>
+                <div class="kiosk-progress-track">
+                    <div class="kiosk-progress-fill" id="kiosk-totp-bar" style="width: 100%;"></div>
+                </div>
+            </div>
+            <p class="kiosk-instruction">
+                Personel terminali uygulamasını açın ve<br>telefonunuzu bu ekrandaki karekoda doğrultun.
+            </p>
+        </div>
+    </div>
+    <button class="kiosk-exit-btn" id="kiosk-exit-btn" onclick="closeKioskMode()">✕ Kiosk'tan Çık</button>
 
     <!-- 🖥️ YÖNETİCİ ANA EKRANI (ADMIN PANEL) -->
     <div id="adminPanel" style="display: none;">
@@ -3542,7 +3589,7 @@ Mesajın sonuna 'ShiftTurbo Güvenlik Sistemi' imzasını ekle.`;
                 </div>
                 <button class="btn-cyber" id="qr-code-btn"
                     style="padding: 10px 15px; font-size: 12px; background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid #10b981; cursor: pointer;"
-                    onclick="toggleQRModal(true)" title="İşletme Giriş QR Kodu"><i class="fas fa-qrcode"></i> İŞLETME QR</button>
+                    onclick="toggleQRModal(true)" title="Dinamik İşletme Giriş QR Kodu"><i class="fas fa-qrcode"></i> DİNAMİK QR</button>
                 <button class="btn-cyber" id="tv-mode-btn"
                     style="padding: 10px 15px; font-size: 12px; background: rgba(139, 92, 246, 0.1); color: #a78bfa; border: 1px solid #8b5cf6; cursor: pointer;"
                     onclick="toggleTVMode()" title="İzleme Modu / TV Paneli"><i class="fas fa-tv"></i> İZLEME MODU</button>
@@ -4451,7 +4498,7 @@ Mesajın sonuna 'ShiftTurbo Güvenlik Sistemi' imzasını ekle.`;
                         return;
                     }
                     
-                    const { data: busData, error: busError } = await _supabase.from('businesses').select('id, business_name').eq('owner_id', userId).limit(1);
+                    const { data: busData, error: busError } = await _supabase.from('businesses').select('id, business_name, qr_secret').eq('owner_id', userId).limit(1);
                     
                     if (busError) {
                         console.error("İşletme sorgu hatası:", busError);
@@ -4466,6 +4513,7 @@ Mesajın sonuna 'ShiftTurbo Güvenlik Sistemi' imzasını ekle.`;
                     
                     window.currentBusinessId = busData[0].id;
                     window.currentBusinessName = busData[0].business_name;
+                    window.currentQrSecret = busData[0].qr_secret || null;
                 } catch(e) {
                     console.error("Onboarding hatası:", e);
                     showToast("HATA", "Sistem hatası.", "error");
@@ -4529,9 +4577,15 @@ Mesajın sonuna 'ShiftTurbo Güvenlik Sistemi' imzasını ekle.`;
                         return;
                     }
 
+                    // qr_secret ön yüz tarafında rastgele üretiliyor (DB default ile de olur, ama burada garantilemek için)
+                    const arr = new Uint8Array(32);
+                    crypto.getRandomValues(arr);
+                    const qrSecret = Array.from(arr).map(b => b.toString(16).padStart(2, '0')).join('');
+
                     const { data, error } = await _supabase.from('businesses').insert([{
                         business_name: name,
-                        owner_id: userId
+                        owner_id: userId,
+                        qr_secret: qrSecret
                     }]).select();
 
                     if (error) {
@@ -4542,6 +4596,7 @@ Mesajın sonuna 'ShiftTurbo Güvenlik Sistemi' imzasını ekle.`;
                     if (data && data.length > 0) {
                         window.currentBusinessId = data[0].id;
                         window.currentBusinessName = data[0].business_name;
+                        window.currentQrSecret = data[0].qr_secret || qrSecret;
                         document.documentElement.classList.remove('onboarding-active');
                         showToast("BAŞARILI", `İşletmeniz (${name}) başarıyla oluşturuldu!`, "success");
                         
@@ -4557,28 +4612,100 @@ Mesajın sonuna 'ShiftTurbo Güvenlik Sistemi' imzasını ekle.`;
             }
             window.registerBusiness = registerBusiness;
 
-            let qrcodeInstance = null;
+            // ═══════════════════════════════════════════════════════
+            // 🔄 TOTP Algoritmasi — Web Crypto API (kütüphanesiz, native)
+            // ═══════════════════════════════════════════════════════
+            async function generateTOTPToken(secret, counter) {
+                const keyData = new TextEncoder().encode(secret);
+                const key = await crypto.subtle.importKey(
+                    'raw', keyData, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']
+                );
+                const buf = new ArrayBuffer(8);
+                const view = new DataView(buf);
+                const big = BigInt(counter);
+                view.setUint32(0, Number(big >> 32n) >>> 0, false);
+                view.setUint32(4, Number(big & 0xffffffffn) >>> 0, false);
+                const sig = await crypto.subtle.sign('HMAC', key, buf);
+                const arr = new Uint8Array(sig);
+                const offset = arr[arr.length - 1] & 0xf;
+                const code = (((arr[offset] & 0x7f) << 24) | ((arr[offset+1] & 0xff) << 16) | ((arr[offset+2] & 0xff) << 8) | (arr[offset+3] & 0xff)) % 1_000_000;
+                return code.toString().padStart(6, '0');
+            }
+
+            // QR içeriği: SHIFTURBO:{business_id}:{6-haneli-totp-token}
+            async function buildTOTPQRText() {
+                const secret = window.currentQrSecret;
+                const biz = window.currentBusinessId;
+                if (!secret || !biz) return `SHIFTURBO:${biz}`; // Fallback
+                const counter = Math.floor(Date.now() / 1000 / 30);
+                const token = await generateTOTPToken(secret, counter);
+                return `SHIFTURBO:${biz}:${token}`;
+            }
+
+            // ═══════════════════════════════════════════════════════
+            // 📲 DİNAMİK QR MODAL
+            // ═══════════════════════════════════════════════════════
+            let _totpModalInterval = null;
+            let _totpModalQrInstance = null;
+
+            async function _refreshModalQR() {
+                const canvas = document.getElementById('qrcode-canvas');
+                if (!canvas) return;
+                const qrText = await buildTOTPQRText();
+                canvas.innerHTML = '';
+                canvas.classList.remove('qr-refresh-anim');
+                void canvas.offsetWidth; // reflow — animasyonu sıfırla
+                canvas.classList.add('qr-refresh-anim');
+                _totpModalQrInstance = new QRCode(canvas, {
+                    text: qrText,
+                    width: 200, height: 200,
+                    colorDark: '#000000', colorLight: '#ffffff',
+                    correctLevel: QRCode.CorrectLevel.H
+                });
+            }
+
+            function _startModalCountdown() {
+                const secEl = document.getElementById('modal-totp-seconds');
+                const barEl = document.getElementById('modal-totp-bar');
+                if (_totpModalInterval) clearInterval(_totpModalInterval);
+
+                let lastPeriod = -1;
+
+                _totpModalInterval = setInterval(async () => {
+                    const now = Math.floor(Date.now() / 1000);
+                    const period = Math.floor(now / 30);
+                    const remaining = 30 - (now % 30);
+                    const pct = (remaining / 30) * 100;
+
+                    if (secEl) {
+                        secEl.textContent = remaining;
+                        secEl.classList.toggle('urgent', remaining <= 7);
+                    }
+                    if (barEl) {
+                        barEl.style.width = pct + '%';
+                        barEl.classList.toggle('urgent', remaining <= 7);
+                    }
+
+                    // Periyot değişince QR kodu yenile
+                    if (period !== lastPeriod) {
+                        lastPeriod = period;
+                        await _refreshModalQR();
+                    }
+                }, 1000);
+            }
+
+            let qrcodeInstance = null; // Eski referans (uyumluluk için korunuyor)
+
             function toggleQRModal(show) {
                 const modal = document.getElementById('qr-modal');
                 if (!modal) return;
-                
                 if (show) {
                     modal.style.display = 'flex';
-                    const container = document.getElementById('qrcode-canvas');
-                    if (container) {
-                        container.innerHTML = '';
-                        const qrText = `SHIFTURBO:${window.currentBusinessId}`;
-                        qrcodeInstance = new QRCode(container, {
-                            text: qrText,
-                            width: 200,
-                            height: 200,
-                            colorDark : "#000000",
-                            colorLight : "#ffffff",
-                            correctLevel : QRCode.CorrectLevel.H
-                        });
-                    }
+                    _refreshModalQR();
+                    _startModalCountdown();
                 } else {
                     modal.style.display = 'none';
+                    if (_totpModalInterval) { clearInterval(_totpModalInterval); _totpModalInterval = null; }
                 }
             }
             window.toggleQRModal = toggleQRModal;
@@ -4682,6 +4809,101 @@ Mesajın sonuna 'ShiftTurbo Güvenlik Sistemi' imzasını ekle.`;
             }
             window.printQRCode = printQRCode;
 
+            // ═══════════════════════════════════════════════════════
+            // 🖥️ KİOSK MODU
+            // ═══════════════════════════════════════════════════════
+            let _totpKioskInterval = null;
+            let _totpKioskQrInstance = null;
+
+            async function _refreshKioskQR() {
+                const canvas = document.getElementById('kiosk-qr-canvas');
+                if (!canvas) return;
+                const qrText = await buildTOTPQRText();
+                canvas.innerHTML = '';
+                canvas.classList.remove('qr-refresh-anim');
+                void canvas.offsetWidth;
+                canvas.classList.add('qr-refresh-anim');
+                _totpKioskQrInstance = new QRCode(canvas, {
+                    text: qrText,
+                    width: 280, height: 280,
+                    colorDark: '#000000', colorLight: '#ffffff',
+                    correctLevel: QRCode.CorrectLevel.H
+                });
+            }
+
+            function _startKioskCountdown() {
+                const secEl = document.getElementById('kiosk-totp-seconds');
+                const barEl = document.getElementById('kiosk-totp-bar');
+                if (_totpKioskInterval) clearInterval(_totpKioskInterval);
+
+                let lastPeriod = -1;
+
+                _totpKioskInterval = setInterval(async () => {
+                    const now = Math.floor(Date.now() / 1000);
+                    const period = Math.floor(now / 30);
+                    const remaining = 30 - (now % 30);
+                    const pct = (remaining / 30) * 100;
+
+                    if (secEl) {
+                        secEl.textContent = remaining;
+                        secEl.classList.toggle('urgent', remaining <= 7);
+                    }
+                    if (barEl) {
+                        barEl.style.width = pct + '%';
+                        barEl.classList.toggle('urgent', remaining <= 7);
+                    }
+
+                    if (period !== lastPeriod) {
+                        lastPeriod = period;
+                        await _refreshKioskQR();
+                    }
+                }, 1000);
+            }
+
+            function openKioskMode() {
+                const overlay = document.getElementById('kiosk-overlay');
+                const exitBtn = document.getElementById('kiosk-exit-btn');
+                const nameEl = document.getElementById('kiosk-business-name');
+                if (!overlay) return;
+
+                // Modal'i kapat
+                toggleQRModal(false);
+
+                // İşletme adını göster
+                if (nameEl) nameEl.textContent = window.currentBusinessName || 'DÜKKANIM';
+
+                overlay.classList.add('active');
+                if (exitBtn) exitBtn.classList.add('visible');
+
+                // Tam ekran iste (mümkünse)
+                if (document.documentElement.requestFullscreen) {
+                    document.documentElement.requestFullscreen().catch(() => {});
+                }
+
+                _refreshKioskQR();
+                _startKioskCountdown();
+            }
+            window.openKioskMode = openKioskMode;
+
+            function closeKioskMode() {
+                const overlay = document.getElementById('kiosk-overlay');
+                const exitBtn = document.getElementById('kiosk-exit-btn');
+                if (overlay) overlay.classList.remove('active');
+                if (exitBtn) exitBtn.classList.remove('visible');
+                if (_totpKioskInterval) { clearInterval(_totpKioskInterval); _totpKioskInterval = null; }
+                // Tam ekrandan çık
+                if (document.fullscreenElement && document.exitFullscreen) {
+                    document.exitFullscreen().catch(() => {});
+                }
+            }
+            window.closeKioskMode = closeKioskMode;
+
+            // Escape tuşuyla kiosk'tan çık
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && document.getElementById('kiosk-overlay')?.classList.contains('active')) {
+                    closeKioskMode();
+                }
+            });
 
             function logout() {
                 document.getElementById('logout-modal').style.display = 'flex';
