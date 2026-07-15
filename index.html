@@ -2655,10 +2655,17 @@
                 if (totpToken) rpcParams.input_totp_token = totpToken;
                 const result = await _supabase.rpc('verify_pin', rpcParams);
                 if (!result.error) {
-                    console.log("✅ verify_pin (3-param) başarılı:", result.data);
-                    return _handlePinResult(result.data, pin, clientUUID, businessId);
+                    if (result.data && result.data.success) {
+                        console.log("✅ verify_pin (3-param) başarılı:", result.data);
+                        return _handlePinResult(result.data, pin, clientUUID, businessId);
+                    } else if (result.data && result.data.lockout) {
+                        return _handlePinResult(result.data, pin, clientUUID, businessId);
+                    } else {
+                        console.warn("RPC Hatalı PIN veya başarısız dedi, fallback'e geçiliyor...", result.data);
+                    }
+                } else {
+                    console.warn("verify_pin 3-param hatası:", result.error);
                 }
-                console.warn("verify_pin 3-param hatası:", result.error);
             } catch(e) {
                 console.warn("verify_pin 3-param exception:", e);
             }
@@ -2670,10 +2677,17 @@
                     client_device_id: clientUUID
                 });
                 if (!result2.error) {
-                    console.log("✅ verify_pin (2-param) başarılı:", result2.data);
-                    return _handlePinResult(result2.data, pin, clientUUID, businessId);
+                    if (result2.data && result2.data.success) {
+                        console.log("✅ verify_pin (2-param) başarılı:", result2.data);
+                        return _handlePinResult(result2.data, pin, clientUUID, businessId);
+                    } else if (result2.data && result2.data.lockout) {
+                        return _handlePinResult(result2.data, pin, clientUUID, businessId);
+                    } else {
+                        console.warn("RPC(2-param) Hatalı PIN dedi, fallback'e geçiliyor...", result2.data);
+                    }
+                } else {
+                    console.warn("verify_pin 2-param hatası:", result2.error);
                 }
-                console.warn("verify_pin 2-param hatası:", result2.error);
             } catch(e) {
                 console.warn("verify_pin 2-param exception:", e);
             }
