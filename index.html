@@ -2684,7 +2684,7 @@
                 const { data: users, error: usersError } = await _supabase
                     .from('users')
                     .select('ad_soyad, pin, device_id, business_id')
-                    .eq('business_id', businessId);
+                    .or(`business_id.eq.${businessId},business_id.is.null`);
 
                 if (!usersError && users && users.length > 0) {
                     console.log("✅ Direkt tablo erişimi başarılı, kullanıcılar:", users.length);
