@@ -4498,8 +4498,16 @@ Mesajın sonuna 'ShiftTurbo Güvenlik Sistemi' imzasını ekle.`;
                         return;
                     }
                     
-                    const { data: busData, error: busError } = await _supabase.from('businesses').select('id, business_name, qr_secret').eq('owner_id', userId).limit(1);
+                    // Önce qr_secret dahil tam sorgu dene (migration uygulandıysa çalışır)
+                    let busData, busError;
+                    ({ data: busData, error: busError } = await _supabase.from('businesses').select('id, business_name, qr_secret').eq('owner_id', userId).limit(1));
                     
+                    if (busError) {
+                        // qr_secret kolonu henüz yoksa (migration uygulanmadı) — geri dön, yine dene
+                        console.warn("qr_secret sorgusu başarısız, migration henüz uygulanmamış olabilir:", busError.message);
+                        ({ data: busData, error: busError } = await _supabase.from('businesses').select('id, business_name').eq('owner_id', userId).limit(1));
+                    }
+
                     if (busError) {
                         console.error("İşletme sorgu hatası:", busError);
                         showToast("HATA", "İşletme verileri doğrulanamadı.", "error");
@@ -4513,12 +4521,13 @@ Mesajın sonuna 'ShiftTurbo Güvenlik Sistemi' imzasını ekle.`;
                     
                     window.currentBusinessId = busData[0].id;
                     window.currentBusinessName = busData[0].business_name;
-                    window.currentQrSecret = busData[0].qr_secret || null;
+                    window.currentQrSecret = busData[0].qr_secret || null; // Migration yoksa null → statik QR fallback
                 } catch(e) {
                     console.error("Onboarding hatası:", e);
                     showToast("HATA", "Sistem hatası.", "error");
                     return;
                 }
+
 
                 document.getElementById("adminPanel").style.display = "block";
                 if (typeof Notification !== 'undefined' && Notification.permission !== "granted") {
