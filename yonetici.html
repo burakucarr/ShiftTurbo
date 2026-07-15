@@ -3383,11 +3383,7 @@ Mesajın sonuna 'ShiftTurbo Güvenlik Sistemi' imzasını ekle.`;
             display: block;
         }
 
-        #kiosk-qr-canvas canvas {
-            display: none !important;
-        }
-
-        #kiosk-qr-canvas img {
+        #kiosk-qr-canvas canvas, #kiosk-qr-canvas img {
             display: block !important;
             margin: 0 auto !important;
             width: 280px !important;
@@ -5188,8 +5184,10 @@ Mesajın sonuna 'ShiftTurbo Güvenlik Sistemi' imzasını ekle.`;
                     document.documentElement.requestFullscreen().catch(() => {});
                 }
 
-                _refreshKioskQR();
-                _startKioskCountdown();
+                setTimeout(() => {
+                    _refreshKioskQR();
+                    _startKioskCountdown();
+                }, 100);
             }
             window.openKioskMode = openKioskMode;
 
