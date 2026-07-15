@@ -1,4 +1,4 @@
-const CACHE_NAME = 'shift-turbo-v20'; // Sürüm yükseltmek zorunlu cache silmeyi tetikler
+const CACHE_NAME = 'shift-turbo-v21'; // Sürüm yükseltmek zorunlu cache silmeyi tetikler
 const ASSETS_TO_CACHE = [
   './',
   './index.html',

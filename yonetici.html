@@ -3193,6 +3193,293 @@ Mesajın sonuna 'ShiftTurbo Güvenlik Sistemi' imzasını ekle.`;
                 width: 98%;
             }
         }
+
+        /* ═══════════════════════════════════════════════════
+           🔄 TOTP DİNAMİK QR — COUNTDOWN VE KİOSK STİLLERİ
+           ═══════════════════════════════════════════════════ */
+
+        /* QR Modal Yeni Countdown Bölümü */
+        .totp-countdown-wrapper {
+            width: 100%;
+            margin-bottom: 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .totp-countdown-label {
+            font-family: 'Poppins', sans-serif;
+            font-size: 11px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.5);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .totp-countdown-label .totp-seconds {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--primary);
+            min-width: 24px;
+            text-align: right;
+            transition: color 0.3s;
+        }
+
+        .totp-countdown-label .totp-seconds.urgent {
+            color: #ef4444;
+            animation: urgentPulse 0.5s infinite alternate;
+        }
+
+        @keyframes urgentPulse {
+            from { opacity: 1; }
+            to   { opacity: 0.4; }
+        }
+
+        .totp-progress-bar-track {
+            width: 100%;
+            height: 5px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .totp-progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), #fbbf24);
+            border-radius: 10px;
+            transition: width 1s linear, background-color 0.5s;
+            transform-origin: left;
+        }
+
+        .totp-progress-bar-fill.urgent {
+            background: linear-gradient(90deg, #ef4444, #f97316);
+        }
+
+        /* QR değişirken flash animasyonu */
+        @keyframes qrFlash {
+            0%   { opacity: 0; transform: scale(0.92); }
+            60%  { opacity: 1; transform: scale(1.02); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+
+        .qr-refresh-anim {
+            animation: qrFlash 0.4s ease-out forwards;
+        }
+
+        /* ─── KİOSK MODU (Tam Ekran Terminal) ─────────────────────────── */
+
+        #kiosk-overlay {
+            position: fixed;
+            inset: 0;
+            background: #030712;
+            z-index: 99999; /* Ensure it covers everything, including navbar */
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0;
+            overflow: hidden;
+        }
+
+        #kiosk-overlay.active {
+            display: flex;
+        }
+
+        /* Izgara arkaplan — panelle aynı stil */
+        #kiosk-overlay::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(rgba(244, 129, 32, 0.10) 1px, transparent 1px),
+                        linear-gradient(90deg, rgba(244, 129, 32, 0.10) 1px, transparent 1px);
+            background-size: 30px 30px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .kiosk-inner {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 24px;
+            width: 100%;
+            max-width: 520px;
+            padding: 40px 30px;
+            box-sizing: border-box;
+        }
+
+        .kiosk-logo-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .kiosk-logo-text {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 28px;
+            font-weight: 900;
+            color: #fff;
+            letter-spacing: 4px;
+        }
+
+        .kiosk-logo-text span {
+            color: var(--primary);
+        }
+
+        .kiosk-business-name {
+            font-family: 'Poppins', sans-serif;
+            font-size: 15px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.55);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            text-align: center;
+        }
+
+        .kiosk-instruction {
+            font-family: 'Poppins', sans-serif;
+            font-size: 14px;
+            font-weight: 400;
+            color: rgba(255, 255, 255, 0.45);
+            text-align: center;
+            line-height: 1.7;
+            max-width: 340px;
+        }
+
+        .kiosk-qr-card {
+            background: #ffffff;
+            border-radius: 20px;
+            padding: 24px;
+            box-shadow: 0 0 60px rgba(244, 129, 32, 0.25), 0 0 120px rgba(244, 129, 32, 0.08);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        /* Köşe aksan çizgileri */
+        .kiosk-qr-card::before,
+        .kiosk-qr-card::after {
+            content: '';
+            position: absolute;
+            width: 24px;
+            height: 24px;
+            border-color: var(--primary);
+            border-style: solid;
+            opacity: 0.7;
+        }
+        .kiosk-qr-card::before { top: -2px; left: -2px; border-width: 3px 0 0 3px; border-radius: 4px 0 0 0; }
+        .kiosk-qr-card::after  { bottom: -2px; right: -2px; border-width: 0 3px 3px 0; border-radius: 0 0 4px 0; }
+
+        #kiosk-qr-canvas {
+            display: block;
+        }
+
+        #kiosk-qr-canvas img, #kiosk-qr-canvas canvas {
+            display: block !important;
+            margin: 0 auto !important;
+            width: 280px !important;
+            height: 280px !important;
+        }
+
+        /* Kiosk countdown bar */
+        .kiosk-countdown-wrapper {
+            width: 100%;
+            max-width: 320px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .kiosk-countdown-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+        }
+
+        .kiosk-countdown-text {
+            font-family: 'Poppins', sans-serif;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.4);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .kiosk-seconds-badge {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--primary);
+            min-width: 36px;
+            text-align: center;
+            transition: color 0.3s;
+        }
+
+        .kiosk-seconds-badge.urgent {
+            color: #ef4444;
+            animation: urgentPulse 0.5s infinite alternate;
+        }
+
+        .kiosk-progress-track {
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .kiosk-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), #fbbf24);
+            border-radius: 10px;
+            transition: width 1s linear, background-color 0.5s;
+        }
+
+        .kiosk-progress-fill.urgent {
+            background: linear-gradient(90deg, #ef4444, #f97316);
+        }
+
+        /* Kiosk çıkış butonu — küçük, köşede */
+        .kiosk-exit-btn {
+            position: fixed;
+            top: 18px;
+            right: 18px;
+            z-index: 100000; /* Must be higher than kiosk overlay */
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: rgba(255, 255, 255, 0.65);
+            font-family: 'Poppins', sans-serif;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 8px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            transition: all 0.25s;
+            display: none;
+        }
+
+        #kiosk-overlay.active ~ .kiosk-exit-btn,
+        .kiosk-exit-btn.visible {
+            display: block;
+        }
+
+        .kiosk-exit-btn:hover {
+            background: rgba(239, 68, 68, 0.25);
+            border-color: rgba(239, 68, 68, 0.5);
+            color: #ef4444;
+        }
     </style>
 </head>
 
