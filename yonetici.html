@@ -3383,7 +3383,11 @@ Mesajın sonuna 'ShiftTurbo Güvenlik Sistemi' imzasını ekle.`;
             display: block;
         }
 
-        #kiosk-qr-canvas img, #kiosk-qr-canvas canvas {
+        #kiosk-qr-canvas canvas {
+            display: none !important;
+        }
+
+        #kiosk-qr-canvas img {
             display: block !important;
             margin: 0 auto !important;
             width: 280px !important;
