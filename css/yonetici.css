@@ -436,7 +436,7 @@ body::after {
 }
 
 .stat-val {
-    font-family: 'Orbitron';
+    font-family: 'Poppins', sans-serif;
     font-size: 38px;
     font-weight: 700;
     color: #fff;
@@ -460,6 +460,8 @@ body::after {
     padding: 20px 30px;
     border-radius: 20px;
     display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 30px;
