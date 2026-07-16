@@ -1201,13 +1201,12 @@ Mesajın sonuna 'ShiftTurbo Güvenlik Sistemi' imzasını ekle.`;
         .login-card-bottom-edge {
             position: absolute;
             bottom: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 40%;
-            height: 3px;
+            left: 0;
+            width: 100%;
+            height: 4px;
             background: var(--primary);
-            box-shadow: 0 0 15px var(--primary);
-            border-radius: 3px 3px 0 0;
+            box-shadow: 0 -2px 15px var(--primary);
+            border-radius: 0 0 29px 29px;
         }
 
         .login-card input {
@@ -1401,12 +1400,22 @@ Mesajın sonuna 'ShiftTurbo Güvenlik Sistemi' imzasını ekle.`;
             transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
             font-size: 11px;
             text-transform: uppercase;
+            box-shadow: 0 4px 15px rgba(244, 129, 32, 0.25);
+        }
+
+        [data-theme="light"] .btn-cyber {
+            color: #fff;
+            box-shadow: 0 4px 15px rgba(154, 59, 0, 0.25);
         }
 
         .btn-cyber:hover {
             transform: scale(1.05) translateY(-2px);
             filter: brightness(1.2);
-            box-shadow: 0 0 15px rgba(244, 129, 32, 0.4), 0 0 30px rgba(244, 129, 32, 0.2);
+            box-shadow: 0 6px 20px rgba(244, 129, 32, 0.4), 0 0 30px rgba(244, 129, 32, 0.2);
+        }
+
+        [data-theme="light"] .btn-cyber:hover {
+            box-shadow: 0 6px 20px rgba(154, 59, 0, 0.4), 0 0 30px rgba(154, 59, 0, 0.2);
         }
 
         @keyframes action-pulse {
@@ -3973,7 +3982,7 @@ Mesajın sonuna 'ShiftTurbo Güvenlik Sistemi' imzasını ekle.`;
                             <div class="feature-icon-login"><i class="fas fa-brain"></i></div>
                             <div class="feature-text-login">
                                 <h4>Shift-AI Analiz Asistanı</h4>
-                                <p>Yapay zeka ile anormallikleri otomatik tespit edin, verimlilik raporları oluşturun.</p>
+                                <p>Yapay zeka ile personel geç kalma paternlerini ve fazla mesai anormalliklerini otomatik tespit edin.</p>
                             </div>
                         </div>
                         <div class="feature-item-login">
@@ -3997,10 +4006,14 @@ Mesajın sonuna 'ShiftTurbo Güvenlik Sistemi' imzasını ekle.`;
                     <div id="clock_login" class="time-display-login">00:00</div>
                     <div id="date_login" class="date-display-login">-- MART 2026</div>
                     <div id="step1">
-                        <input type="text" id="username" placeholder="YÖNETİCİ KİMLİĞİ" style="margin-bottom:15px;"
-                            onkeypress="if(event.key === 'Enter') nextStep()">
+                        <div style="position: relative; margin-bottom: 15px;">
+                            <input type="text" id="username" placeholder="YÖNETİCİ KİMLİĞİ (Örn: admin_01)"
+                                onkeypress="if(event.key === 'Enter') nextStep()">
+                            <i class="fas fa-user-shield"
+                                style="position: absolute; right: 20px; top: 50%; transform: translateY(-50%); font-size: 12px; color: var(--primary); opacity: 0.3; pointer-events: none;"></i>
+                        </div>
                         <div style="position: relative; margin-bottom: 25px;">
-                            <input type="password" id="password" placeholder="ERİŞİM ANAHTARI"
+                            <input type="password" id="password" placeholder="ERİŞİM ANAHTARI (••••••••)"
                                 onkeypress="if(event.key === 'Enter') nextStep()">
                             <i class="fas fa-shield-alt"
                                 style="position: absolute; right: 20px; top: 50%; transform: translateY(-50%); font-size: 12px; color: var(--primary); opacity: 0.3; pointer-events: none;"></i>
