@@ -6610,8 +6610,12 @@ Mesajın sonuna 'ShiftTurbo Güvenlik Sistemi' imzasını ekle.`;
 
                 const finalMsg = targetVal === 'ALL' ? `[ALL] ${msg}` : `[${targetVal}] ${msg}`;
 
+                if (!window.currentBusinessId) {
+                    showToast("HATA", "İşletme kimliği bulunamadı. Lütfen sayfayı yenileyin ve tekrar deneyin.", "error");
+                    return;
+                }
                 const { error } = await _supabase.from('broadcasts').insert([{ message: finalMsg, business_id: window.currentBusinessId }]);
-                if (error) { showToast("HATA", "Duyuru yayınlanamadı: " + error.message, "error"); }
+                if (error) { console.error("Duyuru insert hatası:", error); showToast("HATA", "Duyuru yayınlanamadı: " + error.message, "error"); }
                 else {
                     showToast("DUYURU YAYINLANDI", "Hedef terminallere iletildi.", "success");
                     input.value = "";
@@ -6631,7 +6635,9 @@ Mesajın sonuna 'ShiftTurbo Güvenlik Sistemi' imzasını ekle.`;
             async function fetchBroadcastHistory() {
                 const listEl = document.getElementById('broadcast-list');
                 if (!listEl) return;
-                const { data, error } = await _supabase.from('broadcasts').select('*').eq('business_id', window.currentBusinessId).order('created_at', { ascending: false });
+                let bq = _supabase.from('broadcasts').select('*').order('created_at', { ascending: false });
+                if (window.currentBusinessId) bq = bq.eq('business_id', window.currentBusinessId);
+                const { data, error } = await bq;
 
                 if (error || !data || data.length === 0) { listEl.innerHTML = '<div style="color:#64748b; font-size:11px;">Henüz geçmiş duyuru yok.</div>'; return; }
                 listEl.innerHTML = data.map(b => {

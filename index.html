@@ -3638,7 +3638,12 @@
 
             try {
                 const businessId = localStorage.getItem('shiftTurbo_business_id');
-                const { data } = await _supabase.from('broadcasts').select('message').eq('business_id', businessId).order('created_at', { ascending: false });
+                // businessId varsa ona göre filtrele, yoksa tüm duyuruları çek (geriye dönük uyumluluk)
+                let query = _supabase.from('broadcasts').select('message').order('created_at', { ascending: false });
+                if (businessId) {
+                    query = query.or(`business_id.eq.${businessId},business_id.is.null`);
+                }
+                const { data } = await query;
                 if (data && data.length > 0) {
                     let matchedMsg = null;
                     // 1. Öncelikle kişiye özel bir duyuru var mı diye tüm listeyi kontrol et (Öncelikli Gösterim)
