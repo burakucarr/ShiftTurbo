@@ -1085,16 +1085,6 @@ function cleanPdfText(text) {
     str = str.replace(/⏱️|📩|📍|⭐|⚠️|📝|⚡|💸|📊|📜|📄/g, '');
     str = str.replace(/AÇ \/ OKU/g, '');
 
-    const trMap = {
-        'Ç': 'C', 'ç': 'c',
-        'Ğ': 'G', 'ğ': 'g',
-        'İ': 'I', 'ı': 'i',
-        'Ö': 'O', 'ö': 'o',
-        'Ş': 'S', 'ş': 's',
-        'Ü': 'U', 'ü': 'u'
-    };
-    str = str.replace(/[ÇçĞğİıÖöŞşÜü]/g, match => trMap[match]);
-
     return str.trim();
 }
 
@@ -1141,7 +1131,19 @@ async function exportPDF() {
 
         doc.addFileToVFS("Roboto-Regular.ttf", base64Font);
         doc.addFont("Roboto-Regular.ttf", "Roboto", "normal");
-        doc.setFont("Roboto");
+        
+        const fontUrlBold = 'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/fonts/Roboto/Roboto-Medium.ttf';
+        const respBold = await fetch(fontUrlBold);
+        const blobBold = await respBold.blob();
+        const base64FontBold = await new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result.split(',')[1]);
+            reader.readAsDataURL(blobBold);
+        });
+        doc.addFileToVFS("Roboto-Medium.ttf", base64FontBold);
+        doc.addFont("Roboto-Medium.ttf", "Roboto", "bold");
+
+        doc.setFont("Roboto", "normal");
     } catch (e) {
         console.warn("Font yüklenemedi, varsayılan fonta geçiliyor.", e);
     }
@@ -1151,10 +1153,11 @@ async function exportPDF() {
 
     doc.setTextColor(244, 129, 32);
     doc.setFont('Roboto', 'bold'); doc.setFontSize(24);
-    doc.text(cleanPdfText("SHIFT TURBO"), 40, 50);
+    const busNameExt = window.currentBusinessName ? " - " + window.currentBusinessName.toLocaleUpperCase('tr-TR') : "";
+    doc.text(cleanPdfText("SHİFT TURBO" + busNameExt), 40, 50);
 
     doc.setFontSize(11); doc.setTextColor(148, 163, 184); doc.setFont('Roboto', 'normal');
-    doc.text(cleanPdfText("OPERASYON RAPORU | YONETICI TERMINALI"), 40, 72);
+    doc.text(cleanPdfText("OPERASYON RAPORU | YÖNETİCİ TERMİNALİ"), 40, 72);
 
     doc.setDrawColor(244, 129, 32); doc.setLineWidth(1.5);
     doc.line(40, 85, doc.internal.pageSize.width - 40, 85);
@@ -1180,11 +1183,11 @@ async function exportPDF() {
     const summaryRows = Object.keys(summaryData).map(name => [cleanPdfText(name), summaryData[name].count + " Kez", summaryData[name].duration]);
 
     doc.setFontSize(14); doc.setTextColor(59, 130, 246); doc.setFont('Roboto', 'bold');
-    doc.text(cleanPdfText("📊 MESAI OZETI"), 40, 130);
+    doc.text(cleanPdfText("📝 MESAİ ÖZETİ"), 40, 130);
 
     doc.autoTable({
         startY: 145,
-        head: [['PERSONEL', 'MESAI SAYISI', 'TOPLAM SURE']],
+        head: [['PERSONEL', 'MESAİ SAYISI', 'TOPLAM SÜRE']],
         body: summaryRows,
         theme: 'grid',
         styles: { fillColor: [15, 23, 42], textColor: [220, 226, 235], font: 'Roboto', fontSize: 9, lineColor: [51, 65, 85], lineWidth: 0.5, cellPadding: 8 },
@@ -1227,14 +1230,14 @@ async function exportPDF() {
     const nextY1 = doc.lastAutoTable.finalY + 35;
 
     doc.setFontSize(14); doc.setTextColor(16, 185, 129); doc.setFont('Roboto', 'bold');
-    doc.text(cleanPdfText("💸 OTONOM HAKEDIS VE MAAS TABLOSU"), 40, nextY1);
+    doc.text(cleanPdfText("💸 OTONOM HAKEDİŞ VE MAAŞ TABLOSU"), 40, nextY1);
 
     doc.setFontSize(10); doc.setTextColor(148, 163, 184); doc.setFont('Roboto', 'normal');
-    doc.text(cleanPdfText(`(Tarih: ${sD || 'Baslangic'} / ${eD || 'Bugun'}) | Net Odeme: ${grandTotalPay.toLocaleString('tr-TR', { maximumFractionDigits: 2 })} TL`), doc.internal.pageSize.width - 350, nextY1 + 15);
+    doc.text(cleanPdfText(`(Tarih: ${sD || 'Başlangıç'} / ${eD || 'Bugün'}) | Net Ödeme: ${grandTotalPay.toLocaleString('tr-TR', { maximumFractionDigits: 2 })} TL`), doc.internal.pageSize.width - 350, nextY1 + 15);
 
     doc.autoTable({
         startY: nextY1 + 25,
-        head: [['PERSONEL', 'SAATLIK UCRET', 'NET MESAI', 'HAM HAKEDIS', 'DISIPLIN DURUMU', 'NET ODENECEK']],
+        head: [['PERSONEL', 'SAATLİK ÜCRET', 'NET MESAİ', 'HAM HAKEDİŞ', 'DİSİPLİN DURUMU', 'NET ÖDENECEK']],
         body: financeTableData,
         theme: 'grid',
         styles: { fillColor: [15, 23, 42], textColor: [220, 226, 235], font: 'Roboto', fontSize: 9, lineColor: [51, 65, 85], lineWidth: 0.5, cellPadding: 8 },

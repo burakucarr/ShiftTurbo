@@ -216,7 +216,7 @@
                     }
                     if (a.type === 'OVERTIME' && !seenOvertime.has(a.name)) {
                         seenOvertime.add(a.name);
-                        baseSuggestions.push({ text: `🏮 ${a.name} Aşırı Mesai (${a.hours}s)`, isAnomaly: true, anomalyKey, action: async (btnDOM) => { this.openAIWarningModal(a, btnDOM); } });
+                        baseSuggestions.push({ text: `🏮 ${a.name} Aşırı Mesai (${a.hours})`, isAnomaly: true, anomalyKey, action: async (btnDOM) => { this.openAIWarningModal(a, btnDOM); } });
                     }
                     if (a.type === 'FORGOTTEN_CHECKOUT' && !seenForgotten.has(a.name)) {
                         seenForgotten.add(a.name);
@@ -300,7 +300,7 @@
                     violationDesc = "Dükkan sınırları dışından (mağaza dışından) GPS kaydı oluşturma";
                     anomalyDetail = `Tarih: ${anomaly.date || ''}`;
                 } else if (anomaly.type === 'OVERTIME') {
-                    violationDesc = "10 saati aşan aşırı mesai süresi";
+                    violationDesc = "10 saat 30 dakikayı aşan aşırı mesai süresi";
                     anomalyDetail = `Süre: ${anomaly.hours || ''} saat`;
                 } else if (anomaly.type === 'FORGOTTEN_CHECKOUT') {
                     violationDesc = "Mesai bitiminde çıkış yapmayı unutarak açık log bırakma";
@@ -906,6 +906,197 @@ Mesajın sonuna 'ShiftTurbo Güvenlik Sistemi' imzasını ekle.`;
             color: #94a3b8;
         }
 
+        /* ============================================
+           🌟 SHIFTTURBO HAKKINDA / BİLGİ PANELİ YENİ STİLLERİ
+           ============================================ */
+        .login-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            max-width: 1100px;
+            padding: 20px;
+            z-index: 10;
+            position: relative;
+            box-sizing: border-box;
+            max-height: 100vh;
+            overflow-y: auto;
+        }
+
+        /* Scrollbar'ı gizle fakat kaydırma işlevini koru */
+        .login-wrapper::-webkit-scrollbar {
+            display: none;
+        }
+        .login-wrapper {
+            -ms-overflow-style: none;  /* IE ve Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+
+        .login-content-split {
+            display: flex;
+            flex-direction: row;
+            gap: 60px;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .login-about-col {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            text-align: left;
+            max-width: 480px;
+        }
+
+        .about-desc-login {
+            font-family: 'Poppins', sans-serif;
+            font-size: 13px;
+            line-height: 1.6;
+            color: var(--text-sub);
+            opacity: 0.85;
+            margin: 0 0 10px 0;
+        }
+
+        .about-features-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .feature-item-login {
+            display: flex;
+            align-items: flex-start;
+            gap: 18px;
+            padding: 18px;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .feature-item-login:hover {
+            background: rgba(255, 255, 255, 0.04);
+            border-color: rgba(244, 129, 32, 0.25);
+            transform: translateX(6px);
+        }
+
+        [data-theme="light"] .feature-item-login {
+            background: rgba(15, 23, 42, 0.02);
+            border: 1px solid rgba(15, 23, 42, 0.05);
+        }
+
+        [data-theme="light"] .feature-item-login:hover {
+            background: rgba(15, 23, 42, 0.04);
+            border-color: rgba(154, 59, 0, 0.25);
+        }
+
+        .feature-icon-login {
+            font-size: 18px;
+            color: var(--primary);
+            width: 42px;
+            height: 42px;
+            border-radius: 14px;
+            background: rgba(244, 129, 32, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: transform 0.3s ease;
+        }
+
+        [data-theme="light"] .feature-icon-login {
+            background: rgba(154, 59, 0, 0.1);
+        }
+
+        .feature-item-login:hover .feature-icon-login {
+            transform: rotate(8deg) scale(1.1);
+        }
+
+        .feature-text-login h4 {
+            font-family: 'Poppins', sans-serif;
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-main);
+            margin: 0 0 5px 0;
+            letter-spacing: 0.5px;
+        }
+
+        .feature-text-login p {
+            font-family: 'Poppins', sans-serif;
+            font-size: 11px;
+            color: var(--text-sub);
+            margin: 0;
+            line-height: 1.5;
+            opacity: 0.8;
+        }
+
+        .system-status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: 30px;
+            background: rgba(16, 185, 129, 0.08);
+            border: 1px solid rgba(16, 185, 129, 0.15);
+            margin-top: 10px;
+            align-self: flex-start;
+        }
+
+        [data-theme="light"] .system-status-badge {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: var(--success);
+            box-shadow: 0 0 8px var(--success);
+            animation: status-pulse 2s infinite;
+        }
+
+        .status-text {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 9px;
+            font-weight: 700;
+            color: var(--success);
+            letter-spacing: 1.5px;
+        }
+
+        @keyframes status-pulse {
+            0% { transform: scale(0.95); opacity: 0.7; }
+            50% { transform: scale(1.1); opacity: 1; box-shadow: 0 0 12px var(--success); }
+            100% { transform: scale(0.95); opacity: 0.7; }
+        }
+
+        /* Responsive Kurallar */
+        @media (max-width: 1023px) {
+            .login-content-split {
+                flex-direction: column;
+                gap: 40px;
+            }
+            .login-about-col {
+                order: 2;
+                max-width: 420px;
+                text-align: center;
+                align-items: center;
+            }
+            .feature-item-login {
+                text-align: left;
+            }
+            .system-status-badge {
+                align-self: center;
+            }
+            .login-card {
+                order: 1;
+            }
+        }
+
         .beams-container {
             position: absolute;
             top: 0;
@@ -1189,7 +1380,13 @@ Mesajın sonuna 'ShiftTurbo Güvenlik Sistemi' imzasını ekle.`;
             color: #000;
             font-weight: 900;
             font-family: 'Orbitron';
-            box-shadow: 0 0 15px rgba(244, 129, 32, 0.3);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .admin-avatar:hover {
+            background: rgba(59, 130, 246, 0.1);
+            box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+            transform: scale(1.05);
         }
 
         .btn-cyber {
@@ -3212,7 +3409,7 @@ Mesajın sonuna 'ShiftTurbo Güvenlik Sistemi' imzasını ekle.`;
             font-family: 'Poppins', sans-serif;
             font-size: 11px;
             font-weight: 600;
-            color: rgba(255, 255, 255, 0.5);
+            color: var(--text-sub);
             text-transform: uppercase;
             letter-spacing: 1.5px;
             display: flex;
@@ -3276,7 +3473,7 @@ Mesajın sonuna 'ShiftTurbo Güvenlik Sistemi' imzasını ekle.`;
         #kiosk-overlay {
             position: fixed;
             inset: 0;
-            background: #030712;
+            background: var(--bg);
             z-index: 99999; /* Ensure it covers everything, including navbar */
             display: none;
             flex-direction: column;
@@ -3326,7 +3523,7 @@ Mesajın sonuna 'ShiftTurbo Güvenlik Sistemi' imzasını ekle.`;
             font-family: 'Orbitron', sans-serif;
             font-size: 28px;
             font-weight: 900;
-            color: #fff;
+            color: var(--text-main);
             letter-spacing: 4px;
         }
 
@@ -3338,7 +3535,7 @@ Mesajın sonuna 'ShiftTurbo Güvenlik Sistemi' imzasını ekle.`;
             font-family: 'Poppins', sans-serif;
             font-size: 15px;
             font-weight: 600;
-            color: rgba(255, 255, 255, 0.55);
+            color: var(--text-sub);
             letter-spacing: 2px;
             text-transform: uppercase;
             text-align: center;
@@ -3348,7 +3545,7 @@ Mesajın sonuna 'ShiftTurbo Güvenlik Sistemi' imzasını ekle.`;
             font-family: 'Poppins', sans-serif;
             font-size: 14px;
             font-weight: 400;
-            color: rgba(255, 255, 255, 0.45);
+            color: var(--text-sub);
             text-align: center;
             line-height: 1.7;
             max-width: 340px;
@@ -3481,6 +3678,24 @@ Mesajın sonuna 'ShiftTurbo Güvenlik Sistemi' imzasını ekle.`;
             background: rgba(239, 68, 68, 0.25);
             border-color: rgba(239, 68, 68, 0.5);
             color: #ef4444;
+        }
+        @keyframes ring-bell {
+            0% { transform: rotate(0); }
+            15% { transform: rotate(15deg); }
+            30% { transform: rotate(-10deg); }
+            45% { transform: rotate(10deg); }
+            60% { transform: rotate(-5deg); }
+            75% { transform: rotate(0); }
+            100% { transform: rotate(0); }
+        }
+        #notif-bell-btn:hover {
+            background: rgba(255,255,255,0.08) !important;
+        }
+        [data-theme="light"] #notif-bell-btn:hover {
+            background: rgba(0,0,0,0.05) !important;
+        }
+        #notif-bell-btn:hover #notif-bell-icon {
+            animation: ring-bell 0.6s ease-in-out;
         }
     </style>
 </head>
@@ -3723,49 +3938,93 @@ Mesajın sonuna 'ShiftTurbo Güvenlik Sistemi' imzasını ekle.`;
             <div class="beam b2"></div>
             <div class="beam b3"></div>
         </div>
-        <div class="brand-signature-login">
-            <div style="display: flex; align-items: center; justify-content: center; gap: 15px;">
-                <div class="brand-logo-text-login">SHİFT<span>TURBO</span></div>
-                <div
-                    style="height: 24px; width: 2px; background: var(--primary); box-shadow: 0 0 10px var(--primary); opacity: 0.6;">
+
+        <div class="login-wrapper">
+            <!-- 🏷️ BRAND SIGNATURE (Ortak Üst Başlık) -->
+            <div class="brand-signature-login">
+                <div style="display: flex; align-items: center; justify-content: center; gap: 15px;">
+                    <div class="brand-logo-text-login">SHİFT<span>TURBO</span></div>
+                    <div
+                        style="height: 24px; width: 2px; background: var(--primary); box-shadow: 0 0 10px var(--primary); opacity: 0.6;">
+                    </div>
+                    <div
+                        style="font-family: 'Poppins', sans-serif; font-size: clamp(10px, 2.5vw, 13px); font-weight: 600; color: var(--primary); letter-spacing: 2px; opacity: 0.9;">
+                        YÖNETİCİ TERMİNALİ</div>
                 </div>
-                <div
-                    style="font-family: 'Poppins', sans-serif; font-size: clamp(10px, 2.5vw, 13px); font-weight: 600; color: var(--primary); letter-spacing: 2px; opacity: 0.9;">
-                    YÖNETİCİ TERMİNALİ</div>
+                <span class="brand-slogan-login">Zamanı Durdurma, Onu Yönet</span>
             </div>
-            <span class="brand-slogan-login">Zamanı Durdurma, Onu Yönet</span>
-        </div>
-        <div class="login-card">
-            <div class="login-card-bottom-edge"></div>
-            <div id="clock_login" class="time-display-login">00:00</div>
-            <div id="date_login" class="date-display-login">-- MART 2026</div>
-            <div id="step1">
-                <input type="text" id="username" placeholder="YÖNETİCİ KİMLİĞİ" style="margin-bottom:15px;"
-                    onkeypress="if(event.key === 'Enter') nextStep()">
-                <div style="position: relative; margin-bottom: 25px;">
-                    <input type="password" id="password" placeholder="ERİŞİM ANAHTARI"
-                        onkeypress="if(event.key === 'Enter') nextStep()">
-                    <i class="fas fa-shield-alt"
-                        style="position: absolute; right: 20px; top: 50%; transform: translateY(-50%); font-size: 12px; color: var(--primary); opacity: 0.3; pointer-events: none;"></i>
+
+            <div class="login-content-split">
+                <!-- ℹ️ SHIFTTURBO HAKKINDA / ÖZELLİKLER PANELİ (Sol Sütun) -->
+                <div class="login-about-col">
+                    <p class="about-desc-login">
+                        Modern işletmeler için özel olarak tasarlanmış, yapay zeka destekli otonom personel takip ve vardiya yönetim sistemi.
+                    </p>
+
+                    <div class="about-features-container">
+                        <div class="feature-item-login">
+                            <div class="feature-icon-login"><i class="fas fa-clock"></i></div>
+                            <div class="feature-text-login">
+                                <h4>Gerçek Zamanlı Zaman Yönetimi</h4>
+                                <p>Giriş, çıkış, gecikme ve fazla mesai kayıtlarını anlık olarak izleyin.</p>
+                            </div>
+                        </div>
+                        <div class="feature-item-login">
+                            <div class="feature-icon-login"><i class="fas fa-brain"></i></div>
+                            <div class="feature-text-login">
+                                <h4>Shift-AI Analiz Asistanı</h4>
+                                <p>Yapay zeka ile anormallikleri otomatik tespit edin, verimlilik raporları oluşturun.</p>
+                            </div>
+                        </div>
+                        <div class="feature-item-login">
+                            <div class="feature-icon-login"><i class="fas fa-shield-alt"></i></div>
+                            <div class="feature-text-login">
+                                <h4>KVKK ve AES-256 Güvenliği</h4>
+                                <p>Gelişmiş şifreleme altyapısı ile kurumsal verileriniz güvende kalsın.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="system-status-badge">
+                        <span class="status-dot"></span>
+                        <span class="status-text">SİSTEM AKTİF: TÜM SERVİSLER STABİL</span>
+                    </div>
                 </div>
-                <button class="btn-cyber" style="width:100%" onclick="nextStep()">ERİŞİMİ ONAYLA</button>
-            </div>
-            <div id="step2" style="display:none;">
-                <p
-                    style="font-family:'Orbitron'; font-size:10px; color:var(--primary); margin-bottom:20px; letter-spacing:1px;">
-                    İKİNCİL DOĞRULAMA GEREKLİ</p>
-                <div style="position: relative; margin-bottom: 25px;">
-                    <input type="password" id="twoStepCode" placeholder="GÜVENLİK KODU" style="letter-spacing:8px;">
-                    <i class="fas fa-key"
-                        style="position: absolute; right: 20px; top: 50%; transform: translateY(-50%); font-size: 12px; color: var(--primary); opacity: 0.3; pointer-events: none;"></i>
+
+                <!-- 🔐 GİRİŞ KART (Sağ Sütun) -->
+                <div class="login-card">
+                    <div class="login-card-bottom-edge"></div>
+                    <div id="clock_login" class="time-display-login">00:00</div>
+                    <div id="date_login" class="date-display-login">-- MART 2026</div>
+                    <div id="step1">
+                        <input type="text" id="username" placeholder="YÖNETİCİ KİMLİĞİ" style="margin-bottom:15px;"
+                            onkeypress="if(event.key === 'Enter') nextStep()">
+                        <div style="position: relative; margin-bottom: 25px;">
+                            <input type="password" id="password" placeholder="ERİŞİM ANAHTARI"
+                                onkeypress="if(event.key === 'Enter') nextStep()">
+                            <i class="fas fa-shield-alt"
+                                style="position: absolute; right: 20px; top: 50%; transform: translateY(-50%); font-size: 12px; color: var(--primary); opacity: 0.3; pointer-events: none;"></i>
+                        </div>
+                        <button class="btn-cyber" style="width:100%" onclick="nextStep()">ERİŞİMİ ONAYLA</button>
+                    </div>
+                    <div id="step2" style="display:none;">
+                        <p
+                            style="font-family:'Orbitron'; font-size:10px; color:var(--primary); margin-bottom:20px; letter-spacing:1px;">
+                            İKİNCİL DOĞRULAMA GEREKLİ</p>
+                        <div style="position: relative; margin-bottom: 25px;">
+                            <input type="password" id="twoStepCode" placeholder="GÜVENLİK KODU" style="letter-spacing:8px;">
+                            <i class="fas fa-key"
+                                style="position: absolute; right: 20px; top: 50%; transform: translateY(-50%); font-size: 12px; color: var(--primary); opacity: 0.3; pointer-events: none;"></i>
+                        </div>
+                        <button class="btn-cyber" style="width:100%" onclick="checkAuth()">SİSTEME ERİŞİM SAĞLA</button>
+                        <button
+                            style="background:none; border:none; color:rgba(255,255,255,0.3); font-size:9px; margin-top:15px; cursor:pointer;"
+                            onclick="location.reload()">Geri Dön</button>
+                    </div>
+                    <div class="info-trigger-login" onclick="toggleAboutModal(true)">
+                        <i class="fas fa-info-circle" style="margin-right: 5px;"></i> SHIFT TURBO GÜVENLİK SİSTEMİ
+                    </div>
                 </div>
-                <button class="btn-cyber" style="width:100%" onclick="checkAuth()">SİSTEME ERİŞİM SAĞLA</button>
-                <button
-                    style="background:none; border:none; color:rgba(255,255,255,0.3); font-size:9px; margin-top:15px; cursor:pointer;"
-                    onclick="location.reload()">Geri Dön</button>
-            </div>
-            <div class="info-trigger-login" onclick="toggleAboutModal(true)">
-                <i class="fas fa-info-circle" style="margin-right: 5px;"></i> SHIFT TURBO GÜVENLİK SİSTEMİ
             </div>
         </div>
     </div>
@@ -3810,10 +4069,10 @@ Mesajın sonuna 'ShiftTurbo Güvenlik Sistemi' imzasını ekle.`;
 
             <div style="display: flex; gap: 10px; justify-content: center;">
                 <button class="btn-cyber" style="background: rgba(139, 92, 246, 0.15); color: #a78bfa; border-color: #8b5cf6; font-size: 11px; padding: 10px 14px;" onclick="openKioskMode()">
-                    <i class="fas fa-tv"></i> KİOSK MODU
+                    📡 CANLI QR EKRANI
                 </button>
                 <button class="btn-cyber btn-green" style="font-size: 11px; padding: 10px 14px;" onclick="printQRCode()">🖨️ YAZDIR</button>
-                <button class="btn-cyber" style="background: rgba(255,255,255,0.05); color: #fff; border-color: #475569; font-size: 11px; padding: 10px 14px;" onclick="toggleQRModal(false)">KAPAT</button>
+                <button class="btn-cyber" style="background: rgba(128,128,128,0.15); color: var(--text-main); border-color: #475569; font-size: 11px; padding: 10px 14px;" onclick="toggleQRModal(false)">KAPAT</button>
             </div>
         </div>
     </div>
@@ -3843,7 +4102,7 @@ Mesajın sonuna 'ShiftTurbo Güvenlik Sistemi' imzasını ekle.`;
             </p>
         </div>
     </div>
-    <button class="kiosk-exit-btn" id="kiosk-exit-btn" onclick="closeKioskMode()">✕ Kiosk'tan Çık</button>
+    <button class="kiosk-exit-btn" id="kiosk-exit-btn" onclick="closeKioskMode()">✕ Tam Ekrandan Çık</button>
 
     <!-- 🖥️ YÖNETİCİ ANA EKRANI (ADMIN PANEL) -->
     <div id="adminPanel" style="display: none;">
@@ -3872,7 +4131,7 @@ Mesajın sonuna 'ShiftTurbo Güvenlik Sistemi' imzasını ekle.`;
                         <div id="liveDate" style="font-family:'Poppins', sans-serif; font-variant-numeric: tabular-nums; font-weight: 500; font-size:11px; line-height: 1; letter-spacing: 1px;">--.--.----</div>
                     </div>
                 </div>
-                <div class="admin-avatar"
+                <div class="admin-avatar" onclick="openProfileSettingsModal()" title="Hesap ve İşletme Ayarları"
                     style="background: none; border: 1.5px solid var(--primary); color: var(--primary);">
                     <i class="fas fa-user-shield" style="font-size: 16px;"></i>
                 </div>
@@ -3885,9 +4144,33 @@ Mesajın sonuna 'ShiftTurbo Güvenlik Sistemi' imzasını ekle.`;
                 <button class="btn-cyber" id="theme-toggle-btn"
                     style="padding: 10px 15px; font-size: 12px; background: rgba(244, 129, 32, 0.1); color: var(--primary); border: 1px solid var(--primary); cursor: pointer;"
                     onclick="toggleTheme()" title="Aydınlık / Karanlık Mod">☀️</button>
-                <button class="btn-cyber"
-                    style="padding: 10px 15px; font-size: 10px; background: rgba(244, 129, 32, 0.1); color: var(--primary); border: 1px solid var(--primary);"
-                    onclick="showPasswordModal()">🔑 ŞİFRE DEĞİŞTİR</button>
+
+                <button id="notif-bell-btn" onclick="initPWAPush()" title="Bildirim ayarları" style="
+                    position: relative;
+                    background: none;
+                    border: none;
+                    cursor: pointer;
+                    padding: 8px;
+                    border-radius: 50%;
+                    width: 40px;
+                    height: 40px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    transition: background 0.2s;
+                ">
+                    <span id="notif-bell-icon" style="font-size: 20px; display: inline-block; transform-origin: top center;">🔕</span>
+                    <span id="notif-bell-badge" style="
+                        display: none;
+                        position: absolute;
+                        top: 6px; right: 6px;
+                        width: 9px; height: 9px;
+                        background: #10b981;
+                        border-radius: 50%;
+                        border: 2px solid #030712;
+                        box-shadow: 0 0 6px #10b981;
+                    "></span>
+                </button>
                 <button class="btn-logout" onclick="logout()">ÇIKIŞ</button>
             </div>
         </div>
@@ -3972,8 +4255,7 @@ Mesajın sonuna 'ShiftTurbo Güvenlik Sistemi' imzasını ekle.`;
                     style="background: rgba(59, 130, 246, 0.2); color: #60a5fa; border-color: #3b82f6; font-size:10px;">ℹ️
                     PUANLAMA KRİTERLERİ</button>
                 <button class="btn-cyber" id="btn-pwa-push" onclick="initPWAPush()"
-                    style="background: rgba(147, 51, 234, 0.2); color: #c084fc; border-color: #9333ea; font-size:10px;">🔔
-                    CANLI MOBİL BİLDİRİMLER</button>
+                    style="display:none;">🔔 BİLDİRİMLER</button>
                 <button class="btn-cyber" onclick="openCinematicSummary()"
                     style="background: rgba(244, 129, 32, 0.15); color: var(--primary); border-color: var(--primary); font-size:10px;"><i class="fas fa-film"></i> 🎬 GÜN ÖZETİ</button>
                 <button class="btn-cyber btn-green" onclick="exportPDF()">📄 RAPOR AL</button>
@@ -4253,7 +4535,7 @@ Mesajın sonuna 'ShiftTurbo Güvenlik Sistemi' imzasını ekle.`;
 
     <div class="ucr-badge">
         <span class="ucr-dot"></span>
-        UCR Technology
+        <span id="business-badge-text">UCR Technology</span>
     </div>
 
     <script>
@@ -4811,6 +5093,8 @@ Mesajın sonuna 'ShiftTurbo Güvenlik Sistemi' imzasını ekle.`;
                     window.currentBusinessId = busData[0].id;
                     window.currentBusinessName = busData[0].business_name;
                     window.currentQrSecret = busData[0].qr_secret || null; // Migration yoksa null → statik QR fallback
+                    const bBadge = document.getElementById('business-badge-text');
+                    if (bBadge) bBadge.textContent = window.currentBusinessName || 'İŞLETMEM';
                 } catch(e) {
                     console.error("Onboarding hatası:", e);
                     showToast("HATA", "Sistem hatası.", "error");
@@ -4895,6 +5179,8 @@ Mesajın sonuna 'ShiftTurbo Güvenlik Sistemi' imzasını ekle.`;
                         window.currentBusinessId = data[0].id;
                         window.currentBusinessName = data[0].business_name;
                         window.currentQrSecret = data[0].qr_secret || qrSecret;
+                        const bBadge2 = document.getElementById('business-badge-text');
+                        if (bBadge2) bBadge2.textContent = window.currentBusinessName || 'İŞLETMEM';
                         document.documentElement.classList.remove('onboarding-active');
                         showToast("BAŞARILI", `İşletmeniz (${name}) başarıyla oluşturuldu!`, "success");
                         
@@ -5176,7 +5462,7 @@ Mesajın sonuna 'ShiftTurbo Güvenlik Sistemi' imzasını ekle.`;
                 toggleQRModal(false);
 
                 // İşletme adını göster
-                if (nameEl) nameEl.textContent = window.currentBusinessName || 'DÜKKANIM';
+                if (nameEl) nameEl.textContent = window.currentBusinessName || 'İŞLETMEM';
 
                 overlay.classList.add('active');
                 if (exitBtn) exitBtn.classList.add('visible');
@@ -5578,13 +5864,17 @@ Mesajın sonuna 'ShiftTurbo Güvenlik Sistemi' imzasını ekle.`;
                                     time: latestAction.time 
                                 });
                             } else {
-                                // Bugün giriş yapmış ama 10 saati aşmış (OVERTIME)
+                                // Bugün giriş yapmış ama 10.5 saati aşmış (OVERTIME)
                                 const diffHours = (new Date() - new Date(latestAction.raw_time)) / (1000 * 60 * 60);
-                                if (diffHours > 10) {
+                                if (diffHours > 10.5) {
+                                    const totalMin = Math.floor(diffHours * 60);
+                                    const dispH = Math.floor(totalMin / 60);
+                                    const dispM = totalMin % 60;
+                                    const hoursLabel = dispM > 0 ? `${dispH}sa ${dispM}dk` : `${dispH}sa`;
                                     anomalies.push({ 
                                         type: 'OVERTIME', 
                                         name: personel, 
-                                        hours: Math.round(diffHours) 
+                                        hours: hoursLabel 
                                     });
                                 }
                             }
@@ -6053,16 +6343,6 @@ Mesajın sonuna 'ShiftTurbo Güvenlik Sistemi' imzasını ekle.`;
                 str = str.replace(/⏱️|📩|📍|⭐|⚠️|📝|⚡|💸|📊|📜|📄/g, '');
                 str = str.replace(/AÇ \/ OKU/g, '');
 
-                const trMap = {
-                    'Ç': 'C', 'ç': 'c',
-                    'Ğ': 'G', 'ğ': 'g',
-                    'İ': 'I', 'ı': 'i',
-                    'Ö': 'O', 'ö': 'o',
-                    'Ş': 'S', 'ş': 's',
-                    'Ü': 'U', 'ü': 'u'
-                };
-                str = str.replace(/[ÇçĞğİıÖöŞşÜü]/g, match => trMap[match]);
-
                 return str.trim();
             }
 
@@ -6072,10 +6352,23 @@ Mesajın sonuna 'ShiftTurbo Güvenlik Sistemi' imzasını ekle.`;
 
                 const { jsPDF } = window.jspdf;
                 const doc = new jsPDF('p', 'pt', 'a4');
+
+                const isLightMode = document.documentElement.getAttribute('data-theme') === 'light';
+                const pdfBg = isLightMode ? [255, 255, 255] : [10, 15, 30];
+                const pdfTextPrimary = isLightMode ? [15, 23, 42] : [244, 129, 32];
+                const pdfTextSecondary = isLightMode ? [71, 85, 105] : [148, 163, 184];
+                const pdfTableBg = isLightMode ? [255, 255, 255] : [15, 23, 42];
+                const pdfTableAlt = isLightMode ? [248, 250, 252] : [8, 12, 25];
+                const pdfTableLine = isLightMode ? [226, 232, 240] : [51, 65, 85];
+                const pdfTableText = isLightMode ? [51, 65, 85] : [220, 226, 235];
+                const pdfHeaderBgGreen = isLightMode ? [16, 185, 129] : [16, 185, 129];
+                const pdfHeaderBgOrange = isLightMode ? [249, 115, 22] : [244, 129, 32];
+                const pdfHeaderText = isLightMode ? [255, 255, 255] : [10, 15, 30];
+
                 const originalAddPage = doc.addPage;
                 doc.addPage = function () {
                     originalAddPage.apply(this, arguments);
-                    doc.setFillColor(10, 15, 30);
+                    doc.setFillColor(...pdfBg);
                     doc.rect(0, 0, doc.internal.pageSize.width, doc.internal.pageSize.height, 'F');
                 };
 
@@ -6091,25 +6384,38 @@ Mesajın sonuna 'ShiftTurbo Güvenlik Sistemi' imzasını ekle.`;
 
                     doc.addFileToVFS("Roboto-Regular.ttf", base64Font);
                     doc.addFont("Roboto-Regular.ttf", "Roboto", "normal");
-                    doc.setFont("Roboto");
+                    
+                    const fontUrlBold = 'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/fonts/Roboto/Roboto-Medium.ttf';
+                    const respBold = await fetch(fontUrlBold);
+                    const blobBold = await respBold.blob();
+                    const base64FontBold = await new Promise((resolve) => {
+                        const reader = new FileReader();
+                        reader.onloadend = () => resolve(reader.result.split(',')[1]);
+                        reader.readAsDataURL(blobBold);
+                    });
+                    doc.addFileToVFS("Roboto-Medium.ttf", base64FontBold);
+                    doc.addFont("Roboto-Medium.ttf", "Roboto", "bold");
+
+                    doc.setFont("Roboto", "normal");
                 } catch (e) {
                     console.warn("Font yüklenemedi, varsayılan fonta geçiliyor.", e);
                 }
 
-                doc.setFillColor(10, 15, 30);
+                doc.setFillColor(...pdfBg);
                 doc.rect(0, 0, doc.internal.pageSize.width, doc.internal.pageSize.height, 'F');
 
-                doc.setTextColor(244, 129, 32);
+                doc.setTextColor(...pdfTextPrimary);
                 doc.setFont('Roboto', 'bold'); doc.setFontSize(24);
-                doc.text(cleanPdfText("SHIFT TURBO"), 40, 50);
+                const busNameExt = window.currentBusinessName ? " - " + window.currentBusinessName.toLocaleUpperCase('tr-TR') : "";
+                doc.text(cleanPdfText("SHİFT TURBO" + busNameExt), 40, 50);
 
-                doc.setFontSize(11); doc.setTextColor(148, 163, 184); doc.setFont('Roboto', 'normal');
-                doc.text(cleanPdfText("OPERASYON RAPORU | YONETICI TERMINALI"), 40, 72);
+                doc.setFontSize(11); doc.setTextColor(...pdfTextSecondary); doc.setFont('Roboto', 'normal');
+                doc.text(cleanPdfText("OPERASYON RAPORU | YÖNETİCİ TERMİNALİ"), 40, 72);
 
-                doc.setDrawColor(244, 129, 32); doc.setLineWidth(1.5);
+                doc.setDrawColor(...pdfTextPrimary); doc.setLineWidth(1.5);
                 doc.line(40, 85, doc.internal.pageSize.width - 40, 85);
 
-                doc.setFontSize(10); doc.setTextColor(203, 213, 225);
+                doc.setFontSize(10); doc.setTextColor(...pdfTextSecondary);
 
                 const sDEl = document.getElementById('startDate');
                 const eDEl = document.getElementById('endDate');
@@ -6162,24 +6468,24 @@ Mesajın sonuna 'ShiftTurbo Güvenlik Sistemi' imzasını ekle.`;
                 });
 
                 // Tablo 1: Otonom Hakediş ve Maaş Tablosu (PDF)
-                doc.setFontSize(14); doc.setTextColor(16, 185, 129); doc.setFont('Roboto', 'bold');
-                doc.text(cleanPdfText("💸 OTONOM HAKEDIS VE MAAS TABLOSU"), 40, 140);
+                doc.setFontSize(14); doc.setTextColor(...pdfHeaderBgGreen); doc.setFont('Roboto', 'bold');
+                doc.text(cleanPdfText("💸 OTONOM HAKEDİŞ VE MAAŞ TABLOSU"), 40, 140);
 
-                doc.setFontSize(10); doc.setTextColor(148, 163, 184); doc.setFont('Roboto', 'normal');
-                doc.text(cleanPdfText(`(Tarih: ${sD || 'Baslangic'} / ${eD || 'Bugun'}) | Net Odeme: ${grandTotalPay.toLocaleString('tr-TR', { maximumFractionDigits: 2 })} TL`), doc.internal.pageSize.width - 350, 155);
+                doc.setFontSize(10); doc.setTextColor(...pdfTextSecondary); doc.setFont('Roboto', 'normal');
+                doc.text(cleanPdfText(`(Tarih: ${sD || 'Başlangıç'} / ${eD || 'Bugün'}) | Net Ödeme: ${grandTotalPay.toLocaleString('tr-TR', { maximumFractionDigits: 2 })} TL`), doc.internal.pageSize.width - 350, 155);
 
                 doc.autoTable({
                     startY: 165,
-                    head: [[cleanPdfText('PERSONEL'), cleanPdfText('SAATLIK UCRET'), cleanPdfText('NET MESAI'), cleanPdfText('HAM HAKEDIS'), cleanPdfText('DISIPLIN DURUMU'), cleanPdfText('NET ODENECEK')]],
+                    head: [[cleanPdfText('PERSONEL'), cleanPdfText('SAATLİK ÜCRET'), cleanPdfText('NET MESAİ'), cleanPdfText('HAM HAKEDİŞ'), cleanPdfText('DİSİPLİN DURUMU'), cleanPdfText('NET ÖDENECEK')]],
                     body: financeTableData,
                     theme: 'grid',
-                    styles: { fillColor: [15, 23, 42], textColor: [220, 226, 235], font: 'Roboto', fontSize: 9, lineColor: [51, 65, 85], lineWidth: 0.5, cellPadding: 8 },
-                    headStyles: { fillColor: [16, 185, 129], textColor: [10, 15, 30], fontStyle: 'bold', fontSize: 10 },
-                    columnStyles: { 5: { fontStyle: 'bold', textColor: [16, 185, 129], halign: 'right' } },
-                    alternateRowStyles: { fillColor: [8, 12, 25] },
+                    styles: { fillColor: pdfTableBg, textColor: pdfTableText, font: 'Roboto', fontSize: 9, lineColor: pdfTableLine, lineWidth: 0.5, cellPadding: 8 },
+                    headStyles: { fillColor: pdfHeaderBgGreen, textColor: pdfHeaderText, fontStyle: 'bold', fontSize: 10 },
+                    columnStyles: { 5: { fontStyle: 'bold', textColor: pdfHeaderBgGreen, halign: 'right' } },
+                    alternateRowStyles: { fillColor: pdfTableAlt },
                     margin: { left: 40, right: 40 },
                     willDrawPage: function (data) {
-                        doc.setFillColor(10, 15, 30);
+                        doc.setFillColor(...pdfBg);
                         doc.rect(0, 0, doc.internal.pageSize.width, doc.internal.pageSize.height, 'F');
                     }
                 });
@@ -6224,23 +6530,23 @@ Mesajın sonuna 'ShiftTurbo Güvenlik Sistemi' imzasını ekle.`;
                 });
 
                 // Tablo 2: Ana Operasyon Logları (PDF)
-                doc.setFontSize(14); doc.setTextColor(244, 129, 32); doc.setFont('Roboto', 'bold');
-                doc.text(cleanPdfText("📜 ANA OPERASYON LOGLARI (GIRIS - CIKIS HAREKETLERI)"), 40, nextY);
+                doc.setFontSize(14); doc.setTextColor(...pdfHeaderBgOrange); doc.setFont('Roboto', 'bold');
+                doc.text(cleanPdfText("📜 ANA OPERASYON LOGLARI (GİRİŞ - ÇIKIŞ HAREKETLERİ)"), 40, nextY);
 
-                doc.setFontSize(10); doc.setTextColor(148, 163, 184); doc.setFont('Roboto', 'normal');
-                doc.text(cleanPdfText(`Toplam Kayit: ${tableData.length}`), doc.internal.pageSize.width - 150, nextY + 15);
+                doc.setFontSize(10); doc.setTextColor(...pdfTextSecondary); doc.setFont('Roboto', 'normal');
+                doc.text(cleanPdfText(`Toplam Kayıt: ${tableData.length}`), doc.internal.pageSize.width - 150, nextY + 15);
 
                 doc.autoTable({
                     startY: nextY + 25,
-                    head: [[cleanPdfText('PERSONEL'), cleanPdfText('DURUM'), cleanPdfText('BOLGE/NOT'), cleanPdfText('ZAMAN')]],
+                    head: [[cleanPdfText('PERSONEL'), cleanPdfText('DURUM'), cleanPdfText('BÖLGE/NOT'), cleanPdfText('ZAMAN')]],
                     body: tableData,
                     theme: 'grid',
-                    styles: { fillColor: [15, 23, 42], textColor: [220, 226, 235], font: 'Roboto', fontSize: 9, lineColor: [51, 65, 85], lineWidth: 0.5, cellPadding: 8 },
-                    headStyles: { fillColor: [244, 129, 32], textColor: [10, 15, 30], fontStyle: 'bold', fontSize: 10 },
-                    alternateRowStyles: { fillColor: [8, 12, 25] },
+                    styles: { fillColor: pdfTableBg, textColor: pdfTableText, font: 'Roboto', fontSize: 9, lineColor: pdfTableLine, lineWidth: 0.5, cellPadding: 8 },
+                    headStyles: { fillColor: pdfHeaderBgOrange, textColor: pdfHeaderText, fontStyle: 'bold', fontSize: 10 },
+                    alternateRowStyles: { fillColor: pdfTableAlt },
                     margin: { left: 40, right: 40 },
                     willDrawPage: function (data) {
-                        doc.setFillColor(10, 15, 30);
+                        doc.setFillColor(...pdfBg);
                         doc.rect(0, 0, doc.internal.pageSize.width, doc.internal.pageSize.height, 'F');
                     }
                 });
@@ -6249,8 +6555,8 @@ Mesajın sonuna 'ShiftTurbo Güvenlik Sistemi' imzasını ekle.`;
                 const pageCount = doc.internal.getNumberOfPages();
                 for (let i = 1; i <= pageCount; i++) {
                     doc.setPage(i);
-                    doc.setFontSize(8); doc.setTextColor(100, 116, 139);
-                    doc.text(cleanPdfText(`Sayfa ${i} / ${pageCount} - ShiftTurbo Yonetim Sistemi`), 40, doc.internal.pageSize.height - 30);
+                    doc.setFontSize(8); doc.setTextColor(...pdfTextSecondary);
+                    doc.text(cleanPdfText(`Sayfa ${i} / ${pageCount} - ShiftTurbo Yönetim Sistemi`), 40, doc.internal.pageSize.height - 30);
                 }
 
                 // Önizleme Modalı İçin Hazırlık
@@ -6361,19 +6667,14 @@ Mesajın sonuna 'ShiftTurbo Güvenlik Sistemi' imzasını ekle.`;
                 try {
                     const reg = await navigator.serviceWorker.ready;
                     const sub = await reg.pushManager.getSubscription();
-                    const btn = document.getElementById('btn-pwa-push');
-                    if (btn) {
-                        if (sub) {
-                            btn.style.background = 'rgba(16, 185, 129, 0.2)';
-                            btn.style.color = '#10b981';
-                            btn.style.borderColor = '#10b981';
-                            btn.innerText = '🔔 BİLDİRİMLERİ KAPAT';
-                        } else {
-                            btn.style.background = 'rgba(147, 51, 234, 0.2)';
-                            btn.style.color = '#c084fc';
-                            btn.style.borderColor = '#9333ea';
-                            btn.innerText = '🔔 BİLDİRİMLERİ AÇ';
-                        }
+                    const icon = document.getElementById('notif-bell-icon');
+                    const badge = document.getElementById('notif-bell-badge');
+                    if (sub) {
+                        if (icon) icon.textContent = '🔔';
+                        if (badge) badge.style.display = 'block';
+                    } else {
+                        if (icon) icon.textContent = '🔕';
+                        if (badge) badge.style.display = 'none';
                     }
                 } catch (e) {
                     console.error("Bildirim durumu kontrol edilemedi:", e);
@@ -6424,7 +6725,7 @@ Mesajın sonuna 'ShiftTurbo Güvenlik Sistemi' imzasını ekle.`;
 
                     // ── EĞER ZATEN ABONELİK VARSA: Kapat ─────────────────────
                     if (sub) {
-                        const confirmed = await cyberConfirm("BİLDİRİMLERİ KAPAT", "Canlı mobil bildirim aboneliğinizi iptal etmek istediğinize emin misiniz?");
+                        const confirmed = await cyberConfirm("BİLDİRİMLERİ KAPAT", "Arka plan mobil bildirimlerini kapatmak istediğinize emin misiniz?");
                         if (!confirmed) return;
 
                         await sub.unsubscribe();
@@ -6440,13 +6741,10 @@ Mesajın sonuna 'ShiftTurbo Güvenlik Sistemi' imzasını ekle.`;
                         } catch (e) { }
 
                         showToast("BİLDİRİMLER DEAKTİF", "Arka plan mobil bildirimleri kapatıldı.", "info");
-                        const btnOff = document.getElementById('btn-pwa-push');
-                        if (btnOff) {
-                            btnOff.style.background = 'rgba(147, 51, 234, 0.2)';
-                            btnOff.style.color = '#c084fc';
-                            btnOff.style.borderColor = '#9333ea';
-                            btnOff.innerText = '🔔 BİLDİRİMLERİ AÇ';
-                        }
+                        const icon = document.getElementById('notif-bell-icon');
+                        const badge = document.getElementById('notif-bell-badge');
+                        if (icon) icon.textContent = '🔕';
+                        if (badge) badge.style.display = 'none';
                         return;
                     }
 
@@ -6510,13 +6808,10 @@ Mesajın sonuna 'ShiftTurbo Güvenlik Sistemi' imzasını ekle.`;
                     } catch (e) { }
 
                     showToast("MOBİL BİLDİRİMLER AKTİF!", "Panel kapalı olsa bile personel hareketlerinde bildirim alacaksınız!", "success");
-                    const btnOn = document.getElementById('btn-pwa-push');
-                    if (btnOn) {
-                        btnOn.style.background = 'rgba(16, 185, 129, 0.2)';
-                        btnOn.style.color = '#10b981';
-                        btnOn.style.borderColor = '#10b981';
-                        btnOn.innerText = '🔔 BİLDİRİMLERİ KAPAT';
-                    }
+                    const icon2 = document.getElementById('notif-bell-icon');
+                    const badge2 = document.getElementById('notif-bell-badge');
+                    if (icon2) icon2.textContent = '🔔';
+                    if (badge2) badge2.style.display = 'block';
 
                 } catch (e) {
                     console.error("initPWAPush hatası:", e);
@@ -6526,7 +6821,7 @@ Mesajın sonuna 'ShiftTurbo Güvenlik Sistemi' imzasını ekle.`;
                     } else if (errMsg.includes('permission') || errMsg.includes('denied')) {
                         errMsg = "Bildirim izni gerekli. Tarayıcı ayarlarından shiftturbo.tech bildirimine izin verin.";
                     }
-                    showToast("HATA", "Bildirim aboneliği başlatılamadı: " + errMsg, "error");
+                    showToast("HATA", "Bildirimler aktif edilemedi: " + errMsg, "error");
                 }
             }
             window.initPWAPush = initPWAPush;
@@ -7306,6 +7601,162 @@ Mesajın sonuna 'ShiftTurbo Güvenlik Sistemi' imzasını ekle.`;
                 });
             });
         });
+    </script>
+    <!-- Hesap ve Profil Ayarları Modalı -->
+    <div id="profile-settings-modal" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(10px); z-index: 200000; align-items: center; justify-content: center;">
+        <div class="modal-card" style="width: 400px; max-width: 90%; background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 25px; box-shadow: 0 15px 35px rgba(0,0,0,0.5);">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
+                <h3 style="margin: 0; color: var(--text-main); font-family: 'Orbitron', sans-serif; font-size: 18px; display: flex; align-items: center; gap: 10px;">
+                    <i class="fas fa-user-shield" style="color: var(--primary);"></i> Hesap Ayarları
+                </h3>
+                <button onclick="closeProfileSettingsModal()" style="background: none; border: none; color: #94a3b8; font-size: 20px; cursor: pointer;"><i class="fas fa-times"></i></button>
+            </div>
+            
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; color: #94a3b8; font-size: 12px; margin-bottom: 5px; font-family: 'Poppins', sans-serif;">Yönetici E-posta (Okuma Modu)</label>
+                <input type="text" id="settings-email" disabled style="width: 100%; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.05); color: #64748b; padding: 10px; border-radius: 8px; font-family: 'Poppins', sans-serif; font-size: 13px; outline: none;">
+            </div>
+
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; color: #94a3b8; font-size: 12px; margin-bottom: 5px; font-family: 'Poppins', sans-serif;">İşletme Adı</label>
+                <input type="text" id="settings-business-name" style="width: 100%; background: var(--input-bg); border: 1px solid var(--border); color: var(--text-main); padding: 10px; border-radius: 8px; font-family: 'Poppins', sans-serif; font-size: 13px; outline: none; transition: all 0.2s;">
+            </div>
+
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; color: #94a3b8; font-size: 12px; margin-bottom: 5px; font-family: 'Poppins', sans-serif;">Yeni Şifre (Değiştirmek istemiyorsanız boş bırakın)</label>
+                <input type="password" id="settings-password" placeholder="Yeni şifreniz..." style="width: 100%; background: var(--input-bg); border: 1px solid var(--border); color: var(--text-main); padding: 10px; border-radius: 8px; font-family: 'Poppins', sans-serif; font-size: 13px; outline: none; transition: all 0.2s;">
+                <div style="color: var(--text-muted); font-size: 10px; margin-top: 4px; font-family: 'Poppins', sans-serif;">* Şifreniz en az 6 hane olmalıdır.</div>
+            </div>
+
+            <div style="margin-bottom: 25px;">
+                <label style="display: block; color: #94a3b8; font-size: 12px; margin-bottom: 5px; font-family: 'Poppins', sans-serif;">Yeni Şifre Tekrar</label>
+                <input type="password" id="settings-password-confirm" placeholder="Yeni şifrenizi tekrar girin..." style="width: 100%; background: var(--input-bg); border: 1px solid var(--border); color: var(--text-main); padding: 10px; border-radius: 8px; font-family: 'Poppins', sans-serif; font-size: 13px; outline: none; transition: all 0.2s;">
+            </div>
+
+            <div id="profile-settings-msg" style="display: none; padding: 10px; border-radius: 8px; font-size: 11px; font-family: 'Poppins', sans-serif; margin-bottom: 15px; font-weight: 600; text-align: center;"></div>
+
+            <div style="display: flex; gap: 10px;">
+                <button id="btn-save-profile" class="btn-cyber" onclick="saveProfileSettings()" style="flex: 1; padding: 12px; background: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid #3b82f6; font-size: 13px; font-weight: 600; cursor: pointer; border-radius: 8px; transition: all 0.3s;"><i class="fas fa-save"></i> DEĞİŞİKLİKLERİ KAYDET</button>
+            </div>
+            
+            <div style="margin-top: 15px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 15px;">
+                <button class="btn-cyber" onclick="closeProfileSettingsModal(); logout();" style="width: 100%; padding: 12px; background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid #ef4444; font-size: 13px; font-weight: 600; cursor: pointer; border-radius: 8px;"><i class="fas fa-sign-out-alt"></i> SİSTEMDEN ÇIKIŞ YAP</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function openProfileSettingsModal() {
+            document.getElementById('profile-settings-modal').style.display = 'flex';
+            
+            // Kullanıcı e-postasını al
+            const { data: { user } } = await _supabase.auth.getUser();
+            if (user && user.email) {
+                document.getElementById('settings-email').value = user.email;
+            }
+
+            // İşletme adını al
+            if (window.currentBusinessId) {
+                const { data, error } = await _supabase.from('businesses').select('business_name').eq('id', window.currentBusinessId).single();
+                if (data && data.business_name) {
+                    document.getElementById('settings-business-name').value = data.business_name;
+                }
+            }
+        }
+
+        function closeProfileSettingsModal() {
+            document.getElementById('profile-settings-modal').style.display = 'none';
+            document.getElementById('settings-password').value = '';
+            document.getElementById('settings-password-confirm').value = '';
+            const msgBox = document.getElementById('profile-settings-msg');
+            msgBox.style.display = 'none';
+            msgBox.innerHTML = '';
+            
+            const btn = document.getElementById('btn-save-profile');
+            btn.innerHTML = '<i class="fas fa-save"></i> DEĞİŞİKLİKLERİ KAYDET';
+            btn.style.background = 'rgba(59, 130, 246, 0.2)';
+            btn.style.color = '#60a5fa';
+            btn.style.borderColor = '#3b82f6';
+        }
+
+        function showProfileError(msg) {
+            const msgBox = document.getElementById('profile-settings-msg');
+            msgBox.style.display = 'block';
+            msgBox.style.background = 'rgba(239, 68, 68, 0.1)';
+            msgBox.style.color = '#ef4444';
+            msgBox.style.border = '1px solid #ef4444';
+            msgBox.innerHTML = '<i class="fas fa-exclamation-triangle"></i> ' + msg;
+        }
+
+        async function saveProfileSettings() {
+            const msgBox = document.getElementById('profile-settings-msg');
+            msgBox.style.display = 'none';
+            const btn = document.getElementById('btn-save-profile');
+            
+            try {
+                const newBizName = document.getElementById('settings-business-name').value.trim();
+                const newPassword = document.getElementById('settings-password').value.trim();
+                const newPasswordConfirm = document.getElementById('settings-password-confirm').value.trim();
+                
+                if (newBizName.length < 3) {
+                    showProfileError("İşletme adı en az 3 karakter olmalıdır.");
+                    return;
+                }
+
+                // Update Business Name
+                if (window.currentBusinessId) {
+                    const { error: nameError } = await _supabase.from('businesses')
+                        .update({ business_name: newBizName })
+                        .eq('id', window.currentBusinessId);
+                    
+                    if (nameError) {
+                        showProfileError("İşletme adı güncellenirken hata oluştu.");
+                        return;
+                    }
+                }
+
+                // Update Password if filled
+                if (newPassword !== "") {
+                    if (newPassword.length < 6) {
+                        showProfileError("Şifreniz en az 6 karakter olmalıdır.");
+                        return;
+                    }
+                    if (newPassword !== newPasswordConfirm) {
+                        showProfileError("Girdiğiniz şifreler eşleşmiyor, lütfen kontrol ediniz.");
+                        return;
+                    }
+                    const { error: pwdError } = await _supabase.auth.updateUser({ password: newPassword });
+                    if (pwdError) {
+                        showProfileError("Şifre güncellenirken hata oluştu: " + pwdError.message);
+                        return;
+                    }
+                }
+
+                // Başarılı durumu
+                btn.innerHTML = '<i class="fas fa-check-circle"></i> AYARLARINIZ KAYDEDİLDİ';
+                btn.style.background = 'rgba(16, 185, 129, 0.2)';
+                btn.style.color = '#10b981';
+                btn.style.borderColor = '#10b981';
+                
+                msgBox.style.display = 'block';
+                msgBox.style.background = 'rgba(16, 185, 129, 0.1)';
+                msgBox.style.color = '#10b981';
+                msgBox.style.border = '1px solid #10b981';
+                msgBox.innerHTML = 'Değişiklikleriniz başarıyla kaydedildi!';
+
+                setTimeout(() => {
+                    closeProfileSettingsModal();
+                }, 1500);
+
+            } catch (err) {
+                console.error("Profil ayarları kaydedilirken hata:", err);
+                showProfileError("Beklenmedik bir hata oluştu: " + err.message);
+            }
+        }
+        
+        window.openProfileSettingsModal = openProfileSettingsModal;
+        window.closeProfileSettingsModal = closeProfileSettingsModal;
+        window.saveProfileSettings = saveProfileSettings;
     </script>
 </body>
 
