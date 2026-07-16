@@ -3590,6 +3590,15 @@
                 _supabase.channel('broadcast-changes').on('postgres_changes', { event: '*', schema: 'public', table: 'broadcasts' }, payload => { fetchLatestBroadcast(); }).subscribe();
 
                 fetchLatestBroadcast(); setInterval(fetchLatestBroadcast, 30000);
+
+                // 🔔 PWA'da bildirim izni: her açılışta kontrol et
+                if ('Notification' in window && Notification.permission === 'default') {
+                    try {
+                        Notification.requestPermission().then(perm => {
+                            if (perm === 'granted') console.log('🔔 Bildirim izni alındı.');
+                        }).catch(e => console.warn('Push izin hatası:', e));
+                    } catch(e) { console.warn('Push catch:', e); }
+                }
             }
         };
 
