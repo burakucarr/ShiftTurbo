@@ -4,12 +4,26 @@
   "description": "ShiftTurbo AI Pro Yönetici Paneli",
   "icons": [
     {
+      "src": "logom_192.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "logom_384.png",
+      "type": "image/png",
+      "sizes": "384x384",
+      "purpose": "any maskable"
+    },
+    {
       "src": "logom.png",
       "type": "image/png",
       "sizes": "512x512",
       "purpose": "any maskable"
     }
   ],
+  "id": "/yonetici",
+  "scope": "/",
   "start_url": "/yonetici.html",
   "display": "standalone",
   "orientation": "portrait",

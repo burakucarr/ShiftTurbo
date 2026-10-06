@@ -15,7 +15,7 @@
     <link rel="icon" type="image/png" href="logom.png">
 
     <link
-        href="https://fonts.googleapis.com/css2?family=Poppins:wght@200;400;600;700;900&family=Orbitron:wght@200;500;700;900&family=Inter:wght@400;700;800;900&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Exo+2:wght@500;600;700;800;900&family=Rajdhani:wght@500;600;700;800&family=Poppins:wght@200;400;600;700;900&family=Orbitron:wght@600;700;900&family=Inter:wght@400;700;800;900&subset=latin,latin-ext&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
@@ -23,6 +23,21 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="./config.js"></script>
     <script src="./js/shared.js"></script>
+
+    <!-- 🔔 OneSignal Instant Web Push SDK -->
+    <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+    <script>
+      window.OneSignalDeferred = window.OneSignalDeferred || [];
+      OneSignalDeferred.push(async function(OneSignal) {
+        const appId = (typeof SHIFTURBO_CONFIG !== 'undefined' && SHIFTURBO_CONFIG.oneSignalAppId) || localStorage.getItem('shiftTurbo_onesignal_appid');
+        if (appId) {
+          await OneSignal.init({
+            appId: appId,
+            allowLocalhostAsSecureOrigin: true,
+          });
+        }
+      });
+    </script>
 
     <script>
         (function() {
@@ -105,6 +120,50 @@
         [data-theme="light"] .date-display-login {
             color: #475569;
             font-weight: 600;
+        }
+
+        /* 🟢 MESAİ AKTİF KART STİLLERİ (GECE / GÜNDÜZ %100 YÜKSEK KONTRAST) */
+        .live-shift-card-box {
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 20px;
+            text-align: left;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border: 1.5px solid #10b981 !important;
+        }
+        [data-theme="light"] .live-shift-card-box {
+            background: rgba(16, 185, 129, 0.08) !important;
+        }
+        [data-theme="dark"] .live-shift-card-box,
+        :root:not([data-theme="light"]) .live-shift-card-box {
+            background: rgba(16, 185, 129, 0.12) !important;
+        }
+
+        .live-lbl {
+            font-size: 13.5px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        [data-theme="light"] .live-lbl {
+            color: #334155 !important;
+        }
+        [data-theme="dark"] .live-lbl,
+        :root:not([data-theme="light"]) .live-lbl {
+            color: #cbd5e1 !important;
+        }
+
+        .live-val {
+            font-weight: 900 !important;
+        }
+        [data-theme="light"] .live-val {
+            color: #0f172a !important;
+        }
+        [data-theme="dark"] .live-val,
+        :root:not([data-theme="light"]) .live-val {
+            color: #ffffff !important;
         }
 
         [data-theme="light"] .pin-input {
@@ -458,9 +517,10 @@
         }
 
         .gps-status-text {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 9px;
-            letter-spacing: 2px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
             color: #38bdf8;
             text-align: center;
         }
@@ -563,14 +623,16 @@
         }
 
         .ucr-badge {
-            position: fixed !important;
-            bottom: max(18px, env(safe-area-inset-bottom, 18px)) !important;
-            right: 20px !important;
-            display: flex !important;
+            position: relative !important;
+            bottom: auto !important;
+            right: auto !important;
+            margin: 20px auto 10px auto !important;
+            display: inline-flex !important;
             align-items: center !important;
+            justify-content: center !important;
             gap: 10px !important;
             font-family: 'Segoe UI', sans-serif;
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 600;
             color: #ffffff;
             padding: 8px 16px;
@@ -579,8 +641,8 @@
             -webkit-backdrop-filter: blur(10px);
             border-radius: 12px;
             border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 0 15px rgba(244, 129, 32, 0.3), 0 0 30px rgba(0, 0, 0, 0.5);
-            z-index: 2147483647 !important;
+            box-shadow: 0 0 15px rgba(244, 129, 32, 0.3);
+            z-index: 5 !important;
             transition: all .3s cubic-bezier(0.4, 0, 0.2, 1);
             cursor: default;
             user-select: none;
@@ -1259,7 +1321,8 @@
 
         .modal-content,
         .error-content {
-            background: #0f172a !important;
+            background: var(--modal-bg, #0f172a) !important;
+            color: var(--text-main) !important;
             padding: 30px !important;
             border-radius: 25px !important;
             border: 2px solid var(--primary) !important;
@@ -1267,7 +1330,8 @@
             max-width: 320px !important;
             text-align: center !important;
             position: relative !important;
-            box-shadow: 0 0 50px rgba(0, 0, 0, 1);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3) !important;
+            transition: background 0.3s ease, color 0.3s ease;
         }
 
         .error-content {
@@ -1277,16 +1341,28 @@
         textarea {
             width: 100%;
             height: 100px;
-            background: rgba(0, 0, 0, 0.3);
-            border: 1px solid var(--border);
+            background: var(--glass, rgba(15, 23, 42, 0.05));
+            border: 1.5px solid var(--border);
             border-radius: 12px;
-            color: white;
-            padding: 10px;
-            font-family: 'Poppins';
+            color: var(--text-main);
+            padding: 12px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 13px;
             margin: 15px 0;
             resize: none;
             outline: none;
             box-sizing: border-box;
+            transition: all 0.3s ease;
+        }
+
+        textarea::placeholder {
+            color: var(--text-muted);
+            opacity: 0.75;
+        }
+
+        textarea:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 12px rgba(244, 129, 32, 0.25);
         }
 
         /* === SPLASH & LANDING === */
@@ -1654,8 +1730,7 @@
             .ucr-badge {
                 font-size: 10px;
                 padding: 6px 12px;
-                bottom: 10px !important;
-                right: 10px !important;
+                margin: 15px auto 10px auto !important;
             }
 
             .time-display {
@@ -2009,21 +2084,21 @@
     <div id="message-modal">
         <div class="modal-content" style="position: relative;">
             <span
-                style="position: absolute; top: 15px; right: 20px; color: rgba(255,255,255,0.3); cursor: pointer; font-size: 16px; font-family: 'Orbitron';"
+                style="position: absolute; top: 15px; right: 20px; color: var(--text-muted); cursor: pointer; font-size: 16px; font-family: 'Orbitron';"
                 onclick="toggleModal(false)">X</span>
 
             <div
                 style="font-family: 'Orbitron'; color: var(--primary); font-size: 12px; letter-spacing: 3px; margin-bottom: 5px;">
                 📩 MERKEZE İLET</div>
             <div
-                style="font-size: 9px; color: #64748b; letter-spacing: 1px; margin-bottom: 15px; text-transform: uppercase;">
+                style="font-size: 9px; color: var(--text-muted); letter-spacing: 1px; margin-bottom: 15px; text-transform: uppercase;">
                 Durum Bildirisi veya Operasyon Notu</div>
 
             <textarea id="msg-area"
                 placeholder="Mesajınızı buraya yazınız... (Örn: Ekipman arızası var, bölge temizlendi vb.)"></textarea>
 
             <div
-                style="font-size: 8px; color: #475569; margin-top: -5px; margin-bottom: 15px; letter-spacing: 1px; line-height: 1.4; text-align: left;">
+                style="font-size: 8px; color: var(--text-muted); margin-top: -5px; margin-bottom: 15px; letter-spacing: 1px; line-height: 1.4; text-align: left;">
                 🔒 Bu mesaj yalnızca sistem yöneticisi (UCR Technology) tarafından uçtan uca şifreli olarak okunabilir.
             </div>
 
@@ -2031,7 +2106,7 @@
                 <button class="btn-in btn-mini" onclick="sendMessage()"
                     style="margin-top:0; background: linear-gradient(135deg, var(--primary), #d96d00);">GÖNDER</button>
                 <button class="btn-out btn-mini" onclick="toggleModal(false)"
-                    style="margin-top:0; background: #334155;">İPTAL</button>
+                    style="margin-top:0; background: var(--border); color: var(--text-main);">İPTAL</button>
             </div>
         </div>
     </div>
@@ -2182,7 +2257,7 @@
             <div id="confirm-box" class="fade-in">
 
                 <p id="user-check-text"
-                    style="font-size: 10px; letter-spacing: 1px; color: var(--text-sub); font-family: 'Orbitron';"></p>
+                    style="font-size: 11px; letter-spacing: 1px; color: var(--text-sub); font-family: 'Rajdhani', 'Exo 2', 'Poppins', sans-serif; font-weight: 700;"></p>
 
                 <button class="btn-in btn-mini" onclick="verifySuccess()">EVET, BENİM</button>
 
@@ -2194,7 +2269,7 @@
             <div id="action-confirm" class="fade-in">
 
                 <p id="action-text"
-                    style="font-size: 10px; letter-spacing: 1px; color: var(--text-main); font-family: 'Orbitron'; margin-bottom: 10px;">
+                    style="font-size: 11px; letter-spacing: 1px; color: var(--text-main); font-family: 'Rajdhani', 'Exo 2', 'Poppins', sans-serif; font-weight: 700; margin-bottom: 10px;">
                 </p>
 
                 <button id="final-ok-btn" onclick="executeAction()">ONAYLIYORUM</button>
@@ -2261,6 +2336,24 @@
 
 
     <script>
+        // 🧹 PWA Zorunlu Önbellek Temizleyici (Otonom Cache Purge)
+        if ('caches' in window) {
+            const currentPurgeVer = 'v63_purge';
+            if (localStorage.getItem('shiftTurbo_purge_ver') !== currentPurgeVer) {
+                caches.keys().then(keys => {
+                    return Promise.all(keys.map(k => caches.delete(k)));
+                }).then(() => {
+                    localStorage.setItem('shiftTurbo_purge_ver', currentPurgeVer);
+                    console.log('🧹 TÜM PWA ÖNBELLEKLERİ BAŞARIYLA TEMİZLENDİ!');
+                    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+                        navigator.serviceWorker.getRegistrations().then(regs => {
+                            regs.forEach(r => r.update());
+                        });
+                    }
+                }).catch(e => console.warn('Cache purge error:', e));
+            }
+        }
+
         /* ============================================
            🚀 SHIFTURBO — TERMINAL ENGINE (terminal.js)
            Personel Terminali İşlevleri ve Supabase Bağlantısı
@@ -2282,11 +2375,26 @@
         let pendingType = null;
         let autoTrackInterval = null;
 
-        // 📲 Service Worker Kaydı (PWA için)
+        // 📲 Service Worker Kaydı (PWA Canlı Sürüm Güncelleyici)
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('./sw.js')
-                    .then(reg => console.log('ShiftTurbo PWA Hazır!', reg))
+                    .then(reg => {
+                        console.log('ShiftTurbo PWA Hazır!', reg);
+                        try { reg.update(); } catch(e) {} // PWA açılışında en güncel koda zorla
+
+                        reg.onupdatefound = () => {
+                            const installingWorker = reg.installing;
+                            if (installingWorker) {
+                                installingWorker.onstatechange = () => {
+                                    if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                        console.log('🚀 YENİ PWA SÜRÜMÜ YÜKLENDİ! Sekme yenileniyor...');
+                                        window.location.reload();
+                                    }
+                                };
+                            }
+                        };
+                    })
                     .catch(err => console.log('PWA Hatası:', err));
             });
         }
@@ -2474,14 +2582,18 @@
                 if (typeof onEndedCallback === 'function') onEndedCallback();
                 return;
             }
-            // Önceki event listener'ların tetiklenmesini önlemek için onend/onerror temizle
             if (window.currentUtterance) {
                 window.currentUtterance.onend = null;
                 window.currentUtterance.onerror = null;
             }
             window.speechSynthesis.cancel(); // Önceki yarım kalan sesleri anında temizle
 
-            const utterance = new SpeechSynthesisUtterance(text);
+            // Android TTS büyük harfli isimleri harf harf kodlamasın (B-U-R-A-K) diye düzelt
+            let cleanedText = (text || "").replace(/([A-ZÇĞİÖŞÜ]{2,})/g, function(match) {
+                return match.charAt(0) + match.slice(1).toLowerCase();
+            });
+
+            const utterance = new SpeechSynthesisUtterance(cleanedText);
             utterance.lang = 'tr-TR';
             utterance.rate = 0.92;  // Daha sakin, tane tane ve insansı bir diksiyon
             utterance.pitch = 1.05; // Daha canlı, enerjik ve premium bir ton
@@ -2501,8 +2613,9 @@
         }
 
         function speakGreeting(name) {
-            const firstName = name.split(' ')[0];
-            speakAI(`Shift Turbo Güvenlik Protokolü. ${firstName} kimliği başarıyla doğrulandı. Sistem aktif.`, ["kimlik_dogrulandi_1.mp3", "kimlik_dogrulandi_2.mp3", "kimlik_dogrulandi_3.mp3"]);
+            const firstName = name ? name.split(' ')[0] : 'Personel';
+            const formattedName = firstName ? (firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase()) : 'Personel';
+            speakAI(`Shift Turbo Güvenlik Protokolü. ${formattedName} kimliği başarıyla doğrulandı. Sistem aktif.`, ["kimlik_dogrulandi_1.mp3", "kimlik_dogrulandi_2.mp3", "kimlik_dogrulandi_3.mp3"]);
         }
 
         function updateTime() {
@@ -2542,25 +2655,39 @@
             if (display) display.innerText = "*".repeat(currentPin.length) || "****";
         }
 
+        let isQrProcessing = false;
         async function startQR() {
+            if (isQrProcessing) return;
             playSound('tap');
             document.getElementById('qrWrapper').style.display = 'block';
             document.getElementById('scanBtn').style.display = 'none';
 
             if (!html5QrCode) html5QrCode = new Html5Qrcode("reader");
+            isQrProcessing = false;
 
-            html5QrCode.start({ facingMode: "environment" }, { fps: 25, qrbox: 250 }, async (decodedText) => {
+            html5QrCode.start({ facingMode: "environment" }, { fps: 15, qrbox: 250 }, async (decodedText) => {
+                if (isQrProcessing) return; // 🔒 Çift ve peş peşe okumaları anında engelle
                 const upperText = decodedText.toUpperCase();
                 if (upperText.includes("SHIFTURBO:") || upperText.includes("SHIFT")) {
+                    isQrProcessing = true; // 🔒 Anında kilitle
                     let businessId = null;
                     let totpToken = null;
+                    let bizNameFromQR = null;
 
                     if (upperText.includes("SHIFTURBO:")) {
-                        // Format: SHIFTURBO:{business_id}:{totp_token} (yeni dinamik QR)
-                        // veya:   SHIFTURBO:{business_id}              (eski statik QR — geriye dönük uyumlu)
                         const parts = decodedText.split(":");
                         businessId = parts[1] ? parts[1].trim() : null;
-                        totpToken = parts[2] ? parts[2].trim() : null;
+                        
+                        parts.forEach(part => {
+                            const clean = part.trim();
+                            if (clean.startsWith("bname=")) {
+                                try {
+                                    bizNameFromQR = decodeURIComponent(clean.substring(6));
+                                } catch(e) {}
+                            } else if (clean.length === 6 && !isNaN(clean) && !totpToken) {
+                                totpToken = clean;
+                            }
+                        });
                     }
 
                     // Geçersiz veya eski format fallback
@@ -2569,6 +2696,13 @@
                     }
 
                     localStorage.setItem('shiftTurbo_business_id', businessId);
+
+                    if (bizNameFromQR && bizNameFromQR.trim()) {
+                        console.log("🎯 QR KOD İÇİNDEN İŞLETME ADI ANINDA OKUNDU:", bizNameFromQR);
+                        localStorage.setItem('shiftTurbo_business_name', bizNameFromQR);
+                        document.querySelectorAll('.live-shift-biz-name').forEach(el => el.innerText = bizNameFromQR);
+                    }
+
                     // TOTP token'ı kaydet (dinamik QR); yoksa eski değeri temizle
                     if (totpToken) {
                         localStorage.setItem('shiftTurbo_totp_token', totpToken);
@@ -2576,13 +2710,57 @@
                         localStorage.removeItem('shiftTurbo_totp_token');
                     }
 
+                    // İş yeri konum ve ad bilgilerini çek ve localStorage'a kaydet
+                    try {
+                        let bName = null;
+                        if (_supabase) {
+                            try {
+                                const { data: bizData } = await _supabase.from('businesses').select('*').eq('id', businessId).limit(1);
+                                if (bizData && bizData.length > 0 && bizData[0]) {
+                                    if (bizData[0].store_lat && bizData[0].store_lon) {
+                                        localStorage.setItem('shiftTurbo_store_lat', bizData[0].store_lat);
+                                        localStorage.setItem('shiftTurbo_store_lon', bizData[0].store_lon);
+                                        localStorage.setItem('shiftTurbo_max_distance', bizData[0].max_distance || 150);
+                                    }
+                                    bName = bizData[0].business_name || bizData[0].name || bizData[0].store_name;
+                                }
+                            } catch(e) {}
+                        }
+
+                        if (!bName) {
+                            try {
+                                const restUrl = proxyUrl.replace(/\/$/, '') + '/rest/v1';
+                                const headers = { 'apikey': 'proxy-authenticated', 'Content-Type': 'application/json' };
+                                const pRes = await fetch(restUrl + '/businesses?id=eq.' + businessId + '&select=*', { headers });
+                                if (pRes.ok) {
+                                    const pData = await pRes.json();
+                                    if (pData && pData.length > 0 && pData[0]) {
+                                        bName = pData[0].business_name || pData[0].name || pData[0].store_name;
+                                        if (pData[0].store_lat && pData[0].store_lon) {
+                                            localStorage.setItem('shiftTurbo_store_lat', pData[0].store_lat);
+                                            localStorage.setItem('shiftTurbo_store_lon', pData[0].store_lon);
+                                            localStorage.setItem('shiftTurbo_max_distance', pData[0].max_distance || 150);
+                                        }
+                                    }
+                                }
+                            } catch(pe) {}
+                        }
+
+                        if (bName && bName.trim()) {
+                            console.log("✅ QR OKUNDU: İŞLETME ADI SAKLANDI:", bName);
+                            localStorage.setItem('shiftTurbo_business_name', bName);
+                        }
+                    } catch(e) { console.warn('İş yeri bilgisi alınamadı:', e); }
+
                     playSound('success');
-                    await html5QrCode.stop();
+                    try { await html5QrCode.stop(); } catch(e){}
                     document.getElementById('qrWrapper').style.display = 'none';
                     document.getElementById('pin-pad').style.display = 'block';
                     createNumPad();
+                    setTimeout(() => { isQrProcessing = false; }, 2000);
                 }
             }).catch(err => {
+                isQrProcessing = false;
                 playSound('error');
                 document.getElementById('qrWrapper').style.display = 'none';
                 document.getElementById('scanBtn').style.display = 'block';
@@ -2815,7 +2993,7 @@
                 localStorage.setItem('temp_user_name', fullName);
                 localStorage.setItem('temp_user_pin', currentPin.trim());
                 document.getElementById('pin-pad').style.display = 'none';
-                document.getElementById('user-check-text').innerText = `MERHABA ${fullName.split(' ')[0].toUpperCase()}, GİRİŞ YAPAN SEN MİSİN?`;
+                document.getElementById('user-check-text').innerText = `MERHABA ${fullName.split(' ')[0].toLocaleUpperCase('tr-TR')}, GİRİŞ YAPAN SEN MİSİN?`;
                 document.getElementById('confirm-box').style.display = 'block';
             } else {
                 playSound('error');
@@ -2834,7 +3012,9 @@
                     document.getElementById('error-msg-body').innerHTML = `<b>📱 CİHAZ EŞLEŞME HATASI:</b><br><br>Bu PIN kodu başka bir telefon ile eşleştirilmiş. Yöneticinizden 'Cihaz Kilidini Açmasını' talep edin.`;
                     document.getElementById('error-modal').style.display = 'flex';
                 } else {
-                    showToast("HATALI PIN", (data && data.message) || "Girdiğiniz PIN kodu geçersizdir.", "error");
+                    const attemptsLeft = (data && data.attempts_left !== undefined) ? data.attempts_left : null;
+                    const msg = attemptsLeft !== null ? `Girdiğiniz PIN geçersizdir. Kalan Hakkınız: ${attemptsLeft} / 5` : ((data && data.message) || "Girdiğiniz PIN kodu geçersizdir.");
+                    showToast("HATALI PIN", msg, "error");
                 }
             }
         }
@@ -2850,13 +3030,9 @@
             // 1. Cihaz ID Güncellemesi ( verify_pin RPC fonksiyonu içinde halledildi)
             console.log("Cihaz doğrulaması güvenli arka plan üzerinden yapıldı.");
 
-            // 2. Bildirim İzni İsteme (Ana akışı asla bloklama!)
-            if ('Notification' in window && 'serviceWorker' in navigator) {
-                try {
-                    Notification.requestPermission().then(perm => {
-                        if (perm === 'granted') console.log("🔔 Push Aktif.");
-                    }).catch(e => console.warn("Push uyarısı:", e));
-                } catch (e) { console.warn("Push catch:", e); }
+            // 2. Push Bildirim Aboneliği (WhatsApp Tarzı Arka Plan Bildirimi İçin Kaydet)
+            if (typeof window.initTerminalPushNotification === 'function') {
+                window.initTerminalPushNotification(fullName);
             }
 
             // 🚀 4. ASIL GİRİŞ İŞLEMİ (KESİN VE ANINDA ÇALIŞIR!)
@@ -2959,7 +3135,7 @@
                     window.resetToScanScreen();
                     window.location.replace(window.location.pathname + '?reset=' + Date.now());
                 };
-                try { speakAI("Sayın personel, mesainiz daha önceden kaydedilmiş. Ana ekrana yönlendiriliyorsunuz.", null, doRedirectAfterSpeech); } catch (e) { doRedirectAfterSpeech(); }
+                try { speakAI("Sayın personel, mesainiz daha önceden kaydedilmiş. Ana ekrana yönlendiriliyorsunuz.", "zaten_cikis_yapildi.mp3", doRedirectAfterSpeech); } catch (e) { doRedirectAfterSpeech(); }
                 return;
             }
 
@@ -2976,7 +3152,7 @@
                     errorMsgBody.innerHTML = `<b>⚠️ BİLGİLENDİRME (ZATEN MESAİDESİNİZ):</b><br><br>Sistem kayıtlarında zaten aktif bir mesai başlangıcınız bulunmaktadır.<br><br>Giriş işleminiz daha önce merkeze iletilmiştir. İyi çalışmalar dileriz.`;
                     errorModal.style.display = 'flex';
                 }
-                try { speakAI("Sayın personel, sistemde zaten aktif bir mesai kaydınız bulunmaktadır."); } catch (e) { }
+                try { speakAI("Sayın personel, sistemde zaten aktif bir mesai kaydınız bulunmaktadır.", "zaten_mesaidesiniz.mp3"); } catch (e) { }
                 setTimeout(() => { location.reload(); }, 6000);
                 return;
             }
@@ -3046,7 +3222,7 @@
                             window.clearTerminalSession();
                             if (typeof window.resetToScanScreen === 'function') window.resetToScanScreen();
                         };
-                        try { speakAI("Sayın personel, cihaz kayıtlarında zaten bir çıkış işlemi bulunmaktadır.", null, doRedirectAfterSpeechOff); } catch (e) { doRedirectAfterSpeechOff(); }
+                        try { speakAI("Sayın personel, cihaz kayıtlarında zaten bir çıkış işlemi bulunmaktadır.", "zaten_cikis_yapildi.mp3", doRedirectAfterSpeechOff); } catch (e) { doRedirectAfterSpeechOff(); }
                         return;
                     }
 
@@ -3062,7 +3238,7 @@
                             errorMsgBodyOff2.innerHTML = `<b>⚠️ BİLGİLENDİRME (ZATEN MESAİDESİNİZ):</b><br><br>Cihazın yerel kayıtlarında zaten aktif bir mesai başlangıcınız bulunmaktadır.<br><br>İnternet bağlantısı olmadığından bulut doğrulaması yapılamıyor. Bağlantı sağlandığında sistem otomatik eşitlenecektir.`;
                             errorModalOff2.style.display = 'flex';
                         }
-                        try { speakAI("Sayın personel, cihaz kayıtlarında zaten aktif bir mesai kaydınız bulunmaktadır."); } catch (e) { }
+                        try { speakAI("Sayın personel, cihaz kayıtlarında zaten aktif bir mesai kaydınız bulunmaktadır.", "zaten_mesaidesiniz.mp3"); } catch (e) { }
                         setTimeout(() => {
                             if (errorModalOff2) errorModalOff2.style.display = 'none';
                             location.reload();
@@ -3074,6 +3250,27 @@
                     playSound('success');
 
                     const businessId = localStorage.getItem('shiftTurbo_business_id');
+
+                    // Çevrimdışı mod için de Haversine mesafe hesaplama
+                    let offlineDistInfo = `DOĞRULUK: ${Math.round(accuracy)}m (⚡ Çevrimdışı)`;
+                    const offStoreLat = parseFloat(localStorage.getItem('shiftTurbo_store_lat'));
+                    const offStoreLon = parseFloat(localStorage.getItem('shiftTurbo_store_lon'));
+                    const offMaxDist = parseInt(localStorage.getItem('shiftTurbo_max_distance')) || 150;
+                    if (lat && lon && !isNaN(offStoreLat) && !isNaN(offStoreLon)) {
+                        const toRad = (deg) => deg * Math.PI / 180;
+                        const R = 6371000;
+                        const dLat = toRad(offStoreLat - lat);
+                        const dLon = toRad(offStoreLon - lon);
+                        const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(toRad(lat)) * Math.cos(toRad(offStoreLat)) * Math.sin(dLon/2) * Math.sin(dLon/2);
+                        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+                        const dist = Math.round(R * c);
+                        if (dist > offMaxDist) {
+                            offlineDistInfo = `DOĞRULUK: ${Math.round(accuracy)}m | MESAFE: ${dist}m ⚠️ SINIR DIŞI (⚡ Çevrimdışı)`;
+                        } else {
+                            offlineDistInfo = `DOĞRULUK: ${Math.round(accuracy)}m | MESAFE: ${dist}m ✅ (⚡ Çevrimdışı)`;
+                        }
+                    }
+
                     const offlineQueue = window.ShiftTurboShared.getObfuscated('shiftTurbo_offline_queue') || [];
                     const offlineRecord = {
                         offline_id: 'off_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now(),
@@ -3081,7 +3278,7 @@
                         type: type,
                         lat: lat,
                         lon: lon,
-                        mahalle: `DOĞRULUK: ${Math.round(accuracy)}m (⚡ Çevrimdışı)`,
+                        mahalle: offlineDistInfo,
                         device_time: new Date().toISOString(),
                         is_offline_sync: true,
                         business_id: businessId
@@ -3089,6 +3286,11 @@
                     offlineQueue.push(offlineRecord);
                     window.ShiftTurboShared.setObfuscated('shiftTurbo_offline_queue', offlineQueue);
                     window.ShiftTurboShared.setStatus(name, type);
+                    if (type === 'GİRİŞ') {
+                        localStorage.setItem('shiftTurbo_active_start_' + name, new Date().toISOString());
+                    } else if (type === 'ÇIKIŞ') {
+                        localStorage.removeItem('shiftTurbo_active_start_' + name);
+                    }
 
                     // Çevrimdışı İşlem Başladı Ekranı
                     statusEl.innerHTML = type === 'ÇIKIŞ' ? `🛑 GÜVENLİK PROTOKOLÜ: MESAİ BİTİRİLDİ (ÇEVRİMDİŞI)` : `<span class="plane-animation">✈️</span> 🛰️ GÜVENLİK PROTOKOLÜ: MESAİ AKTİF (ÇEVRİMDİŞI)`;
@@ -3129,6 +3331,29 @@
                 }
 
                 const businessId = localStorage.getItem('shiftTurbo_business_id');
+
+                // Haversine Mesafe Hesaplama (İş yerine olan gerçek mesafe)
+                let distanceInfo = `DOĞRULUK: ${Math.round(accuracy || 999)}m`;
+                const storeLat = parseFloat(localStorage.getItem('shiftTurbo_store_lat'));
+                const storeLon = parseFloat(localStorage.getItem('shiftTurbo_store_lon'));
+                const maxDist = parseInt(localStorage.getItem('shiftTurbo_max_distance')) || 150;
+
+                if (lat && lon && !isNaN(storeLat) && !isNaN(storeLon)) {
+                    const toRad = (deg) => deg * Math.PI / 180;
+                    const R = 6371000; // Dünya yarıçapı (metre)
+                    const dLat = toRad(storeLat - lat);
+                    const dLon = toRad(storeLon - lon);
+                    const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(toRad(lat)) * Math.cos(toRad(storeLat)) * Math.sin(dLon/2) * Math.sin(dLon/2);
+                    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+                    const distance = Math.round(R * c);
+
+                    if (distance > maxDist) {
+                        distanceInfo = `DOĞRULUK: ${Math.round(accuracy || 999)}m | MESAFE: ${distance}m ⚠️ SINIR DIŞI (Limit: ${maxDist}m)`;
+                    } else {
+                        distanceInfo = `DOĞRULUK: ${Math.round(accuracy || 999)}m | MESAFE: ${distance}m ✅`;
+                    }
+                }
+
                 let insertResult = null;
                 try {
                     insertResult = await _supabase.from('logs').insert([{
@@ -3136,7 +3361,7 @@
                         type: type,
                         lat: lat,
                         lon: lon,
-                        mahalle: `DOĞRULUK: ${Math.round(accuracy || 999)}m`,
+                        mahalle: distanceInfo,
                         business_id: businessId
                     }]);
                 } catch (e) {
@@ -3148,10 +3373,15 @@
                 if (error) {
                     playSound('error');
                     statusEl.innerText = "❌ VERİTABANI HATASI";
-                    document.getElementById('error-msg-body').innerText = "Kayıt Başarısız: " + (error.message || "Bilinmeyen sunucu hatası");
+                    document.getElementById('error-msg-body').innerHTML = window.formatSupabaseErrorMessage(error);
                     document.getElementById('error-modal').style.display = 'flex';
                 } else {
                     window.ShiftTurboShared.setStatus(name, type);
+                    if (type === 'GİRİŞ') {
+                        localStorage.setItem('shiftTurbo_active_start_' + name, new Date().toISOString());
+                    } else if (type === 'ÇIKIŞ') {
+                        localStorage.removeItem('shiftTurbo_active_start_' + name);
+                    }
                     // Çevrimiçi İşlem Başarılı
                     statusEl.innerHTML = type === 'ÇIKIŞ' ? `🛑 GÜVENLİK PROTOKOLÜ: MESAİ BİTİRİLDİ` : `<span class="plane-animation">✈️</span> 🛰️ GÜVENLİK PROTOKOLÜ: MESAİ AKTİF`;
                     statusEl.classList.add('success-glow');
@@ -3190,22 +3420,22 @@
                 }
             };
 
-            // 🛰️ Animasyonlu GPS ekranı kaldırıldı. İşlem doğrudan arka planda hızlı konum almaya çalışır.
+            // 🛰️ Gerçek GPS Konum Alma Motoru
             statusEl.innerText = "⏳ İŞLEM KAYDEDİLİYOR...";
             
             const startBackgroundLocationCheck = () => {
                 let hasFinished = false;
 
-                // Max 2 saniye bekler, alamazsa doğrudan devam eder (Donmayı önler)
+                // Max 6 saniye bekler; alamazsa bgLocation veya yedek konum ile devam eder
                 const timeoutId = setTimeout(() => {
                     if (hasFinished) return;
                     hasFinished = true;
-                    console.log("⏱️ Arka plan GPS zaman aşımı. Yaklaşık konumla devam ediliyor...");
+                    console.log("⏱️ Yüksek hassasiyetli GPS zaman aşımı. Yaklaşık konumla devam ediliyor...");
                     const fallbackLat = window.bgLocation ? window.bgLocation.latitude : null;
                     const fallbackLon = window.bgLocation ? window.bgLocation.longitude : null;
                     const fallbackAcc = window.bgLocation ? window.bgLocation.accuracy : 999;
                     finalizeLocation(fallbackAcc, fallbackLat, fallbackLon);
-                }, 2000);
+                }, 6000);
 
                 if (!navigator.geolocation) {
                     if (hasFinished) return;
@@ -3232,11 +3462,11 @@
                         const fallbackAcc = window.bgLocation ? window.bgLocation.accuracy : 999;
                         finalizeLocation(fallbackAcc, fallbackLat, fallbackLon);
                     },
-                    { enableHighAccuracy: false, timeout: 1800, maximumAge: 10000 }
+                    { enableHighAccuracy: true, timeout: 5500, maximumAge: 5000 }
                 );
             };
 
-            if (window.bgLocation && window.bgLocation.accuracy <= 40) {
+            if (window.bgLocation && window.bgLocation.accuracy <= 100) {
                 finalizeLocation(window.bgLocation.accuracy, window.bgLocation.latitude, window.bgLocation.longitude);
             } else {
                 startBackgroundLocationCheck();
@@ -3365,8 +3595,82 @@
             console.log("🚀 SİSTEM BAŞLATILIYOR...");
             const user = localStorage.getItem('shiftTurbo_user');
             const auth = localStorage.getItem('auth_active') === 'true';
+            const businessId = localStorage.getItem('shiftTurbo_business_id');
+            // İşletme adını önce cache'den al (yoksa Yükleniyor...), arka planda DB/Proxy'den güncelle
+            let storedName = localStorage.getItem('shiftTurbo_business_name');
+            let currentBusinessName = (storedName && storedName.trim() && storedName !== 'ShiftTurbo İşletmesi') ? storedName : 'Yükleniyor...';
 
-            if (user && auth && navigator.geolocation) {
+            // Arka planda DB/Proxy üzerinden 4 katmanlı otonom işletme adı sorgulama motoru
+            const refreshBusinessNameInBackground = () => {
+                let attemptsCount = 0;
+                const attempt = async () => {
+                    attemptsCount++;
+                    if (typeof _supabase === 'undefined' || !_supabase) {
+                        if (attemptsCount < 30) {
+                            setTimeout(attempt, 300); // _supabase hazır olana kadar 300ms bir tekrar dene!
+                        }
+                        return;
+                    }
+
+                    let targetBizId = localStorage.getItem('shiftTurbo_business_id');
+                    const currentUser = localStorage.getItem('shiftTurbo_user');
+                    let fetchedName = null;
+
+                    // Katman 1: Mevcut targetBizId ile Supabase sorgusu
+                    if (targetBizId && targetBizId !== '947d3584-a8bf-4d63-b844-0c5952e22754') {
+                        try {
+                            const { data: bData } = await _supabase.from('businesses').select('*').eq('id', targetBizId).limit(1);
+                            if (bData && bData.length > 0 && bData[0]) {
+                                fetchedName = bData[0].business_name || bData[0].name || bData[0].store_name;
+                            }
+                        } catch(e) {}
+                    }
+
+                    // Katman 2: Personel adından (users tablosu - ILIKE harf bağımsız) business_id bul ve işletmeyi sorgula
+                    if (!fetchedName && currentUser) {
+                        try {
+                            let userBizId = null;
+                            const { data: uData } = await _supabase.from('users').select('*').ilike('ad_soyad', currentUser).limit(1);
+                            if (uData && uData.length > 0 && uData[0] && uData[0].business_id) {
+                                userBizId = uData[0].business_id;
+                            }
+
+                            if (userBizId) {
+                                localStorage.setItem('shiftTurbo_business_id', userBizId);
+                                const { data: bData2 } = await _supabase.from('businesses').select('*').eq('id', userBizId).limit(1);
+                                if (bData2 && bData2.length > 0 && bData2[0]) {
+                                    fetchedName = bData2[0].business_name || bData2[0].name || bData2[0].store_name;
+                                }
+                            }
+                        } catch(e) {}
+                    }
+
+                    // Katman 3: Genel Supabase sorgusu (İşletmeler tablosundaki ilk/aktif işletmeyi çek)
+                    if (!fetchedName) {
+                        try {
+                            const { data: bData3 } = await _supabase.from('businesses').select('*').limit(1);
+                            if (bData3 && bData3.length > 0 && bData3[0]) {
+                                fetchedName = bData3[0].business_name || bData3[0].name || bData3[0].store_name;
+                                if (bData3[0].id) localStorage.setItem('shiftTurbo_business_id', bData3[0].id);
+                            }
+                        } catch(e) {}
+                    }
+
+                    if (fetchedName && fetchedName.trim()) {
+                        console.log("✅ İŞLETME ADI BAŞARIYLA ALINDI VE GÜNCELLENDİ:", fetchedName);
+                        localStorage.setItem('shiftTurbo_business_name', fetchedName);
+                        document.querySelectorAll('.live-shift-biz-name').forEach(el => el.innerText = fetchedName);
+                    } else {
+                        const fallbackName = localStorage.getItem('shiftTurbo_business_name') || 'ShiftTurbo Mağazası';
+                        document.querySelectorAll('.live-shift-biz-name').forEach(el => el.innerText = fallbackName);
+                    }
+                };
+                attempt();
+            };
+            window.refreshBusinessNameInBackground = refreshBusinessNameInBackground;
+            refreshBusinessNameInBackground();
+
+            if (navigator.geolocation) {
                 navigator.geolocation.watchPosition(
                     (pos) => { window.bgLocation = pos.coords; },
                     (err) => { console.log("BG GPS Isıtma Hatası:", err); },
@@ -3377,54 +3681,91 @@
             const mainActions = document.getElementById('main-actions');
 
             if (user && auth) {
-                // Ekranın yüklenirken (async Supabase çağrısı) titreşmesini / eski durum butonunun gelmesini önlemek için anında yerel durum ataması
                 const initialStatus = window.ShiftTurboShared.getStatus(user);
+                let activeShiftStartTime = 0;
+                const savedStart = localStorage.getItem('shiftTurbo_active_start_' + user);
+                if (savedStart) {
+                    activeShiftStartTime = new Date(savedStart).getTime();
+                }
+
                 if (initialStatus === 'GİRİŞ') {
                     document.getElementById('status-bar').style.width = "100%";
                     document.getElementById('greeting').innerText = "SYSTEM ACTIVE / " + user.toUpperCase();
+                    
+                    const initialStartStr = activeShiftStartTime > 0 ? new Date(activeShiftStartTime).toLocaleTimeString('tr-TR', {hour: '2-digit', minute:'2-digit'}) : 'Hesaplanıyor...';
+
                     mainActions.innerHTML = `
-                        <button class="btn-out" onclick="requestConfirm('ÇIKIŞ')" style="display:flex;align-items:center;justify-content:center;gap:8px;"><span style="font-size:18px;">⬇</span> MESAİ BİTİR</button>
-                        <button class="btn-out btn-mini" onclick="window.clearTerminalSession(); window.location.replace(window.location.pathname + '?reset=' + Date.now());" style="background: #334155; margin-top: 15px; font-family: 'Poppins', sans-serif; font-weight: bold; letter-spacing: 1px;">🔄 ANA EKRANA DÖN</button>
+                        <div id="live-shift-status" class="live-shift-card-box">
+                            <div style="font-weight: bold; color: #10b981; font-size: 14px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid rgba(16, 185, 129, 0.25); padding-bottom: 8px;">
+                                <span style="width: 10px; height: 10px; background: #10b981; border-radius: 50%; display: inline-block; animation: pulse 2s infinite;"></span>
+                                MESAİ AKTİF — ${user.toUpperCase()}
+                            </div>
+                            <div class="live-lbl" style="margin-bottom: 8px; display: flex; align-items: center;">
+                                <svg style="width: 14px; height: 14px; fill: none; stroke: #94a3b8; stroke-width: 2; display: inline-block; vertical-align: middle; margin-right: 8px;" viewBox="0 0 24 24"><path d="M3 21h18M9 21V9a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v12M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16"/></svg> İŞLETME: <span class="live-val live-shift-biz-name" style="color: var(--primary, #f48120) !important; margin-left: 4px;">${(currentBusinessName && currentBusinessName.trim()) ? currentBusinessName : 'ShiftTurbo İşletmesi'}</span>
+                            </div>
+                            <div id="live-shift-score-container" class="live-lbl" style="display: flex; align-items: center; margin-bottom: 8px;">
+                                <svg style="width: 14px; height: 14px; fill: none; stroke: #cbd5e1; stroke-width: 2; display: inline-block; vertical-align: middle; margin-right: 8px;" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> DİSİPLİN PUANI: <span class="live-val" style="margin-left: 4px;">Hesaplanıyor...</span>
+                            </div>
+                            <div class="live-lbl" style="display: flex; align-items: center; margin-bottom: 8px;">
+                                <svg style="width: 14px; height: 14px; fill: none; stroke: #94a3b8; stroke-width: 2; display: inline-block; vertical-align: middle; margin-right: 8px;" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg> Giriş Saati: <span id="live-shift-start-time" class="live-val" style="margin-left: 4px;">${initialStartStr}</span>
+                            </div>
+                            <div class="live-lbl" style="margin-bottom: 0; display: flex; align-items: center;">
+                                <svg style="width: 14px; height: 14px; fill: none; stroke: #94a3b8; stroke-width: 2; display: inline-block; vertical-align: middle; margin-right: 8px;" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83"/></svg> Geçen Süre: <span id="live-shift-duration" class="live-val" style="margin-left: 4px;">Hesaplanıyor...</span>
+                            </div>
+                        </div>
+                        <button class="btn-out" onclick="requestConfirm('ÇIKIŞ')" style="display:flex;align-items:center;justify-content:center;gap:6px;">
+                            <svg style="width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2.5; display: inline-block; vertical-align: middle;" viewBox="0 0 24 24"><path d="M12 5v14M19 12l-7 7-7-7"/></svg> MESAİ BİTİR
+                        </button>
+                        <button class="btn-out btn-mini" onclick="if(window.liveShiftTimer) clearInterval(window.liveShiftTimer); window.clearTerminalSession(); window.location.replace(window.location.pathname + '?reset=' + Date.now());" style="background: #334155; margin-top: 15px; font-family: 'Poppins', sans-serif; font-weight: bold; letter-spacing: 1px;">🔄 ANA EKRANA DÖN</button>
                     `;
+
+                    if (window.liveShiftTimer) clearInterval(window.liveShiftTimer);
+                    if (activeShiftStartTime > 0) {
+                        const updateTickerInit = () => {
+                            const durEl = document.getElementById('live-shift-duration');
+                            if (!durEl) { clearInterval(window.liveShiftTimer); return; }
+                            let diffMs = new Date().getTime() - activeShiftStartTime;
+                            if (diffMs < 0) diffMs = 0;
+                            const h = Math.floor(diffMs / 3600000);
+                            const m = Math.floor((diffMs % 3600000) / 60000);
+                            durEl.innerText = `${h} Saat ${m} Dakika`;
+                        };
+                        updateTickerInit();
+                        window.liveShiftTimer = setInterval(updateTickerInit, 60000);
+                    }
                 } else {
                     document.getElementById('status-bar').style.width = "50%";
                     document.getElementById('greeting').innerText = "SYSTEM READY / " + user.toUpperCase();
                     mainActions.innerHTML = `
                         <button class="btn-in" onclick="requestConfirm('GİRİŞ')" style="display:flex;align-items:center;justify-content:center;gap:8px;"><span style="font-size:18px;">⬆</span> MESAİ BAŞLAT</button>
-                        <button class="btn-out btn-mini" onclick="window.clearTerminalSession(); window.location.replace(window.location.pathname + '?reset=' + Date.now());" style="background: #334155; margin-top: 15px; font-family: 'Poppins', sans-serif; font-weight: bold; letter-spacing: 1px;">🔄 ANA EKRANA DÖN</button>
+                        <button class="btn-out btn-mini" onclick="if(window.liveShiftTimer) clearInterval(window.liveShiftTimer); window.clearTerminalSession(); window.location.replace(window.location.pathname + '?reset=' + Date.now());" style="background: #334155; margin-top: 15px; font-family: 'Poppins', sans-serif; font-weight: bold; letter-spacing: 1px;">🔄 ANA EKRANA DÖN</button>
                     `;
                 }
 
-                const clientUUID = getDeviceUUID();
-                const businessId = localStorage.getItem('shiftTurbo_business_id');
-                const { data: userCheck } = await _supabase.from('users').select('device_id').eq('ad_soyad', user).eq('business_id', businessId).limit(1);
+                try {
+                    const clientUUID = getDeviceUUID();
+                    if (businessId) {
+                        const { data: userCheck } = await _supabase.from('users').select('device_id').eq('ad_soyad', user).eq('business_id', businessId).limit(1);
 
-                if (userCheck && userCheck.length > 0) {
-                    const dbDeviceId = userCheck[0].device_id;
-                    if (dbDeviceId && dbDeviceId !== clientUUID) {
-                        console.warn("⚠️ GÜVENLİK İHLALİ: Oturum başka bir cihaza taşınmış. Yerel oturum kapatılıyor.");
-                        if (typeof playSound === 'function') playSound('error');
-                        window.clearTerminalSession();
+                        if (userCheck && userCheck.length > 0) {
+                            const dbDeviceId = userCheck[0].device_id;
+                            if (dbDeviceId && dbDeviceId !== clientUUID) {
+                                console.warn("⚠️ GÜVENLİK İHLALİ: Oturum başka bir cihaza taşınmış. Yerel oturum kapatılıyor.");
+                                if (typeof playSound === 'function') playSound('error');
+                                window.clearTerminalSession();
 
-                        // UI'ı tamamen sıfırla ve kilitle (Yarım oturum durumunu engellemek için)
-                        window.hideAllTerminalPanels();
-                        if (mainActions) mainActions.style.display = 'none';
-                        const greetingEl = document.getElementById('greeting');
-                        if (greetingEl) greetingEl.innerText = "SİSTEM BAĞLANTISI";
-
-                        const errorMsgBody = document.getElementById('error-msg-body');
-                        const errorModal = document.getElementById('error-modal');
-                        if (errorMsgBody && errorModal) {
-                            errorMsgBody.innerHTML = `<b>⚠️ GÜVENLİK KİLİDİ (CİHAZ EŞLEŞME HATASI):</b><br><br>Bu hesap daha önce başka bir telefon veya tarayıcı ile eşleştirilmiş!<br><br>💡 <b>Aynı telefonu kullanıyor olsanız bile</b>, tarayıcı geçmişini/önbelleğini temizlediğinizde veya uygulamayı silip yüklediğinizde cihaz kimliğiniz değişir.<br><br>🛠️ <b>ÇÖZÜM:</b> Lütfen yöneticinizden <b>Yönetici Paneli -> Personel Yönetimi</b> sekmesinden isminizin yanındaki <b>'🔓 KİLİDİ AÇ'</b> butonuna basmasını talep ediniz. Ardından tekrar PIN girerek bu cihazı yeni telefonunuz olarak tanımlayabilirsiniz.`;
-                            errorModal.style.display = 'flex';
+                                // UI'ı tamamen sıfırla ve kilitle (Yarım oturum durumunu engellemek için)
+                                window.hideAllTerminalPanels();
+                            }
                         }
-                        if (scanBtn) scanBtn.style.display = 'block';
-                        return;
                     }
+                } catch (e) {
+                    console.warn("Cihaz kontrolü hatası atlatıldı:", e);
                 }
 
                 let lastAction = window.ShiftTurboShared.getStatus(user);
                 let cloudTime = 0;
+
                 if (navigator.onLine) {
                     try {
                         const res = await _supabase
@@ -3435,6 +3776,12 @@
                         if (res && res.data && res.data.length > 0) {
                             lastAction = res.data[0].type;
                             cloudTime = new Date(res.data[0].created_at).getTime();
+                            if (lastAction === 'GİRİŞ') {
+                                activeShiftStartTime = cloudTime;
+                                localStorage.setItem('shiftTurbo_active_start_' + user, new Date(cloudTime).toISOString());
+                            } else {
+                                localStorage.removeItem('shiftTurbo_active_start_' + user);
+                            }
                             window.ShiftTurboShared.setStatus(user, lastAction);
                         }
                     } catch (e) { console.warn("Supabase buton durumu çekilemedi:", e); }
@@ -3448,6 +3795,12 @@
                     const offlineTime = new Date(lastOfflineItem.device_time || 0).getTime();
                     if (offlineTime > cloudTime) {
                         lastAction = lastOfflineItem.type;
+                        if (lastAction === 'GİRİŞ') {
+                            activeShiftStartTime = offlineTime;
+                            localStorage.setItem('shiftTurbo_active_start_' + user, new Date(offlineTime).toISOString());
+                        } else {
+                            localStorage.removeItem('shiftTurbo_active_start_' + user);
+                        }
                         window.ShiftTurboShared.setStatus(user, lastAction);
                         console.log(`⚡ Çevrimdışı kuyruktan daha yeni bir buton durumu algılandı: ${lastAction}`);
                     }
@@ -3456,16 +3809,54 @@
                 if (lastAction === 'GİRİŞ') {
                     document.getElementById('status-bar').style.width = "100%";
                     document.getElementById('greeting').innerText = "SYSTEM ACTIVE / " + user.toUpperCase();
+                    
+                    const startTimeStr = activeShiftStartTime > 0 ? new Date(activeShiftStartTime).toLocaleTimeString('tr-TR', {hour: '2-digit', minute:'2-digit'}) : 'Bilinmiyor';
+                    
                     mainActions.innerHTML = `
-                        <button class="btn-out" onclick="requestConfirm('ÇIKIŞ')" style="display:flex;align-items:center;justify-content:center;gap:8px;"><span style="font-size:18px;">⬇</span> MESAİ BİTİR</button>
-                        <button class="btn-out btn-mini" onclick="window.clearTerminalSession(); window.location.replace(window.location.pathname + '?reset=' + Date.now());" style="background: #334155; margin-top: 15px; font-family: 'Poppins', sans-serif; font-weight: bold; letter-spacing: 1px;">🔄 ANA EKRANA DÖN</button>
+                        <div id="live-shift-status" class="live-shift-card-box">
+                            <div style="font-weight: bold; color: #10b981; font-size: 14px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid rgba(16, 185, 129, 0.25); padding-bottom: 8px;">
+                                <span style="width: 10px; height: 10px; background: #10b981; border-radius: 50%; display: inline-block; animation: pulse 2s infinite;"></span>
+                                MESAİ AKTİF — ${user.toUpperCase()}
+                            </div>
+                            <div class="live-lbl" style="margin-bottom: 8px; display: flex; align-items: center;">
+                                <svg style="width: 14px; height: 14px; fill: none; stroke: #94a3b8; stroke-width: 2; display: inline-block; vertical-align: middle; margin-right: 8px;" viewBox="0 0 24 24"><path d="M3 21h18M9 21V9a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v12M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16"/></svg> İŞLETME: <span class="live-val live-shift-biz-name" style="color: var(--primary, #f48120) !important; margin-left: 4px;">${(currentBusinessName && currentBusinessName.trim()) ? currentBusinessName : 'ShiftTurbo İşletmesi'}</span>
+                            </div>
+                            <div id="live-shift-score-container" class="live-lbl" style="display: flex; align-items: center; margin-bottom: 8px;">
+                                <svg style="width: 14px; height: 14px; fill: none; stroke: #cbd5e1; stroke-width: 2; display: inline-block; vertical-align: middle; margin-right: 8px;" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> DİSİPLİN PUANI: <span class="live-val" style="margin-left: 4px;">Hesaplanıyor...</span>
+                            </div>
+                            <div class="live-lbl" style="display: flex; align-items: center; margin-bottom: 8px;">
+                                <svg style="width: 14px; height: 14px; fill: none; stroke: #94a3b8; stroke-width: 2; display: inline-block; vertical-align: middle; margin-right: 8px;" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg> Giriş Saati: <span id="live-shift-start-time" class="live-val" style="margin-left: 4px;">${startTimeStr}</span>
+                            </div>
+                            <div class="live-lbl" style="margin-bottom: 0; display: flex; align-items: center;">
+                                <svg style="width: 14px; height: 14px; fill: none; stroke: #94a3b8; stroke-width: 2; display: inline-block; vertical-align: middle; margin-right: 8px;" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83"/></svg> Geçen Süre: <span id="live-shift-duration" class="live-val" style="margin-left: 4px;">Hesaplanıyor...</span>
+                            </div>
+                        </div>
+                        <button class="btn-out" onclick="requestConfirm('ÇIKIŞ')" style="display:flex;align-items:center;justify-content:center;gap:6px;">
+                            <svg style="width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2.5; display: inline-block; vertical-align: middle;" viewBox="0 0 24 24"><path d="M12 5v14M19 12l-7 7-7-7"/></svg> MESAİ BİTİR
+                        </button>
+                        <button class="btn-out btn-mini" onclick="if(window.liveShiftTimer) clearInterval(window.liveShiftTimer); window.clearTerminalSession(); window.location.replace(window.location.pathname + '?reset=' + Date.now());" style="background: #334155; margin-top: 15px; font-family: 'Poppins', sans-serif; font-weight: bold; letter-spacing: 1px;">🔄 ANA EKRANA DÖN</button>
                     `;
+                    
+                    if (window.liveShiftTimer) clearInterval(window.liveShiftTimer);
+                    if (activeShiftStartTime > 0) {
+                        const updateTicker = () => {
+                            const durEl = document.getElementById('live-shift-duration');
+                            if (!durEl) { clearInterval(window.liveShiftTimer); return; }
+                            let diffMs = new Date().getTime() - activeShiftStartTime;
+                            if (diffMs < 0) diffMs = 0;
+                            const h = Math.floor(diffMs / 3600000);
+                            const m = Math.floor((diffMs % 3600000) / 60000);
+                            durEl.innerText = `${h} Saat ${m} Dakika`;
+                        };
+                        updateTicker();
+                        window.liveShiftTimer = setInterval(updateTicker, 60000);
+                    }
                 } else {
                     document.getElementById('status-bar').style.width = "50%";
                     document.getElementById('greeting').innerText = "SYSTEM READY / " + user.toUpperCase();
                     mainActions.innerHTML = `
                         <button class="btn-in" onclick="requestConfirm('GİRİŞ')" style="display:flex;align-items:center;justify-content:center;gap:8px;"><span style="font-size:18px;">⬆</span> MESAİ BAŞLAT</button>
-                        <button class="btn-out btn-mini" onclick="window.clearTerminalSession(); window.location.replace(window.location.pathname + '?reset=' + Date.now());" style="background: #334155; margin-top: 15px; font-family: 'Poppins', sans-serif; font-weight: bold; letter-spacing: 1px;">🔄 ANA EKRANA DÖN</button>
+                        <button class="btn-out btn-mini" onclick="if(window.liveShiftTimer) clearInterval(window.liveShiftTimer); window.clearTerminalSession(); window.location.replace(window.location.pathname + '?reset=' + Date.now());" style="background: #334155; margin-top: 15px; font-family: 'Poppins', sans-serif; font-weight: bold; letter-spacing: 1px;">🔄 ANA EKRANA DÖN</button>
                     `;
                 }
 
@@ -3496,10 +3887,7 @@
                             const pLogs = allStoreLogs
                                 .filter(l => ((l.personel_name || l.personel || "").trim().toLocaleUpperCase('tr-TR') === (pName || "").trim().toLocaleUpperCase('tr-TR')));
                             pLogs.forEach(l => {
-                                if (l.mahalle && l.mahalle.includes('DOĞRULUK:')) {
-                                    const match = l.mahalle.match(/DOĞRULUK:\s*(\d+)m/);
-                                    if (match && parseInt(match[1]) > 400) { pViolation = true; }
-                                }
+                                if (l.mahalle && (l.mahalle.includes('SINIR DIŞI') || (l.mahalle.includes('DOĞRULUK:') && l.mahalle.match(/DOĞRULUK:\s*(\d+)m/) && parseInt(l.mahalle.match(/DOĞRULUK:\s*(\d+)m/)[1]) > 400))) { pViolation = true; }
                             });
 
                             if (pScore > maxScore) { maxScore = pScore; bestStaffName = pName; }
@@ -3514,8 +3902,18 @@
                             let badgesHtml = "";
                             let gMsg = "";
 
+                            const liveScoreBox = document.getElementById('live-shift-score-container');
+                            if (liveScoreBox) {
+                                const thresh = window.currentBusinessSettings?.performance_threshold || 98;
+                                let scoreHtml = `⭐ DİSİPLİN PUANI: <span class="live-val">${currentUserScore} Puan</span>`;
+                                if (currentUserScore >= thresh) {
+                                    scoreHtml += ` <span style="color:#f59e0b; font-weight:bold;">(🏆 Performans Primli)</span>`;
+                                }
+                                liveScoreBox.innerHTML = scoreHtml;
+                            }
+
                             if (currentUserScore >= 95) {
-                                badgesHtml += `<span style="background: rgba(16,185,129,0.15); border: 1px solid #10b981; color: #10b981; padding: 6px 12px; border-radius: 8px; font-family: 'Poppins', sans-serif; font-size: 11px; font-weight: bold; display: inline-flex; align-items: center; box-shadow: 0 0 10px rgba(16,185,129,0.2);">ÜSTÜN BAŞARI</span>`;
+                                badgesHtml += `<span style="color: #cbd5e1; font-family: 'Poppins', sans-serif; font-size: 12px; font-weight: 500; display: inline-flex; align-items: center; margin-right: 18px;"><span style="width: 6px; height: 6px; border-radius: 50%; background: #10b981; display: inline-block; margin-right: 8px; box-shadow: 0 0 6px #10b981;"></span>Üstün Başarı</span>`;
                                 gMsg = `<b>Yüksek Performans:</b> Operasyonel verimlilik puanınız ${currentUserScore}. Gösterdiğiniz üstün devamlılık ve disiplin için teşekkür ederiz.`;
                             } else if (currentUserScore >= 80) {
                                 gMsg = `<b>İstikrarlı Performans:</b> Verimlilik puanınız ${currentUserScore}. Operasyonel standartlara uyumunuz için teşekkür ederiz.`;
@@ -3524,11 +3922,11 @@
                             }
 
                             if (!currentUserHasViolation) {
-                                badgesHtml += `<span style="background: rgba(59,130,246,0.15); border: 1px solid #3b82f6; color: #60a5fa; padding: 6px 12px; border-radius: 8px; font-family: 'Poppins', sans-serif; font-size: 11px; font-weight: bold; display: inline-flex; align-items: center; box-shadow: 0 0 10px rgba(59,130,246,0.2);">TAM UYUM</span>`;
+                                badgesHtml += `<span style="color: #cbd5e1; font-family: 'Poppins', sans-serif; font-size: 12px; font-weight: 500; display: inline-flex; align-items: center; margin-right: 18px;"><span style="width: 6px; height: 6px; border-radius: 50%; background: #3b82f6; display: inline-block; margin-right: 8px; box-shadow: 0 0 6px #3b82f6;"></span>Tam Uyum</span>`;
                             }
 
                             if (bestStaffName.toLocaleUpperCase('tr-TR') === user.toLocaleUpperCase('tr-TR') && currentUserScore >= 90) {
-                                badgesHtml += `<span style="background: rgba(245,158,11,0.15); border: 1px solid #f59e0b; color: #fbbf24; padding: 6px 12px; border-radius: 8px; font-family: 'Poppins', sans-serif; font-size: 11px; font-weight: bold; display: inline-flex; align-items: center; box-shadow: 0 0 10px rgba(245,158,11,0.2);">AYIN PERSONELİ</span>`;
+                                badgesHtml += `<span style="color: #f59e0b; font-family: 'Poppins', sans-serif; font-size: 12px; font-weight: 500; display: inline-flex; align-items: center; margin-right: 18px;"><span style="width: 6px; height: 6px; border-radius: 50%; background: #f59e0b; display: inline-block; margin-right: 8px; box-shadow: 0 0 6px #f59e0b;"></span>Ayın Personeli</span>`;
                                 gMsg += `<br><br><b>Tebrikler:</b> Bu ay mağazadaki en yüksek operasyonel puana sahipsiniz. Başarılarınızın devamını dileriz.`;
                             }
 
@@ -3591,12 +3989,25 @@
 
                 fetchLatestBroadcast(); setInterval(fetchLatestBroadcast, 30000);
 
-                // 🔔 PWA'da bildirim izni: her açılışta kontrol et
+                // 📱 Android & iOS (iPhone) ekran uyanma ve sekmeye dönme dinleyicisi
+                document.addEventListener('visibilitychange', () => {
+                    if (!document.hidden) fetchLatestBroadcast();
+                });
+                window.addEventListener('focus', () => fetchLatestBroadcast());
+
+                // 🔔 PWA / Mobil Bildirim izni (Android & iOS Safari uyumlu)
                 if ('Notification' in window && Notification.permission === 'default') {
                     try {
-                        Notification.requestPermission().then(perm => {
-                            if (perm === 'granted') console.log('🔔 Bildirim izni alındı.');
-                        }).catch(e => console.warn('Push izin hatası:', e));
+                        const req = Notification.requestPermission();
+                        if (req && typeof req.then === 'function') {
+                            req.then(perm => {
+                                if (perm === 'granted') console.log('🔔 Bildirim izni alındı.');
+                            }).catch(e => console.warn('Push izin hatası:', e));
+                        } else {
+                            Notification.requestPermission(perm => {
+                                if (perm === 'granted') console.log('🔔 Bildirim izni alındı.');
+                            });
+                        }
                     } catch(e) { console.warn('Push catch:', e); }
                 }
             }
@@ -3636,69 +4047,136 @@
             else console.log("Tüm eski broadcasts silindi.");
         }
 
+        function showInAppBroadcastToast(msg) {
+            let toast = document.getElementById('inapp-broadcast-toast');
+            if (toast) toast.remove();
+            
+            toast = document.createElement('div');
+            toast.id = 'inapp-broadcast-toast';
+            toast.style.cssText = `
+                position: fixed;
+                bottom: 30px;
+                right: 20px;
+                left: 20px;
+                max-width: 460px;
+                margin: 0 auto;
+                background: linear-gradient(135deg, rgba(15, 23, 42, 0.98), rgba(30, 41, 59, 0.98));
+                border: 2px solid #f48120;
+                box-shadow: 0 10px 30px rgba(244, 129, 32, 0.5), 0 0 25px rgba(0,0,0,0.9);
+                border-radius: 16px;
+                padding: 16px 20px;
+                z-index: 999999;
+                color: #fff;
+                font-family: 'Poppins', sans-serif;
+                display: flex;
+                align-items: center;
+                gap: 15px;
+                backdrop-filter: blur(15px);
+                transition: all 0.4s ease;
+            `;
+            toast.innerHTML = `
+                <div style="font-size: 28px; line-height: 1; flex-shrink: 0;">📢</div>
+                <div style="flex: 1; min-width: 0;">
+                    <div style="font-family: 'Orbitron', sans-serif; font-size: 11px; font-weight: 900; color: #f48120; letter-spacing: 1.5px; margin-bottom: 4px;">YENİ DUYURU</div>
+                    <div style="font-size: 13px; font-weight: 600; color: #f8fafc; line-height: 1.4; word-break: break-word;">${msg}</div>
+                </div>
+                <button onclick="this.parentElement.style.opacity='0'; setTimeout(() => this.parentElement.remove(), 400);" style="background: rgba(255,255,255,0.1); border: none; color: #94a3b8; font-size: 16px; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">✕</button>
+            `;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                if (toast && toast.parentElement) {
+                    toast.style.opacity = '0';
+                    toast.style.transform = 'translateY(20px)';
+                    setTimeout(() => toast.remove(), 400);
+                }
+            }, 10000);
+        }
+
         async function fetchLatestBroadcast() {
             const user = localStorage.getItem('shiftTurbo_user');
-            const auth = localStorage.getItem('auth_active') === 'true';
-            if (!user || !auth) {
-                const banner = document.getElementById('broadcast-banner');
-                if (banner) banner.style.display = 'none';
-                document.body.style.paddingTop = "0"; return;
-            }
 
             try {
                 const businessId = localStorage.getItem('shiftTurbo_business_id');
-                // businessId varsa ona göre filtrele, yoksa tüm duyuruları çek (geriye dönük uyumluluk)
-                let query = _supabase.from('broadcasts').select('message').order('created_at', { ascending: false });
+                let query = _supabase.from('broadcasts').select('id, message').order('created_at', { ascending: false });
                 if (businessId) {
                     query = query.or(`business_id.eq.${businessId},business_id.is.null`);
                 }
                 const { data } = await query;
                 if (data && data.length > 0) {
                     let matchedMsg = null;
-                    // 1. Öncelikle kişiye özel bir duyuru var mı diye tüm listeyi kontrol et (Öncelikli Gösterim)
+                    let matchedId = null;
+
+                    // En yeni duyurudan eskiye doğru tara: Kullanıcıya uygun İLK duyuruyu al (Genel [ALL] veya Kişiye Özel)
                     for (let b of data) {
-                        let m = b.message;
+                        let m = b.message || "";
                         if (m.match(/^\[(.*?)\]\s*(.*)/)) {
                             const match = m.match(/^\[(.*?)\]\s*(.*)/);
-                            const target = match[1];
+                            const target = match[1].trim().toLocaleUpperCase('tr-TR');
                             const content = match[2];
-                            if (target.trim().toLocaleUpperCase('tr-TR') === user.trim().toLocaleUpperCase('tr-TR')) {
+
+                            if (target === 'ALL') {
+                                matchedMsg = content;
+                                matchedId = b.id;
+                                break;
+                            } else if (user && target === user.trim().toLocaleUpperCase('tr-TR')) {
                                 matchedMsg = "👤 ÖZEL BİLDİRİM: " + content;
+                                matchedId = b.id;
                                 break;
                             }
-                        }
-                    }
-                    // 2. Kişiye özel duyuru yoksa en güncel genel duyuruyu veya ön eksiz duyuruyu al
-                    if (!matchedMsg) {
-                        for (let b of data) {
-                            let m = b.message;
-                            if (m.startsWith('[ALL] ')) {
-                                matchedMsg = m.replace('[ALL] ', '');
-                                break;
-                            } else if (m.match(/^\[(.*?)\]\s*(.*)/)) {
-                                // Diğer kişilere özel duyuruları atla
-                                continue;
-                            } else {
-                                matchedMsg = m;
-                                break;
-                            }
+                        } else {
+                            matchedMsg = m;
+                            matchedId = b.id;
+                            break;
                         }
                     }
 
                     if (matchedMsg) {
-                        document.getElementById('broadcast-text').innerText = matchedMsg;
-                        document.getElementById('broadcast-banner').style.display = 'block';
+                        const textEl = document.getElementById('broadcast-text');
+                        const bannerEl = document.getElementById('broadcast-banner');
+                        if (textEl) textEl.innerText = matchedMsg;
+                        if (bannerEl) bannerEl.style.display = 'block';
                         document.body.style.paddingTop = "35px";
+
+                        // Yeni Duyuru Algılama (Ses + Ekran İçi Toast + Sistem Push)
+                        const lastSeen = localStorage.getItem('last_seen_broadcast_id');
+                        if (matchedId && String(matchedId) !== String(lastSeen)) {
+                            localStorage.setItem('last_seen_broadcast_id', String(matchedId));
+                            
+                            // Sesli Uyarı
+                            if (typeof playSound === 'function') {
+                                try { playSound('success'); } catch(e){}
+                            }
+
+                            // Ekran İçi Görsel Pop-up (Toast)
+                            showInAppBroadcastToast(matchedMsg);
+
+                            // Android & iOS Service Worker Bildirimi
+                            if ('serviceWorker' in navigator && 'Notification' in window && Notification.permission === 'granted') {
+                                navigator.serviceWorker.ready.then(reg => {
+                                    reg.showNotification('📢 ShiftTurbo Duyurusu', {
+                                        body: matchedMsg,
+                                        icon: './logom.png',
+                                        badge: './logom.png',
+                                        tag: 'shift-turbo-broadcast-' + matchedId,
+                                        data: { url: '/index.html' }
+                                    });
+                                }).catch(() => {});
+                            }
+                        }
                     } else {
-                        document.getElementById('broadcast-banner').style.display = 'none';
+                        const bannerEl = document.getElementById('broadcast-banner');
+                        if (bannerEl) bannerEl.style.display = 'none';
                         document.body.style.paddingTop = "0";
                     }
                 } else {
-                    document.getElementById('broadcast-text').innerText = "";
-                    document.getElementById('broadcast-banner').style.display = 'none';
+                    const textEl = document.getElementById('broadcast-text');
+                    const bannerEl = document.getElementById('broadcast-banner');
+                    if (textEl) textEl.innerText = "";
+                    if (bannerEl) bannerEl.style.display = 'none';
                     document.body.style.paddingTop = "0";
                 }
-            } catch (e) { console.log("Duyuru çekilemedi."); }
+            } catch (e) { console.log("Duyuru çekilemedi:", e); }
         }
 
         function checkKVKKStatus() {

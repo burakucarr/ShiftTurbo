@@ -249,14 +249,7 @@
                     showToast("HESAP KİLİTLENDİ", `${MAX_ATTEMPTS} hatalı deneme. 5 dakika beklemeniz gerekiyor.`, "error");
                     if (errBox) errBox.innerHTML = `❌ HESAP KİLİTLENDİ!<br>5 dakika beklemeniz gerekiyor.`;
                 } else {
-                    let errMsg = (error && error.message) ? error.message : "Kimlik bilgileri hatalı.";
-                    if (errMsg.toLowerCase().includes("invalid login credentials")) {
-                        errMsg = "Invalid login credentials (Geçersiz kimlik veya şifre)";
-                    } else if (errMsg.toLowerCase().includes("email not confirmed")) {
-                        errMsg = "Email not confirmed (E-posta adresi henüz doğrulanmamış)";
-                    } else if (errMsg.toLowerCase().includes("user not found")) {
-                        errMsg = "User not found (Kullanıcı bulunamadı)";
-                    }
+                    let errMsg = window.formatSupabaseErrorMessage(error);
                     showToast("GİRİŞ BAŞARISIZ", `${errMsg} — ${remaining} deneme hakkı kaldı`, "error");
                     if (btn) { btn.disabled = false; btn.textContent = 'ERİŞİMİ ONAYLA'; }
                     if (errBox) errBox.innerHTML = `❌ GİRİŞ BAŞARISIZ!<br>${errMsg}<br>Kalan Deneme Hakkı: ${remaining}`;
@@ -421,7 +414,9 @@ async function fetchData() {
         lat: log.lat,
         lon: log.lon,
         time: new Date(log.created_at).toLocaleString('tr-TR'),
-        raw_time: log.created_at
+        raw_time: log.created_at,
+        is_overtime_approved: !!log.is_overtime_approved,
+        overtime_approved_by: log.overtime_approved_by || null
     }));
 
     updateTrendGraph();
@@ -477,11 +472,21 @@ window.sendBroadcast = async function () {
 
     const finalMsg = targetVal === 'ALL' ? `[ALL] ${msg}` : `[${targetVal}] ${msg}`;
 
-    const { error } = await _supabase.from('broadcasts').insert([{ message: finalMsg }]);
+    const businessId = window.currentBusinessId || localStorage.getItem('shiftTurbo_business_id');
+    const { error } = await _supabase.from('broadcasts').insert([{ message: finalMsg, business_id: businessId }]);
     if (error) {
         showToast("HATA", "Duyuru gönderilemedi. Lütfen ayarları kontrol edin.", "error");
     } else {
-        showToast("İŞLEM BAŞARILI", "📢 Duyuru hedefe iletildi.", "success");
+        // WhatsApp Tarzı Arka Plan Push Bildirimi Tetikle (Hibrit WebPush + OneSignal)
+        try {
+            if (typeof window.triggerOneSignalPush === 'function') {
+                window.triggerOneSignalPush(finalMsg, '📢 YÖNETİCİ DUYURUSU');
+            } else if (typeof window.triggerWebPushNotification === 'function') {
+                window.triggerWebPushNotification(finalMsg, '📢 YÖNETİCİ DUYURUSU');
+            }
+        } catch (pushErr) { console.warn("Push tetikleme uyarısı:", pushErr); }
+
+        showToast("İŞLEM BAŞARILI", "📢 Duyuru hedefe iletildi ve arka plan bildirimi tetiklendi.", "success");
         input.value = "";
         fetchBroadcastHistory(); // Listeyi güncelle
     }
@@ -553,7 +558,7 @@ window.deleteSingleBroadcast = async function (id) {
 }
 
 async function endPersonnelShift(personelName) {
-    if (!await cyberConfirm("MESAYİ SONLANDIRMA", `⚠️ Sayın Yönetici, "${personelName}" isimli personelin mesaisini uzaktan sonlandırmak istediğinize emin misiniz?`)) return;
+    if (!await cyberConfirm("MESAİ SONLANDIRMA", `⚠️ Sayın Yönetici, "${personelName}" isimli personelin mesaisini uzaktan sonlandırmak istediğinize emin misiniz?`)) return;
 
     const { error } = await _supabase.from('logs').insert([{
         personel_name: personelName,
@@ -597,7 +602,7 @@ async function loadStaffList() {
             return `
                 <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
                     <td style="padding: 15px; color: #fff; font-weight: 600;">${u.ad_soyad} ${deviceBadge}</td>
-                    <td style="padding: 15px; font-family: 'Orbitron'; color: var(--primary);">••••</td>
+                    <td style="padding: 15px; font-family: 'Poppins', sans-serif; color: var(--primary);">••••</td>
                     <td style="padding: 15px; text-align: right;">
                         <button onclick="resetDevice('${cleanName}')" style="background: rgba(244, 129, 32, 0.1); border: 1px solid #f48120; color: #f48120; padding: 5px 12px; border-radius: 8px; cursor: pointer; font-size: 10px; margin-right: 5px;">📱 CİHAZ KİLİDİNİ AÇ</button>
                         <button onclick="deleteStaff('${cleanName}')" style="background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; color: #ef4444; padding: 5px 12px; border-radius: 8px; cursor: pointer; font-size: 10px;">SİL</button>
@@ -756,7 +761,9 @@ function runAIAnalysis() {
             activeStaff++;
             const hoursInShift = (new Date() - new Date(lastAction.raw_time)) / 3600000;
             if (hoursInShift > 10.5) {
-                criticalCount++;
+                if (!lastAction.is_overtime_approved) {
+                    criticalCount++;
+                }
                 overtimeStaffNames.push(name);
             }
 
@@ -775,6 +782,8 @@ function runAIAnalysis() {
         aiMsg += `<div>📍 <b style="color:#f48120">DIŞ MEKAN GİRİŞİ:</b> <span style="color:#fff; background:#ef4444; padding:2px 6px; border-radius:4px;">${remoteStaffNames.join(", ")}</span> dükkan dışından işlem yaptı!</div>`;
     } else if (criticalCount > 0) {
         aiMsg += `<div>⚠️ <b style="color:#ef4444">KRİTİK DURUM:</b> Mesaisi 10.5 saati aşıp çıkış yapmayanlar var.</div>`;
+    } else if (overtimeStaffNames.length > 0 && criticalCount === 0) {
+        aiMsg += `<div>🛡️ <b style="color:#10b981">KONTROL ALTINDA:</b> Fazla mesai yapan personel mevcut ancak tümü yönetici onayı ile çalışıyor.</div>`;
     } else {
         aiMsg += `<div>✅ <b style="color:#10b981">GÜVENLİ:</b> Tüm personel dükkan sınırları içerisinde ve operasyon normal akışında.</div>`;
     }
@@ -805,7 +814,11 @@ function runAIAnalysis() {
         remoteStaffNames.forEach(name => anomalies.push({ type: 'OUTSIDE', name: name }));
     }
     if (overtimeStaffNames.length > 0) {
-        overtimeStaffNames.forEach(name => anomalies.push({ type: 'OVERTIME', name: name }));
+        overtimeStaffNames.forEach(name => {
+            const lastAction = window.allLogs.filter(l => l.personel === name).find(l => l.type === 'GİRİŞ');
+            const isApproved = lastAction ? !!lastAction.is_overtime_approved : false;
+            anomalies.push({ type: isApproved ? 'APPROVED_OVERTIME' : 'OVERTIME', name: name });
+        });
     }
     if (window.ShiftAI) window.ShiftAI.updateSuggestions(anomalies);
 
@@ -918,7 +931,7 @@ function applyFilter(fromUser = true) {
             const durationText = calculateRowDuration(log, window.allLogs, pLogsSorted);
 
             const clickAction = isMessage ? `onclick="showMsg('${log.personel}', '${log.mahalle.replace(/'/g, "\\'")}', '${log.time}')"` : "";
-            const badgeStyle = isMessage ? 'background: #9333ea; cursor: pointer; border-color: #a78bfa;' : '';
+            const badgeStyle = isMessage ? 'background: #9333ea; color: #ffffff !important; cursor: pointer; border-color: #a78bfa;' : '';
             const displayText = isMessage ? '📩 MESAJI OKU' : log.type;
 
             let isOffline = log.mahalle && log.mahalle.includes('⚡ Çevrimdışı');
@@ -935,11 +948,23 @@ function applyFilter(fromUser = true) {
                 ? `<button onclick="window.endPersonnelShift('${log.personel}')" class="btn-cyber" style="background:#ef4444; color:#fff; font-size:9px; font-family:'Poppins', sans-serif; font-weight:600; padding:4px 8px; border-radius:4px; margin-left:6px; cursor:pointer; border:none; display:inline-block; vertical-align:middle; box-shadow:0 0 8px rgba(239,68,68,0.4);">🔴 BİTİR</button>`
                 : '';
 
+            // Fazla mesai onay durumu kontrolü ve buton (Supabase DB tabanlı)
+            let overtimeApprovalSection = '';
+            if (isCrit && log.type === 'GİRİŞ') {
+                const safePersonName = (log.personel || '').replace(/'/g, "\\'");
+                if (log.is_overtime_approved) {
+                    overtimeApprovalSection = `<br><span style="background: rgba(16,185,129,0.15); color: #10b981; border: 1px solid #10b981; padding: 2px 8px; border-radius: 6px; font-size: 9px; font-family: 'Poppins', sans-serif; font-weight: 600; display: inline-block; margin-top: 4px; box-shadow: 0 0 8px rgba(16,185,129,0.2);">🛡️ ONAYLI FAZLA MESAİ</span>`
+                        + `<button onclick="window.revokeOvertimeAndRefresh(${log.id}, '${safePersonName}')" style="background: rgba(239,68,68,0.15); color: #ef4444; border: 1px solid #ef4444; font-size: 8px; font-family: 'Poppins', sans-serif; font-weight: 600; padding: 2px 6px; border-radius: 4px; margin-left: 4px; cursor: pointer; display: inline-block; vertical-align: middle;">❌ Geri Al</button>`;
+                } else {
+                    overtimeApprovalSection = `<br><button onclick="window.approveOvertimePrompt(${log.id}, '${safePersonName}')" style="background: rgba(16,185,129,0.15); color: #10b981; border: 1px solid #10b981; font-size: 9px; font-family: 'Poppins', sans-serif; font-weight: 600; padding: 3px 10px; border-radius: 6px; margin-top: 4px; cursor: pointer; display: inline-block; box-shadow: 0 0 8px rgba(16,185,129,0.15);">✅ Fazla Mesaiyi Onayla</button>`;
+                }
+            }
+
             return `<tr class="${isCrit ? 'critical-alarm' : ''} ${isNew ? 'new-action-row' : ''}">
 <td style="font-family:'Poppins', sans-serif; font-size:15px; font-weight:700; letter-spacing:0.5px; color:var(--text-main);">
     ${log.personel}<br>
     ${scoreBox}
-    ${isCrit ? `<br><span class="critical-badge" style="display:inline-block; vertical-align:middle;">⚠️ 10 SAAT+ MESAİ</span>${forceEndBtn}` : ''} 
+    ${isCrit ? `<br><span class="critical-badge" style="display:inline-block; vertical-align:middle;">⚠️ 10 SAAT+ MESAİ</span>${forceEndBtn}${overtimeApprovalSection}` : ''} 
 </td>
 <td>
     <span class="badge ${log.type}" ${clickAction} style="${badgeStyle}">${displayText}</span><br>
@@ -1040,7 +1065,7 @@ function renderCustomTable(data) {
         const durationText = calculateRowDuration(log, allLogs, pLogsSorted);
 
         const clickAction = isMessage ? `onclick="showMsg('${log.personel}', '${log.mahalle.replace(/'/g, "\\'")}', '${log.time}')"` : "";
-        const badgeStyle = isMessage ? 'background: #9333ea; cursor: pointer; border-color: #a78bfa;' : '';
+        const badgeStyle = isMessage ? 'background: #9333ea; color: #ffffff !important; cursor: pointer; border-color: #a78bfa;' : '';
         const displayText = isMessage ? '📩 MESAJI OKU' : log.type;
 
         let isOffline = log.mahalle && log.mahalle.includes('⚡ Çevrimdışı');
@@ -1202,27 +1227,51 @@ async function exportPDF() {
 
     // 2. 💸 OTONOM HAKEDİŞ VE MAAŞ TABLOSU VERİLERİNİ TOPLA
     const financeTableData = [];
-    const rates = window.ShiftTurboShared.getObfuscated('shiftTurbo_hourly_rates') || {};
     const users = window.allUsers || [];
     let grandTotalPay = 0;
 
     users.forEach(u => {
         const name = u.ad_soyad.trim().toLocaleUpperCase('tr-TR');
-        const rate = Number((rates[u.pin] || 200).toFixed(2));
-        const hours = typeof calculateStaffHours === 'function' ? calculateStaffHours(name, filteredLogs) : 0;
-        const basePay = hours * rate;
-        const score = typeof window.calculateScore === 'function' ? window.calculateScore(name) : 100;
-        const penaltyPercent = (100 - score) * 0.5;
+        const fallbackRate = Number((u.hourly_rate || 200).toFixed(2));
+        const payData = typeof window.calculateStaffPayAndHours === 'function'
+            ? window.calculateStaffPayAndHours(name, filteredLogs, fallbackRate)
+            : { hours: 0, basePay: 0 };
+        
+        const hours = payData.hours;
+        const basePay = payData.basePay;
+        const avgRate = hours > 0 ? Number((basePay / hours).toFixed(2)) : fallbackRate;
+        const score = typeof window.calculateScore === 'function' ? window.calculateScore(name, filteredLogs) : 100;
+        const bS = window.currentBusinessSettings || {};
+        const bMultiplier = bS.penalty_rate_multiplier !== undefined ? Number(bS.penalty_rate_multiplier) : 0.50;
+        const perfBonusRate = bS.performance_bonus_rate !== undefined ? Number(bS.performance_bonus_rate) : 3;
+        const perfThreshold = bS.performance_threshold !== undefined ? Number(bS.performance_threshold) : 98;
+
+        const penaltyPercent = (100 - score) * bMultiplier;
         const penaltyAmount = basePay * (penaltyPercent / 100);
-        const netPay = Math.max(0, basePay - penaltyAmount);
+
+        let bonusAmount = 0;
+        if (score >= perfThreshold && perfBonusRate > 0) {
+            bonusAmount = basePay * (perfBonusRate / 100);
+        }
+
+        const netPay = Math.max(0, basePay - penaltyAmount + bonusAmount);
+
+        let disciplineText = '';
+        if (score >= perfThreshold && perfBonusRate > 0) {
+            disciplineText = `${score} Puan (+${bonusAmount.toLocaleString('tr-TR', { maximumFractionDigits: 2 })} TL PRIM)`;
+        } else if (score < 100) {
+            disciplineText = `${score} Puan (-${penaltyAmount.toLocaleString('tr-TR', { maximumFractionDigits: 2 })} TL)`;
+        } else {
+            disciplineText = `${score} Puan (Kesinti/Prim Yok)`;
+        }
 
         grandTotalPay += netPay;
         financeTableData.push([
             cleanPdfText(name),
-            cleanPdfText(`${rate} TL`),
+            cleanPdfText(`${avgRate} TL`),
             cleanPdfText(`${hours.toFixed(1)} Saat`),
             cleanPdfText(`${basePay.toLocaleString('tr-TR', { maximumFractionDigits: 2 })} TL`),
-            cleanPdfText(`${score} Puan (-${penaltyAmount.toLocaleString('tr-TR', { maximumFractionDigits: 2 })} TL)`),
+            cleanPdfText(disciplineText),
             cleanPdfText(`${netPay.toLocaleString('tr-TR', { maximumFractionDigits: 2 })} TL`)
         ]);
     });

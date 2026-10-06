@@ -109,7 +109,8 @@
                 if (lastLog && lastLog.type === 'GİRİŞ') {
                     const hours = ((now - new Date(lastLog.raw_time)) / 3600000).toFixed(1);
                     statusStr = `MESAİDE (${hours} saattir içeride)`;
-                    if (hours > 10.5) overtimeWarning = " [⚠️ KURAL İHLALİ: 10 SAATTEN FAZLA MESAİ!]";
+                    const _maxS = window.maxShiftHours || 10.5;
+                    if (hours > _maxS) overtimeWarning = ` [⚠️ KURAL İHLALİ: ${_maxS} SAATTEN FAZLA MESAİ!]`;
                 }
 
                 staffSummary += `- ${person}: ${score} Puan | Durum: ${statusStr}${overtimeWarning}\n`;
@@ -242,7 +243,7 @@ ${query}`;
                         action: async (btnDOM) => {
                             this.dismissedAnomalies.add(anomalyKey);
                             localStorage.setItem('shiftTurbo_dismissed_anomalies', JSON.stringify([...this.dismissedAnomalies]));
-                            const success = await this.sendQuickBroadcast(`Dikkat ${a.name}: 10 saati aşan mesai tespit edildi. Lütfen mola veriniz.`, a.name, btnDOM);
+                            const success = await this.sendQuickBroadcast(`Dikkat ${a.name}: Belirlenen mesai süresini aşan çalışma tespit edildi. Lütfen mola veriniz.`, a.name, btnDOM);
                             if (!success) {
                                 this.dismissedAnomalies.delete(anomalyKey);
                                 localStorage.setItem('shiftTurbo_dismissed_anomalies', JSON.stringify([...this.dismissedAnomalies]));

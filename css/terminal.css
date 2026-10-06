@@ -45,7 +45,7 @@ body::after {
 }
 
 .brand-logo-text {
-    font-family: 'Orbitron', sans-serif;
+    font-family: 'Rajdhani', 'Exo 2', 'Poppins', sans-serif;
     font-size: 16px;
     letter-spacing: 8px;
     font-weight: 900;
@@ -103,14 +103,14 @@ body::after {
 }
 
 .icon-item {
-    font-size: 8px; font-family: 'Orbitron'; letter-spacing: 1px; color: var(--primary);
+    font-size: 8px; font-family: 'Rajdhani', 'Exo 2', 'Poppins', sans-serif; letter-spacing: 1px; color: var(--primary);
     display: flex; align-items: center; gap: 4px;
 }
 
 button {
     padding: 20px; border-radius: 15px; border: none; font-weight: 800;
     cursor: pointer; transition: 0.3s; color: white;
-    font-family: 'Orbitron', sans-serif; text-transform: uppercase;
+    font-family: 'Rajdhani', 'Exo 2', 'Poppins', sans-serif; text-transform: uppercase;
     letter-spacing: 1.5px; font-size: 11px; width: 100%; margin-top: 25px;
 }
 
@@ -133,14 +133,14 @@ button {
 
 .pin-input {
     background: rgba(0, 0, 0, 0.4); border: 1px solid var(--primary); padding: 12px;
-    border-radius: 12px; font-family: 'Orbitron'; font-size: 20px; letter-spacing: 12px;
+    border-radius: 12px; font-family: 'Rajdhani', 'Exo 2', 'Poppins', sans-serif; font-size: 20px; letter-spacing: 12px;
     color: var(--primary); width: 70%; margin: 0 auto 15px; text-align: center;
 }
 
 .numpad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; max-width: 220px; margin: 0 auto; }
 .num-btn {
     padding: 12px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 12px; color: white; font-family: 'Orbitron'; font-size: 16px; cursor: pointer; transition: 0.1s;
+    border-radius: 12px; color: white; font-family: 'Rajdhani', 'Exo 2', 'Poppins', sans-serif; font-size: 16px; cursor: pointer; transition: 0.1s;
 }
 .num-btn:active { background: var(--primary); color: black; box-shadow: 0 0 20px var(--primary); transform: scale(0.95); }
 
@@ -152,7 +152,7 @@ button {
 .btn-message {
     margin-top: 45px; padding: 10px; background: rgba(255, 255, 255, 0.02);
     border: 1px solid rgba(244, 129, 32, 0.2); border-radius: 12px; font-size: 9px;
-    font-family: 'Orbitron'; letter-spacing: 2px; color: rgba(255, 255, 255, 0.3) !important;
+    font-family: 'Rajdhani', 'Exo 2', 'Poppins', sans-serif; letter-spacing: 2px; color: rgba(255, 255, 255, 0.3) !important;
     cursor: pointer; transition: all 0.4s ease; width: 100%;
 }
 .btn-message:hover { background: rgba(244, 129, 32, 0.05); border-color: var(--primary); color: var(--primary) !important; box-shadow: 0 0 15px rgba(244, 129, 32, 0.2); }
@@ -179,24 +179,24 @@ textarea {
     display: flex; flex-direction: column; justify-content: center; align-items: center; transition: opacity 0.5s ease;
 }
 .cyber-spinner { width: 50px; height: 50px; border: 3px solid transparent; border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
-.cyber-text { font-family: 'Orbitron'; font-size: 10px; color: var(--primary); letter-spacing: 4px; animation: pulse 1.5s infinite; text-align: center; margin: 0 20px; }
+.cyber-text { font-family: 'Rajdhani', 'Exo 2', 'Poppins', sans-serif; font-size: 10px; color: var(--primary); letter-spacing: 4px; animation: pulse 1.5s infinite; text-align: center; margin: 0 20px; }
 
 #landing-wrapper {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(3, 7, 18, 0.85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
     z-index: 50000; display: flex; flex-direction: column; overflow-y: auto; overflow-x: hidden; padding: 40px 20px; box-sizing: border-box; transition: opacity 0.8s ease, transform 0.8s ease;
 }
 .landing-header { text-align: center; margin-bottom: 5px; margin-top: 5px; }
-.landing-title { font-family: 'Orbitron'; font-size: 32px; font-weight: 900; letter-spacing: 8px; margin: 0; }
+.landing-title { font-family: 'Rajdhani', 'Exo 2', 'Poppins', sans-serif; font-size: 32px; font-weight: 900; letter-spacing: 8px; margin: 0; }
 .landing-title span { color: var(--primary); }
 .landing-subtitle { font-family: 'Poppins'; font-size: 10px; color: var(--primary); letter-spacing: 3px; margin-top: 10px; text-transform: uppercase; font-weight: 600; }
 .landing-features { display: flex; flex-direction: column; gap: 8px; max-width: 400px; margin: 0 auto 10px; }
 .l-card { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(244, 129, 32, 0.2); border-radius: 15px; padding: 10px 12px; text-align: left; position: relative; overflow: hidden; }
 .l-card::before { content: ''; position: absolute; left: 0; top: 0; height: 100%; width: 3px; background: var(--primary); }
-.l-card h3 { font-family: 'Orbitron'; font-size: 14px; color: #fff; margin: 0 0 10px 0; display: flex; align-items: center; gap: 10px; letter-spacing: 1px; }
+.l-card h3 { font-family: 'Rajdhani', 'Exo 2', 'Poppins', sans-serif; font-size: 14px; color: #fff; margin: 0 0 10px 0; display: flex; align-items: center; gap: 10px; letter-spacing: 1px; }
 .l-card p { font-family: 'Poppins'; font-size: 11px; color: #94a3b8; margin: 0; line-height: 1.6; }
 .landing-action { text-align: center; margin-bottom: 15px; }
 .btn-enter-terminal {
-    background: linear-gradient(135deg, var(--primary), #d96d00); padding: 20px 40px; border-radius: 15px; border: none; font-family: 'Orbitron';
+    background: linear-gradient(135deg, var(--primary), #d96d00); padding: 20px 40px; border-radius: 15px; border: none; font-family: 'Rajdhani', 'Exo 2', 'Poppins', sans-serif;
     font-size: 14px; color: white; font-weight: 800; letter-spacing: 3px; cursor: pointer; box-shadow: 0 10px 30px rgba(244, 129, 32, 0.3); transition: 0.3s; width: 100%; max-width: 300px;
 }
 .btn-enter-terminal:hover { transform: translateY(-3px) scale(1.02); box-shadow: 0 15px 40px rgba(244, 129, 32, 0.5); }

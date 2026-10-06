@@ -1,10 +1,10 @@
-const CACHE_NAME = 'shift-turbo-v26'; // Sürüm yükseltmek zorunlu cache silmeyi tetikler
+const CACHE_NAME = 'shift-turbo-v77'; // Sürüm yükseltmek zorunlu cache silmeyi tetikler
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
   './yonetici.html',
   './manifest.json',
-  'https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Orbitron:wght@500;700;900&display=swap',
+  'https://fonts.googleapis.com/css2?family=Exo+2:wght@500;600;700;800;900&family=Rajdhani:wght@500;600;700;800&family=Poppins:wght@400;600;700&family=Orbitron:wght@600;700;900&subset=latin,latin-ext&display=swap',
   './audio/kimlik_dogrulandi_1.mp3',
   './audio/kimlik_dogrulandi_2.mp3',
   './audio/kimlik_dogrulandi_3.mp3',
@@ -17,7 +17,10 @@ const ASSETS_TO_CACHE = [
   './audio/mesai_baslat_cevrimdisi_1.mp3',
   './audio/mesai_baslat_cevrimdisi_2.mp3',
   './audio/mesai_bitir_cevrimdisi_1.mp3',
-  './audio/mesai_bitir_cevrimdisi_2.mp3'
+  './audio/mesai_bitir_cevrimdisi_2.mp3',
+  './audio/zaten_cikis_yapildi.mp3',
+  './audio/zaten_mesaidesiniz.mp3',
+  './audio/yonetici_sonlandirdi.mp3'
 ];
 
 // 🛠️ Kurulum: Dosyaları Önbelleğe Al
@@ -41,7 +44,7 @@ self.addEventListener('activate', (event) => {
           }
         })
       );
-    })
+    }).then(() => self.clients.claim())
   );
 });
 
@@ -95,13 +98,15 @@ self.addEventListener('push', (event) => {
     }
   }
 
+  const isWarning = (data.title && (data.title.includes('UYARI') || data.title.includes('FAZLA MESAİ')));
+
   const options = {
     body: data.body,
     icon: './logom.png',
     badge: './logom.png',
-    vibrate: [200, 100, 200],
+    vibrate: isWarning ? [400, 100, 400, 100, 400] : [200, 100, 200],
     data: { url: data.url || '/yonetici.html' },
-    tag: 'shift-turbo-notification',
+    tag: isWarning ? 'shift-turbo-warning-' + Date.now() : 'shift-turbo-notification',
     renotify: true,
     actions: [
       { action: 'open', title: '🚀 Görüntüle' },
@@ -138,15 +143,42 @@ self.addEventListener('notificationclick', (event) => {
 // 🔄 ARKA PLAN SENKRONİZASYONU (Background Sync & Periodic Check)
 self.addEventListener('sync', (event) => {
   if (event.tag === 'sync-new-logs') {
-    event.waitUntil(checkNewLogsSilently());
+    event.waitUntil(Promise.all([checkNewLogsSilently(), checkNewBroadcastsSilently()]));
   }
 });
 
 self.addEventListener('periodicsync', (event) => {
   if (event.tag === 'check-shift-turbo-logs') {
-    event.waitUntil(checkNewLogsSilently());
+    event.waitUntil(Promise.all([checkNewLogsSilently(), checkNewBroadcastsSilently()]));
   }
 });
+
+// ⏱️ Arka Plan Otomatik Duyuru Denetleyicisi (10 Saniyede Bir)
+setInterval(() => {
+  try {
+    checkNewBroadcastsSilently();
+  } catch (e) { }
+}, 10000);
+
+async function checkNewBroadcastsSilently() {
+  try {
+    const proxyUrl = 'https://shiftturbo-proxy.burakkucar55-5af.workers.dev';
+    const resp = await fetch(`${proxyUrl}/rest/v1/broadcasts?select=*&order=created_at.desc&limit=5`);
+    const broadcasts = await resp.json();
+    if (broadcasts && broadcasts.length > 0) {
+      const newest = broadcasts[0];
+      const lastSeenBId = await getIndexedDBValue('last_seen_broadcast_id');
+      if (newest.id !== lastSeenBId) {
+        await setIndexedDBValue('last_seen_broadcast_id', newest.id);
+        
+        // Sadece en son görülen duyuru ID'sini IndexedDB'ye kaydet, GECİKMİŞ BİLDİRİM BASMA!
+        // Çünkü kapalıyken gelen bildirimler Apple APNs / Google FCM Push servisi üzerinden anında düşecektir.
+      }
+    }
+  } catch (e) {
+    console.warn("Arka plan duyuru kontrolü yapılamadı:", e);
+  }
+}
 
 async function checkNewLogsSilently() {
   // Arka planda Supabase kontrolü yapıp yeni log varsa Push bildirimi basar
@@ -163,12 +195,16 @@ async function checkNewLogsSilently() {
         let isAnomaly = false;
         let anomalyMsg = '';
 
-        // 1. Outside (Dışarıdan işlem)
-        if (newest.mahalle && newest.mahalle.includes('DOĞRULUK:')) {
+        // 1. Sınır Dışı (İş yerine uzak konum) veya eski GPS hata payı kontrolü
+        if (newest.mahalle && newest.mahalle.includes('SINIR DIŞI')) {
+            isAnomaly = true;
+            const matchDist = newest.mahalle.match(/MESAFE:\s*(\d+)m/);
+            anomalyMsg = matchDist ? `İş yerinden ${matchDist[1]}m uzakta işlem yapıldı!` : 'Güvenli bölge dışında işlem yapıldı!';
+        } else if (newest.mahalle && newest.mahalle.includes('DOĞRULUK:')) {
             const match = newest.mahalle.match(/DOĞRULUK:\s*(\d+)m/);
             if (match && parseInt(match[1]) > 300) {
                 isAnomaly = true;
-                anomalyMsg = `Güvenli bölge dışında (${match[1]}m) işlem yapıldı!`;
+                anomalyMsg = `Düşük GPS doğruluğu ile işlem yapıldı (${match[1]}m sapma)!`;
             }
         }
 

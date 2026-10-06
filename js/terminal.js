@@ -28,10 +28,21 @@ if ('serviceWorker' in navigator) {
     });
 }
 
+async function ensureSupabaseClient() {
+    if (!_supabase) {
+        if (window.ShiftTurboShared && typeof window.ShiftTurboShared.initSupabaseClient === 'function') {
+            const result = await window.ShiftTurboShared.initSupabaseClient(proxyUrl, localSupabaseConfig);
+            if (result) {
+                _supabase = result.client;
+                _supabaseClientType = result.type;
+            }
+        }
+    }
+    return _supabase;
+}
+
 window.addEventListener('load', async () => {
-    const result = await window.ShiftTurboShared.initSupabaseClient(proxyUrl, localSupabaseConfig);
-    _supabase = result.client;
-    _supabaseClientType = result.type;
+    await ensureSupabaseClient();
 });
 
 // 🔄 Çevrimdışı Kuyruk Eşitleyici (Offline Sync Engine - Mutex Locked)
@@ -40,6 +51,9 @@ async function syncOfflineQueue() {
     if (!navigator.onLine || isSyncingOffline) return;
     const offlineQueue = window.ShiftTurboShared.getObfuscated('shiftTurbo_offline_queue') || [];
     if (offlineQueue.length === 0) return;
+
+    await ensureSupabaseClient();
+    if (!_supabase) return;
 
     isSyncingOffline = true;
     console.log(`🔄 Çevrimdışı kuyrukta ${offlineQueue.length} kayıt bulundu. Supabase'e aktarılıyor...`);
@@ -51,14 +65,19 @@ async function syncOfflineQueue() {
 
     for (const item of offlineQueue) {
         try {
-            const { error } = await _supabase.from('logs').insert([{
+            const currentBizId = item.business_id || localStorage.getItem('shiftTurbo_business_id') || window.currentBusinessId || null;
+            const insertPayload = {
                 personel_name: item.personel_name,
                 type: item.type,
                 lat: item.lat,
                 lon: item.lon,
                 mahalle: item.mahalle,
                 created_at: item.device_time
-            }]);
+            };
+            if (currentBizId && currentBizId !== 'default') {
+                insertPayload.business_id = currentBizId;
+            }
+            const { error } = await _supabase.from('logs').insert([insertPayload]);
 
             if (error) {
                 console.warn("Kuyruk eşitleme hatası:", error);
@@ -140,29 +159,41 @@ function toggleAboutModal(show) {
 function speakAI(text, audioPool = null, onEndedCallback = null) {
     let isCallbackCalled = false;
     const doCallback = () => {
-        if (!isCallbackCalled && typeof onEndedCallback === 'function') {
-            isCallbackCalled = true;
+        if (isCallbackCalled) return;
+        isCallbackCalled = true;
+        if (typeof onEndedCallback === 'function') {
             onEndedCallback();
         }
+    };
+
+    // Güvenlik bariyeri: ses kesilmezse doğal sonunda çalışsın, yoksa uzun timeout sonrası zorla devam etsin.
+    const safetyTimer = setTimeout(() => {
+        console.warn("⚠️ Yapay zeka sesi için güvenlik süresi doldu; yönlendirme zorla devam ediyor.");
+        doCallback();
+    }, 20000);
+
+    const clearSafetyTimer = () => {
+        clearTimeout(safetyTimer);
+        doCallback();
     };
 
     if (audioPool && Array.isArray(audioPool)) {
         const randomFile = audioPool[Math.floor(Math.random() * audioPool.length)];
         console.log("🎲 Ses Havuzundan Seçilen Anons:", randomFile);
         const audio = new Audio('./audio/' + randomFile);
-        audio.onended = doCallback;
-        audio.onerror = () => fallbackAI(text, doCallback);
+        audio.onended = clearSafetyTimer;
+        audio.onerror = () => fallbackAI(text, clearSafetyTimer);
         audio.play().catch(e => {
             console.warn("MP3 çalınamadı (Havuzda dosya eksik), tarayıcı AI sesine geçiliyor:", e);
-            fallbackAI(text, doCallback);
+            fallbackAI(text, clearSafetyTimer);
         });
     } else if (typeof audioPool === 'string') {
         const audio = new Audio('./audio/' + audioPool);
-        audio.onended = doCallback;
-        audio.onerror = () => fallbackAI(text, doCallback);
-        audio.play().catch(e => fallbackAI(text, doCallback));
+        audio.onended = clearSafetyTimer;
+        audio.onerror = () => fallbackAI(text, clearSafetyTimer);
+        audio.play().catch(e => fallbackAI(text, clearSafetyTimer));
     } else {
-        fallbackAI(text, doCallback);
+        fallbackAI(text, clearSafetyTimer);
     }
 }
 
@@ -173,7 +204,12 @@ function fallbackAI(text, onEndedCallback = null) {
     }
     window.speechSynthesis.cancel(); // Önceki yarım kalan sesleri anında temizle
 
-    const utterance = new SpeechSynthesisUtterance(text);
+    // Android TTS büyük harfli isimleri harf harf kodlamasın (B-U-R-A-K) diye düzelt
+    let cleanedText = (text || "").replace(/([A-ZÇĞİÖŞÜ]{2,})/g, function (match) {
+        return match.charAt(0) + match.slice(1).toLowerCase();
+    });
+
+    const utterance = new SpeechSynthesisUtterance(cleanedText);
     utterance.lang = 'tr-TR';
     utterance.rate = 0.92;  // Daha sakin, tane tane ve insansı bir diksiyon
     utterance.pitch = 1.05; // Daha canlı, enerjik ve premium bir ton
@@ -193,8 +229,9 @@ function fallbackAI(text, onEndedCallback = null) {
 }
 
 function speakGreeting(name) {
-    const firstName = name.split(' ')[0];
-    speakAI(`Hoş geldin ${firstName}. Kimliğin başarıyla doğrulandı.`);
+    const firstName = name ? name.split(' ')[0] : 'Personel';
+    const formattedName = firstName ? (firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase()) : 'Personel';
+    speakAI(`Hoş geldin ${formattedName}. Kimliğin başarıyla doğrulandı.`, ["kimlik_dogrulandi_1.mp3", "kimlik_dogrulandi_2.mp3", "kimlik_dogrulandi_3.mp3"]);
 }
 
 function updateTime() {
@@ -225,25 +262,35 @@ function pressNum(n) {
     if (display) display.innerText = "*".repeat(currentPin.length) || "****";
 }
 
+let isQrProcessing = false;
 async function startQR() {
+    if (isQrProcessing) return;
     playSound('tap');
-    document.getElementById('qrWrapper').style.display = 'block';
-    document.getElementById('scanBtn').style.display = 'none';
+    const qrWrap = document.getElementById('qrWrapper');
+    const scanBtn = document.getElementById('scanBtn');
+    if (qrWrap) qrWrap.style.display = 'block';
+    if (scanBtn) scanBtn.style.display = 'none';
 
     if (!html5QrCode) html5QrCode = new Html5Qrcode("reader");
+    isQrProcessing = false;
 
-    html5QrCode.start({ facingMode: "environment" }, { fps: 25, qrbox: 250 }, async (decodedText) => {
+    html5QrCode.start({ facingMode: "environment" }, { fps: 15, qrbox: 250 }, async (decodedText) => {
+        if (isQrProcessing) return; // 🔒 Çift ve peş peşe okumaları anında engelle
         if (decodedText.toUpperCase().includes("SHIFT")) {
+            isQrProcessing = true; // 🔒 Anında kilitle
             playSound('success');
-            await html5QrCode.stop();
-            document.getElementById('qrWrapper').style.display = 'none';
-            document.getElementById('pin-pad').style.display = 'block';
+            try { await html5QrCode.stop(); } catch (e) { }
+            if (qrWrap) qrWrap.style.display = 'none';
+            const pinPad = document.getElementById('pin-pad');
+            if (pinPad) pinPad.style.display = 'block';
             createNumPad();
+            setTimeout(() => { isQrProcessing = false; }, 2000);
         }
     }).catch(err => {
+        isQrProcessing = false;
         playSound('error');
-        document.getElementById('qrWrapper').style.display = 'none';
-        document.getElementById('scanBtn').style.display = 'block';
+        if (qrWrap) qrWrap.style.display = 'none';
+        if (scanBtn) scanBtn.style.display = 'block';
 
         const errorMsgBody = document.getElementById('error-msg-body');
         const errorModal = document.getElementById('error-modal');
@@ -288,9 +335,9 @@ async function checkPin() {
         // 🔴 KRİTİK GÜVENLİK DÜZELTMESİ:
         // GET request (url parametresi) yerine RPC (Remote Procedure Call) kullanarak
         // POST request atıyoruz. Böylece PIN kodu ağ loglarında plaintext olarak gözükmüyor.
-        ({ data, error } = await _supabase.rpc('verify_pin', { 
-            input_pin: pin, 
-            client_device_id: clientUUID 
+        ({ data, error } = await _supabase.rpc('verify_pin', {
+            input_pin: pin,
+            client_device_id: clientUUID
         }));
     } catch (e) {
         console.error('PIN doğrulama hatası (exception):', e);
@@ -310,7 +357,7 @@ async function checkPin() {
         document.getElementById('main-card').classList.add('shake');
         setTimeout(() => document.getElementById('main-card').classList.remove('shake'), 300);
         currentPin = ""; document.getElementById('pin-display').innerText = "****";
-        document.getElementById('error-msg-body').innerHTML = `<b>⚠️ SUNUCU HATASI:</b><br><br>PIN doğrulaması sırasında bir hata oluştu. Lütfen tekrar deneyin.<br><br>Hata kodu: ${error.code || ''} ${error.message || ''}`;
+        document.getElementById('error-msg-body').innerHTML = `<b>⚠️ SUNUCU HATASI:</b><br><br>${window.formatSupabaseErrorMessage(error)}`;
         document.getElementById('error-modal').style.display = 'flex';
         return;
     }
@@ -318,9 +365,9 @@ async function checkPin() {
     if (data && data.success) {
         playSound('success');
         localStorage.setItem('temp_user_name', data.user_name);
-        
+
         document.getElementById('pin-pad').style.display = 'none';
-        document.getElementById('user-check-text').innerText = `MERHABA ${data.user_name.split(' ')[0].toUpperCase()}, GİRİŞ YAPAN SEN MİSİN?`;
+        document.getElementById('user-check-text').innerText = `MERHABA ${data.user_name.split(' ')[0].toLocaleUpperCase('tr-TR')}, GİRİŞ YAPAN SEN MİSİN?`;
         document.getElementById('confirm-box').style.display = 'block';
 
     } else if (data && data.error_type === 'device_mismatch') {
@@ -340,13 +387,12 @@ async function checkPin() {
         // Güvenlik: Hesap kilitlendi mi?
         if (data && (data.error_type === 'account_locked' || data.lockout)) {
             const minutes = data.locked_until_minutes || (data.remaining_seconds ? Math.ceil(data.remaining_seconds / 60) : 15);
-            document.getElementById('error-msg-body').innerHTML = `<b>⛔ HESAP KİLİTLENDİ:</b><br><br>Çok fazla hatalı PIN denemesi yaptınız.<br><br>Lütfen ${minutes} dakika sonra tekrar deneyin.`;
+            document.getElementById('error-msg-body').innerHTML = `<b>⛔ HESAP KİLİTLENDİ:</b><br><br>5 kez üst üste hatalı PIN girildiği için kilitlendi.<br><br>Lütfen <b>${minutes} dakika</b> sonra tekrar deneyin.`;
             document.getElementById('error-modal').style.display = 'flex';
         } else {
-            // Genel hata: yanlış PIN veya data null döndü
-            const detail = data ? (data.message || data.error_type || JSON.stringify(data)) : 'Sunucudan yanıt alınamadı.';
-            console.warn('checkPin genel hata - data:', data, 'error:', error);
-            document.getElementById('error-msg-body').innerHTML = `<b>❌ PIN HATASI:</b><br><br>PIN doğrulanamadı. Lütfen PIN kodunuzu kontrol edip tekrar deneyin.<br><br><small style="color:#888">${detail}</small>`;
+            const attemptsLeft = (data && data.attempts_left !== undefined) ? data.attempts_left : null;
+            const attemptsInfo = attemptsLeft !== null ? `<br><br><span style="color:#f59e0b; font-weight:600; font-family:'Poppins';">⚠️ Kalan Hatalı Deneme Hakkı: ${attemptsLeft} / 5</span>` : '';
+            document.getElementById('error-msg-body').innerHTML = `<b>❌ HATALI PIN KODU:</b><br><br>Girdiğiniz PIN kodu hatalı. Lütfen kontrol edip tekrar deneyiniz.${attemptsInfo}`;
             document.getElementById('error-modal').style.display = 'flex';
         }
     }
@@ -358,13 +404,9 @@ async function verifySuccess() {
 
     // Cihaz ID güncellemesine gerek yok, verify_pin SQL metodu cihazı otomatik kaydeder (Güvenli Backend-Side Binding)
 
-    // 2. Bildirim İzni İsteme (Ana akışı asla bloklama!)
-    if ('Notification' in window && 'serviceWorker' in navigator) {
-        try {
-            Notification.requestPermission().then(perm => {
-                if (perm === 'granted') console.log("🔔 Push Aktif.");
-            }).catch(e => console.warn("Push uyarısı:", e));
-        } catch (e) { console.warn("Push catch:", e); }
+    // 2. Push Bildirim Aboneliği (WhatsApp Tarzı Arka Plan Bildirimi İçin Kaydet)
+    if (typeof window.initTerminalPushNotification === 'function') {
+        window.initTerminalPushNotification(fullName);
     }
 
     // 3. Sesli Karşılama (Hata verirse bile durmasın)
@@ -461,7 +503,7 @@ async function executeAction() {
             errorMsgBody.innerHTML = `<b>⚠️ BİLGİLENDİRME (DAHA ÖNCEDEN ÇIKIŞ YAPILDI):</b><br><br>Sistem kayıtlarında zaten başarılı bir çıkış işleminiz bulunmaktadır.<br><br>Çıkış işleminiz daha önce merkeze iletilmiş ve güvence altına alınmıştır. Tekrar çıkış yapmanıza gerek yoktur.`;
             errorModal.style.display = 'flex';
         }
-        try { speakAI("Sayın personel, sistemde daha önceden çıkış yaptınız. Çıkış kaydınız zaten mevcuttur."); } catch (e) { }
+        try { speakAI("Sayın personel, sistemde daha önceden çıkış yaptınız. Çıkış kaydınız zaten mevcuttur.", "zaten_cikis_yapildi.mp3"); } catch (e) { }
 
         window.clearTerminalSession();
 
@@ -485,7 +527,7 @@ async function executeAction() {
             errorMsgBody.innerHTML = `<b>⚠️ BİLGİLENDİRME (ZATEN MESAİDESİNİZ):</b><br><br>Sistem kayıtlarında zaten aktif bir mesai başlangıcınız bulunmaktadır.<br><br>Giriş işleminiz daha önce merkeze iletilmiştir. İyi çalışmalar dileriz.`;
             errorModal.style.display = 'flex';
         }
-        try { speakAI("Sayın personel, sistemde zaten aktif bir mesai kaydınız bulunmaktadır."); } catch (e) { }
+        try { speakAI("Sayın personel, sistemde zaten aktif bir mesai kaydınız bulunmaktadır.", "zaten_mesaidesiniz.mp3"); } catch (e) { }
         setTimeout(() => {
             if (errorModal) errorModal.style.display = 'none';
             location.reload();
@@ -519,7 +561,7 @@ async function executeAction() {
                     errorMsgBodyOff.innerHTML = `<b>⚠️ BİLGİLENDİRME (DAHA ÖNCEDEN ÇIKIŞ YAPILDI):</b><br><br>Cihazın yerel kayıtlarında zaten bir çıkış işlemi bulunmaktadır.<br><br>İnternet bağlantısı olmadığından bulut doğrulaması yapılamıyor. Bağlantı sağlandığında sistem otomatik eşitlenecektir.<br><br>Tekrar çıkış kaydı oluşturulmadı.`;
                     errorModalOff.style.display = 'flex';
                 }
-                try { speakAI("Sayın personel, cihaz kayıtlarında zaten bir çıkış işlemi bulunmaktadır."); } catch (e) { }
+                try { speakAI("Sayın personel, cihaz kayıtlarında zaten bir çıkış işlemi bulunmaktadır.", "zaten_cikis_yapildi.mp3"); } catch (e) { }
 
                 window.clearTerminalSession();
 
@@ -542,7 +584,7 @@ async function executeAction() {
                     errorMsgBodyOff2.innerHTML = `<b>⚠️ BİLGİLENDİRME (ZATEN MESAİDESİNİZ):</b><br><br>Cihazın yerel kayıtlarında zaten aktif bir mesai başlangıcınız bulunmaktadır.<br><br>İnternet bağlantısı olmadığından bulut doğrulaması yapılamıyor. Bağlantı sağlandığında sistem otomatik eşitlenecektir.`;
                     errorModalOff2.style.display = 'flex';
                 }
-                try { speakAI("Sayın personel, cihaz kayıtlarında zaten aktif bir mesai kaydınız bulunmaktadır."); } catch (e) { }
+                try { speakAI("Sayın personel, cihaz kayıtlarında zaten aktif bir mesai kaydınız bulunmaktadır.", "zaten_mesaidesiniz.mp3"); } catch (e) { }
                 setTimeout(() => {
                     if (errorModalOff2) errorModalOff2.style.display = 'none';
                     location.reload();
@@ -553,7 +595,7 @@ async function executeAction() {
             console.log("✅ Çevrimdışı işlem onaylandı, kuyruğa alınıyor...");
             playSound('success');
 
-            const offlineQueue = window.ShiftTurboShared.getObfuscated('shiftTurbo_offline_queue') || [];
+            const currentBizId = localStorage.getItem('shiftTurbo_business_id') || window.currentBusinessId || null;
             const offlineRecord = {
                 offline_id: 'off_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now(),
                 personel_name: name,
@@ -562,6 +604,7 @@ async function executeAction() {
                 lon: lon,
                 mahalle: `DOĞRULUK: ${Math.round(accuracy)}m (⚡ Çevrimdışı)`,
                 device_time: new Date().toISOString(),
+                business_id: currentBizId,
                 is_offline_sync: true
             };
             offlineQueue.push(offlineRecord);
@@ -598,23 +641,62 @@ async function executeAction() {
                 );
             } catch (e) { console.warn("TTS Error:", e); }
 
-            // Olası bir tarayıcı onended tetiklenmeme bug'ına karşı 8.5 saniyelik KABAK GİBİ Garanti Timer!
-            setTimeout(performFinalRedirect, 8500);
+            // Sesin doğal olarak bitmesini bekle; 20 saniyelik güvenlik sınırı yalnız acil durumlarda devreye girer.
+            setTimeout(performFinalRedirect, 20000);
             return;
         }
 
-        const { error } = await _supabase.from('logs').insert([{
-            personel_name: name,
-            type: type,
-            lat: lat,
-            lon: lon,
-            mahalle: `DOĞRULUK: ${Math.round(accuracy)}m`
-        }]);
+        await ensureSupabaseClient();
+
+        if (!_supabase) {
+            playSound('error');
+            statusEl.innerText = "❌ BAGLANTI HATASI";
+            document.getElementById('error-msg-body').innerHTML = "Veritabanı bağlantısı henüz başlatılamadı. Lütfen sayfayı yenileyiniz veya tekrar deneyiniz.";
+            document.getElementById('error-modal').style.display = 'flex';
+            return;
+        }
+
+        const currentBizId = localStorage.getItem('shiftTurbo_business_id') || window.currentBusinessId || null;
+        let error = null;
+        let rpcSuccess = false;
+
+        try {
+            const { data: rpcRes, error: rpcErr } = await _supabase.rpc('submit_shift_log', {
+                p_personel_name: name,
+                p_type: type,
+                p_lat: lat,
+                p_lon: lon,
+                p_accuracy: accuracy,
+                p_business_id: (currentBizId && currentBizId !== 'default') ? currentBizId : null
+            });
+
+            if (!rpcErr && rpcRes && rpcRes.success) {
+                rpcSuccess = true;
+                console.log("✅ Sunucu taraflı RPC (submit_shift_log) ile log başarıyla kaydedildi:", rpcRes);
+            }
+        } catch (e) {
+            console.warn("RPC submit_shift_log istisnası, standart insert ile devam ediliyor:", e);
+        }
+
+        if (!rpcSuccess) {
+            const insertPayload = {
+                personel_name: name,
+                type: type,
+                lat: lat,
+                lon: lon,
+                mahalle: `DOĞRULUK: ${Math.round(accuracy)}m`
+            };
+            if (currentBizId && currentBizId !== 'default') {
+                insertPayload.business_id = currentBizId;
+            }
+            const { error: directErr } = await _supabase.from('logs').insert([insertPayload]);
+            error = directErr;
+        }
 
         if (error) {
             playSound('error');
             statusEl.innerText = "❌ VERİTABANI HATASI";
-            document.getElementById('error-msg-body').innerText = "Kayıt Başarısız: " + error.message;
+            document.getElementById('error-msg-body').innerHTML = window.formatSupabaseErrorMessage(error);
             document.getElementById('error-modal').style.display = 'flex';
         } else {
             window.ShiftTurboShared.setStatus(name, type);
@@ -648,12 +730,12 @@ async function executeAction() {
                 );
             } catch (e) { console.warn("TTS Error:", e); }
 
-            // Olası bir tarayıcı onended tetiklenmeme bug'ına karşı 8.5 saniyelik KABAK GİBİ Garanti Timer!
-            setTimeout(performFinalRedirect, 8500);
+            // Sesin doğal olarak bitmesini bekle; 20 saniyelik güvenlik sınırı yalnız acil durumlarda devreye girer.
+            setTimeout(performFinalRedirect, 20000);
         }
     };
 
-    if (window.bgLocation && window.bgLocation.accuracy <= 40) {
+    if (window.bgLocation && window.bgLocation.accuracy <= 100) {
         finalizeLocation(window.bgLocation.accuracy, window.bgLocation.latitude, window.bgLocation.longitude);
     } else {
         const getLocation = (useHighAcc = true) => {
@@ -748,7 +830,7 @@ window.bootSystem = async () => {
     const user = localStorage.getItem('shiftTurbo_user');
     const auth = localStorage.getItem('auth_active') === 'true';
 
-    if (user && auth && navigator.geolocation) {
+    if (navigator.geolocation) {
         navigator.geolocation.watchPosition(
             (pos) => { window.bgLocation = pos.coords; },
             (err) => { console.log("BG GPS Isıtma Hatası:", err); },
@@ -786,6 +868,7 @@ window.bootSystem = async () => {
 
         let lastAction = window.ShiftTurboShared.getStatus(user);
         let cloudTime = 0;
+        let activeShiftStartTime = 0;
         if (navigator.onLine) {
             try {
                 const { data: myLogs, error: logError } = await _supabase
@@ -799,6 +882,7 @@ window.bootSystem = async () => {
                 if (!logError && myLogs && myLogs.length > 0) {
                     lastAction = myLogs[0].type;
                     cloudTime = new Date(myLogs[0].created_at).getTime();
+                    if (lastAction === 'GİRİŞ') activeShiftStartTime = cloudTime;
                     window.ShiftTurboShared.setStatus(user, lastAction);
                 }
             } catch (e) { console.warn("Supabase buton durumu çekilemedi:", e); }
@@ -812,6 +896,7 @@ window.bootSystem = async () => {
             const offlineTime = new Date(lastOfflineItem.device_time || 0).getTime();
             if (offlineTime > cloudTime) {
                 lastAction = lastOfflineItem.type;
+                if (lastAction === 'GİRİŞ') activeShiftStartTime = offlineTime;
                 window.ShiftTurboShared.setStatus(user, lastAction);
                 console.log(`⚡ Çevrimdışı kuyruktan daha yeni bir buton durumu algılandı: ${lastAction}`);
             }
@@ -820,10 +905,46 @@ window.bootSystem = async () => {
         if (lastAction === 'GİRİŞ') {
             document.getElementById('status-bar').style.width = "100%";
             document.getElementById('greeting').innerText = "SYSTEM ACTIVE / " + user.toUpperCase();
+
+            const startTimeStr = activeShiftStartTime > 0 ? new Date(activeShiftStartTime).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }) : 'Bilinmiyor';
+
             mainActions.innerHTML = `
-                <button class="btn-out" onclick="requestConfirm('ÇIKIŞ')">MESAİ BİTİR</button>
-                <button class="btn-out btn-mini" onclick="localStorage.removeItem('shiftTurbo_user'); localStorage.removeItem('auth_active'); localStorage.removeItem('isShiftActive'); localStorage.removeItem('temp_user_name'); localStorage.removeItem('temp_user_pin'); window.location.replace(window.location.pathname + '?reset=' + Date.now());" style="background: #334155; margin-top: 15px; font-family: 'Poppins', sans-serif; font-weight: bold; letter-spacing: 1px;">🔄 ANA EKRANA DÖN</button>
+                <div id="live-shift-status" style="background: rgba(46, 204, 113, 0.05); border: 1px solid rgba(46, 204, 113, 0.3); border-radius: 12px; padding: 15px; margin-bottom: 20px; text-align: left; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+                    <div style="font-weight: bold; color: #2ecc71; font-size: 14px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid rgba(46, 204, 113, 0.2); padding-bottom: 8px;">
+                        <span style="width: 10px; height: 10px; background: #2ecc71; border-radius: 50%; display: inline-block; animation: pulse 2s infinite;"></span>
+                        MESAİ AKTİF — ${user.toUpperCase()}
+                    </div>
+                    <div id="live-shift-score-container" style="font-size: 13px; color: #cbd5e1; margin-bottom: 8px; display: flex; align-items: center;">
+                        <svg style="width: 14px; height: 14px; fill: none; stroke: #cbd5e1; stroke-width: 2; display: inline-block; vertical-align: middle; margin-right: 8px;" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Puan Hesaplanıyor...
+                    </div>
+                    <div style="font-size: 13px; color: #cbd5e1; margin-bottom: 8px; display: flex; align-items: center;">
+                        <svg style="width: 14px; height: 14px; fill: none; stroke: #94a3b8; stroke-width: 2; display: inline-block; vertical-align: middle; margin-right: 8px;" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg> Giriş Saati: <span style="font-weight: bold; color: #fff; margin-left: 4px;">${startTimeStr}</span>
+                    </div>
+                    <div style="font-size: 13px; color: #cbd5e1; display: flex; align-items: center;">
+                        <svg style="width: 14px; height: 14px; fill: none; stroke: #94a3b8; stroke-width: 2; display: inline-block; vertical-align: middle; margin-right: 8px;" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83"/></svg> Geçen Süre: <span id="live-shift-duration" style="font-weight: bold; color: #fff; margin-left: 4px;">Hesaplanıyor...</span>
+                    </div>
+                </div>
+                <button class="btn-out" onclick="requestConfirm('ÇIKIŞ')" style="display:flex;align-items:center;justify-content:center;gap:6px;">
+                    <svg style="width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2.5; display: inline-block; vertical-align: middle;" viewBox="0 0 24 24"><path d="M12 5v14M19 12l-7 7-7-7"/></svg> MESAİ BİTİR
+                </button>
+                <button class="btn-out btn-mini" onclick="if(window.liveShiftTimer) clearInterval(window.liveShiftTimer); localStorage.removeItem('shiftTurbo_user'); localStorage.removeItem('auth_active'); localStorage.removeItem('isShiftActive'); localStorage.removeItem('temp_user_name'); localStorage.removeItem('temp_user_pin'); window.location.replace(window.location.pathname + '?reset=' + Date.now());" style="background: #334155; margin-top: 15px; font-family: 'Poppins', sans-serif; font-weight: bold; letter-spacing: 1px;">🔄 ANA EKRANA DÖN</button>
             `;
+
+            if (window.liveShiftTimer) clearInterval(window.liveShiftTimer);
+            if (activeShiftStartTime > 0) {
+                const updateTicker = () => {
+                    const durEl = document.getElementById('live-shift-duration');
+                    if (!durEl) { clearInterval(window.liveShiftTimer); return; }
+                    let diffMs = new Date().getTime() - activeShiftStartTime;
+                    if (diffMs < 0) diffMs = 0;
+                    const h = Math.floor(diffMs / 3600000).toString().padStart(2, '0');
+                    const m = Math.floor((diffMs % 3600000) / 60000).toString().padStart(2, '0');
+                    const s = Math.floor((diffMs % 60000) / 1000).toString().padStart(2, '0');
+                    durEl.innerText = `${h} Saat ${m} Dakika ${s} Saniye`;
+                };
+                updateTicker();
+                window.liveShiftTimer = setInterval(updateTicker, 1000);
+            }
         } else {
             document.getElementById('status-bar').style.width = "50%";
             document.getElementById('greeting').innerText = "SYSTEM READY / " + user.toUpperCase();
@@ -835,6 +956,24 @@ window.bootSystem = async () => {
 
         // 🎮 OYUNLAŞTIRMA (GAMIFICATION) VE ROZET HESAPLAMA MOTORU
         try {
+            // İşletme ayarlarını çek (Supabase + localStorage fallback)
+            try {
+                const bizId = localStorage.getItem('shiftTurbo_business_id') || 'default';
+                const cachedSettings = localStorage.getItem('shiftTurbo_business_settings_' + bizId);
+                if (cachedSettings) {
+                    window.currentBusinessSettings = JSON.parse(cachedSettings);
+                }
+                if (navigator.onLine && typeof _supabase !== 'undefined' && _supabase) {
+                    let qB = _supabase.from('business_settings').select('*');
+                    if (bizId && bizId !== 'default') qB = qB.eq('business_id', bizId);
+                    const { data: bData } = await qB;
+                    if (bData && bData.length > 0) {
+                        window.currentBusinessSettings = bData[0];
+                        localStorage.setItem('shiftTurbo_business_settings_' + bizId, JSON.stringify(bData[0]));
+                    }
+                }
+            } catch (e) { console.warn("business_settings fetch error in terminal.js:", e); }
+
             const allStoreLogs = await window.ShiftTurboShared.syncLogs(_supabase);
             if (allStoreLogs && allStoreLogs.length > 0) {
                 const staffNames = [...new Set(allStoreLogs.map(l => l.personel_name || l.personel))].filter(Boolean);
@@ -868,8 +1007,18 @@ window.bootSystem = async () => {
                     let badgesHtml = "";
                     let gMsg = "";
 
+                    const liveScoreBox = document.getElementById('live-shift-score-container');
+                    if (liveScoreBox) {
+                        const thresh = window.currentBusinessSettings?.performance_threshold || 98;
+                        let scoreHtml = `<svg style="width: 14px; height: 14px; fill: none; stroke: #cbd5e1; stroke-width: 2; display: inline-block; vertical-align: middle; margin-right: 8px;" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> DİSİPLİN PUANI: <span style="color:#fff; font-weight:bold; margin-left: 4px;">${currentUserScore} Puan</span>`;
+                        if (currentUserScore >= thresh) {
+                            scoreHtml += ` <span style="color:#fbbf24; font-weight:bold; display: inline-flex; align-items: center; gap: 4px; margin-left: 8px;"><svg style="width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 2; display: inline-block; vertical-align: middle;" viewBox="0 0 24 24"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6M18 9h1.5a2.5 2.5 0 0 0 0-5H18M4 22h16M10 14.66V17c0 .55-.45 1-1 1H4v2h16v-2h-5c-.55 0-1-.45-1-1v-2.34M12 2a4 4 0 0 0-4 4v5a4 4 0 0 0 8 0V6a4 4 0 0 0-4-4z"/></svg> Performans Primli</span>`;
+                        }
+                        liveScoreBox.innerHTML = scoreHtml;
+                    }
+
                     if (currentUserScore >= 95) {
-                        badgesHtml += `<span style="background: rgba(16,185,129,0.15); border: 1px solid #10b981; color: #10b981; padding: 6px 12px; border-radius: 8px; font-family: 'Poppins', sans-serif; font-size: 11px; font-weight: bold; display: inline-flex; align-items: center; box-shadow: 0 0 10px rgba(16,185,129,0.2);">ÜSTÜN BAŞARI</span>`;
+                        badgesHtml += `<span style="color: #cbd5e1; font-family: 'Poppins', sans-serif; font-size: 12px; font-weight: 500; display: inline-flex; align-items: center; margin-right: 18px;"><span style="width: 6px; height: 6px; border-radius: 50%; background: #10b981; display: inline-block; margin-right: 8px; box-shadow: 0 0 6px #10b981;"></span>Üstün Başarı</span>`;
                         gMsg = `<b>Yüksek Performans:</b> Operasyonel verimlilik puanınız ${currentUserScore}. Gösterdiğiniz üstün devamlılık ve disiplin için teşekkür ederiz.`;
                     } else if (currentUserScore >= 80) {
                         gMsg = `<b>İstikrarlı Performans:</b> Verimlilik puanınız ${currentUserScore}. Operasyonel standartlara uyumunuz için teşekkür ederiz.`;
@@ -878,11 +1027,11 @@ window.bootSystem = async () => {
                     }
 
                     if (!currentUserHasViolation) {
-                        badgesHtml += `<span style="background: rgba(59,130,246,0.15); border: 1px solid #3b82f6; color: #60a5fa; padding: 6px 12px; border-radius: 8px; font-family: 'Poppins', sans-serif; font-size: 11px; font-weight: bold; display: inline-flex; align-items: center; box-shadow: 0 0 10px rgba(59,130,246,0.2);">TAM UYUM</span>`;
+                        badgesHtml += `<span style="color: #cbd5e1; font-family: 'Poppins', sans-serif; font-size: 12px; font-weight: 500; display: inline-flex; align-items: center; margin-right: 18px;"><span style="width: 6px; height: 6px; border-radius: 50%; background: #3b82f6; display: inline-block; margin-right: 8px; box-shadow: 0 0 6px #3b82f6;"></span>Tam Uyum</span>`;
                     }
 
                     if (bestStaffName.toLocaleUpperCase('tr-TR') === user.toLocaleUpperCase('tr-TR') && currentUserScore >= 90) {
-                        badgesHtml += `<span style="background: rgba(245,158,11,0.15); border: 1px solid #f59e0b; color: #fbbf24; padding: 6px 12px; border-radius: 8px; font-family: 'Poppins', sans-serif; font-size: 11px; font-weight: bold; display: inline-flex; align-items: center; box-shadow: 0 0 10px rgba(245,158,11,0.2);">AYIN PERSONELİ</span>`;
+                        badgesHtml += `<span style="color: #f59e0b; font-family: 'Poppins', sans-serif; font-size: 12px; font-weight: 500; display: inline-flex; align-items: center; margin-right: 18px;"><span style="width: 6px; height: 6px; border-radius: 50%; background: #f59e0b; display: inline-block; margin-right: 8px; box-shadow: 0 0 6px #f59e0b;"></span>Ayın Personeli</span>`;
                         gMsg += `<br><br><b>Tebrikler:</b> Bu ay mağazadaki en yüksek operasyonel puana sahipsiniz. Başarılarınızın devamını dileriz.`;
                     }
 
@@ -929,7 +1078,7 @@ window.bootSystem = async () => {
                     errorMsgBody.innerHTML = `<b>⚠️ BİLGİLENDİRME (MESAİ SONLANDIRILDI):</b><br><br>Mesainiz <b>Yönetici</b> tarafından uzaktan başarıyla sonlandırılmıştır.<br><br>Çıkış kaydınız merkeze iletilmiş ve güvence altına alınmıştır. İyi istirahatler dileriz.`;
                     errorModal.style.display = 'flex';
                 }
-                try { speakAI("Sayın personel, mesainiz yönetici tarafından uzaktan sonlandırılmıştır. İyi istirahatler dileriz."); } catch (e) { }
+                try { speakAI("Sayın personel, mesainiz yönetici tarafından uzaktan sonlandırılmıştır. İyi istirahatler dileriz.", "yonetici_sonlandirdi.mp3"); } catch (e) { }
 
                 setTimeout(() => {
                     if (errorModal) errorModal.style.display = 'none';
@@ -945,6 +1094,12 @@ window.bootSystem = async () => {
         _supabase.channel('broadcast-changes').on('postgres_changes', { event: '*', schema: 'public', table: 'broadcasts' }, payload => { fetchLatestBroadcast(); }).subscribe();
 
         fetchLatestBroadcast(); setInterval(fetchLatestBroadcast, 30000);
+
+        // 📱 Android & iOS (iPhone) ekran uyanma ve sekmeye dönme dinleyicisi
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) fetchLatestBroadcast();
+        });
+        window.addEventListener('focus', () => fetchLatestBroadcast());
     }
 };
 
@@ -972,63 +1127,136 @@ async function deleteBroadcasts() {
     else console.log("Tüm eski broadcasts silindi.");
 }
 
+function showInAppBroadcastToast(msg) {
+    let toast = document.getElementById('inapp-broadcast-toast');
+    if (toast) toast.remove();
+
+    toast = document.createElement('div');
+    toast.id = 'inapp-broadcast-toast';
+    toast.style.cssText = `
+        position: fixed;
+        bottom: 30px;
+        right: 20px;
+        left: 20px;
+        max-width: 460px;
+        margin: 0 auto;
+        background: linear-gradient(135deg, rgba(15, 23, 42, 0.98), rgba(30, 41, 59, 0.98));
+        border: 2px solid #f48120;
+        box-shadow: 0 10px 30px rgba(244, 129, 32, 0.5), 0 0 25px rgba(0,0,0,0.9);
+        border-radius: 16px;
+        padding: 16px 20px;
+        z-index: 999999;
+        color: #fff;
+        font-family: 'Poppins', sans-serif;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        backdrop-filter: blur(15px);
+        transition: all 0.4s ease;
+    `;
+    toast.innerHTML = `
+        <div style="font-size: 28px; line-height: 1; flex-shrink: 0;">📢</div>
+        <div style="flex: 1; min-width: 0;">
+            <div style="font-family: 'Orbitron', sans-serif; font-size: 11px; font-weight: 900; color: #f48120; letter-spacing: 1.5px; margin-bottom: 4px;">YENİ DUYURU</div>
+            <div style="font-size: 13px; font-weight: 600; color: #f8fafc; line-height: 1.4; word-break: break-word;">${msg}</div>
+        </div>
+        <button onclick="this.parentElement.style.opacity='0'; setTimeout(() => this.parentElement.remove(), 400);" style="background: rgba(255,255,255,0.1); border: none; color: #94a3b8; font-size: 16px; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">✕</button>
+    `;
+    document.body.appendChild(toast);
+
+    setTimeout(() => {
+        if (toast && toast.parentElement) {
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateY(20px)';
+            setTimeout(() => toast.remove(), 400);
+        }
+    }, 10000);
+}
+
 async function fetchLatestBroadcast() {
     const user = localStorage.getItem('shiftTurbo_user');
-    const auth = localStorage.getItem('auth_active') === 'true';
-    if (!user || !auth) {
-        const banner = document.getElementById('broadcast-banner');
-        if (banner) banner.style.display = 'none';
-        document.body.style.paddingTop = "0"; return;
-    }
 
     try {
-        const { data } = await _supabase.from('broadcasts').select('message').order('created_at', { ascending: false });
+        const businessId = localStorage.getItem('shiftTurbo_business_id');
+        let query = _supabase.from('broadcasts').select('id, message').order('created_at', { ascending: false });
+        if (businessId) {
+            query = query.or(`business_id.eq.${businessId},business_id.is.null`);
+        }
+        const { data } = await query;
         if (data && data.length > 0) {
             let matchedMsg = null;
-            // 1. Öncelikle kişiye özel bir duyuru var mı diye tüm listeyi kontrol et (Öncelikli Gösterim)
+            let matchedId = null;
+
+            // En yeni duyurudan eskiye doğru tara: Kullanıcıya uygun İLK duyuruyu al (Genel [ALL] veya Kişiye Özel)
             for (let b of data) {
-                let m = b.message;
+                let m = b.message || "";
                 if (m.match(/^\[(.*?)\]\s*(.*)/)) {
                     const match = m.match(/^\[(.*?)\]\s*(.*)/);
-                    const target = match[1];
+                    const target = match[1].trim().toLocaleUpperCase('tr-TR');
                     const content = match[2];
-                    if (target.trim().toLocaleUpperCase('tr-TR') === user.trim().toLocaleUpperCase('tr-TR')) {
+
+                    if (target === 'ALL') {
+                        matchedMsg = content;
+                        matchedId = b.id;
+                        break;
+                    } else if (user && target === user.trim().toLocaleUpperCase('tr-TR')) {
                         matchedMsg = "👤 ÖZEL BİLDİRİM: " + content;
+                        matchedId = b.id;
                         break;
                     }
-                }
-            }
-            // 2. Kişiye özel duyuru yoksa en güncel genel duyuruyu veya ön eksiz duyuruyu al
-            if (!matchedMsg) {
-                for (let b of data) {
-                    let m = b.message;
-                    if (m.startsWith('[ALL] ')) {
-                        matchedMsg = m.replace('[ALL] ', '');
-                        break;
-                    } else if (m.match(/^\[(.*?)\]\s*(.*)/)) {
-                        // Diğer kişilere özel duyuruları atla
-                        continue;
-                    } else {
-                        matchedMsg = m;
-                        break;
-                    }
+                } else {
+                    matchedMsg = m;
+                    matchedId = b.id;
+                    break;
                 }
             }
 
             if (matchedMsg) {
-                document.getElementById('broadcast-text').innerText = matchedMsg;
-                document.getElementById('broadcast-banner').style.display = 'block';
+                const textEl = document.getElementById('broadcast-text');
+                const bannerEl = document.getElementById('broadcast-banner');
+                if (textEl) textEl.innerText = matchedMsg;
+                if (bannerEl) bannerEl.style.display = 'block';
                 document.body.style.paddingTop = "35px";
+
+                // Yeni Duyuru Algılama (Ses + Ekran İçi Toast + Sistem Push)
+                const lastSeen = localStorage.getItem('last_seen_broadcast_id');
+                if (matchedId && String(matchedId) !== String(lastSeen)) {
+                    localStorage.setItem('last_seen_broadcast_id', String(matchedId));
+
+                    // Sesli Uyarı
+                    if (typeof playSound === 'function') {
+                        try { playSound('success'); } catch (e) { }
+                    }
+
+                    // Ekran İçi Görsel Pop-up (Toast)
+                    showInAppBroadcastToast(matchedMsg);
+
+                    // Android & iOS Service Worker Bildirimi
+                    if ('serviceWorker' in navigator && 'Notification' in window && Notification.permission === 'granted') {
+                        navigator.serviceWorker.ready.then(reg => {
+                            reg.showNotification('📢 ShiftTurbo Duyurusu', {
+                                body: matchedMsg,
+                                icon: './logom.png',
+                                badge: './logom.png',
+                                tag: 'shift-turbo-broadcast-' + matchedId,
+                                data: { url: '/index.html' }
+                            });
+                        }).catch(() => { });
+                    }
+                }
             } else {
-                document.getElementById('broadcast-banner').style.display = 'none';
+                const bannerEl = document.getElementById('broadcast-banner');
+                if (bannerEl) bannerEl.style.display = 'none';
                 document.body.style.paddingTop = "0";
             }
         } else {
-            document.getElementById('broadcast-text').innerText = "";
-            document.getElementById('broadcast-banner').style.display = 'none';
+            const textEl = document.getElementById('broadcast-text');
+            const bannerEl = document.getElementById('broadcast-banner');
+            if (textEl) textEl.innerText = "";
+            if (bannerEl) bannerEl.style.display = 'none';
             document.body.style.paddingTop = "0";
         }
-    } catch (e) { console.log("Duyuru çekilemedi."); }
+    } catch (e) { console.log("Duyuru çekilemedi:", e); }
 }
 
 function checkKVKKStatus() {
